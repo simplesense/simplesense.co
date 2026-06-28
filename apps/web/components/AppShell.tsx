@@ -13,7 +13,7 @@ function navItems(openMoves: number): NavItem[] {
   return [
     { label: "This week's moves", icon: 'compass', href: '/app', badge: openMoves, active: true },
     { label: 'Store audit', icon: 'clipboard-data', href: '/audit/demo' },
-    { label: 'Monitoring', icon: 'activity', href: '#' },
+    { label: 'Monitoring', icon: 'activity', href: '/monitoring' },
     { label: 'Customers', icon: 'people', href: '#' },
     { label: 'Geography', icon: 'geo-alt', href: '#' },
     { label: 'Products', icon: 'box-seam', href: '#' },

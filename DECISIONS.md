@@ -74,3 +74,19 @@ then generate a baseline migration offline with `prisma migrate diff --from-empt
 from this machine, so it serves both DATABASE_URL and DIRECT_URL.
 Alternatives: a dedicated shadow database URL (extra provisioning); staying on PGlite
 (rejected now that real Supabase works). Consequences: clean history + Supabase-compatible.
+
+## ADR-007: Outcome flywheel — tracked metric, lift, privacy-safe aggregation
+
+Date: 2026-06-27
+Context: §8.6 — implementing a move should measure its real lift over an attribution
+window and feed future confidence, without leaking data across tenants.
+Decision: On IMPLEMENTED we capture the baseline of the move's **tracked metric** (its
+first cited evidence metric — already grounded) and schedule a measurement at
+`ATTRIBUTION_WINDOW_DAYS` (30). After the window, `measureOutcome` records the post-window
+value and `computeLift` (pure, in @ss/core) returns lift + confidence, or **INCONCLUSIVE**
+when there's no baseline or the change is within a 5% noise floor — never overclaiming.
+Cross-tenant learning (sharpening priors "stores like yours saw Y from X") will be derived
+ONLY from **aggregated** outcomes (counts/means across many orgs), never per-tenant rows;
+no query joins one org's data to another's. Per-tenant outcomes are tenant-scoped reads.
+Alternatives: attribute to GMV directly (rejected — noisier than the move's own metric);
+fixed lift labels (rejected — not grounded). Consequences: proof compounds; isolation holds.

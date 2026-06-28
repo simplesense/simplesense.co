@@ -15,7 +15,7 @@ criterion below it is checked and its tests pass.
 - [x] Slice 6 — LLM synthesis + grounding validation + ranking (@ss/engine)
 - [x] Slice 7 — Dashboard ("This week's moves") + design-system port (@ss/ui)
 - [x] Slice 8 — The free "Simple Sense Audit" (the wedge)
-- [ ] Slice 9 — Outcome tracking (flywheel)
+- [x] Slice 9 — Outcome tracking (flywheel) — schedule/measure + Monitoring view
 - [ ] Slice 10 — Billing (Stripe tiers) + gating
 - [ ] Slice 11 — Integration exports (Klaviyo/Meta/Google)
 - [ ] Slice 12 — Hardening
@@ -90,7 +90,24 @@ AC results:
 - [x] failure-resume (ERROR + rethrow so the runner retries) — PASS
 - [~] LIVE backfill — needs RealShopifyReader GraphQL mapping (Shopify creds) + Inngest durability
 
-Next: Slice 9 (outcome flywheel), then GitHub/Vercel deploy (DEPLOY.md done — needs Vercel account).
+## Completed: Slice 9 — outcome flywheel (2026-06-27)
+
+@ss/core `computeLift` (pure: lift + confidence, or INCONCLUSIVE below a 5% noise floor /
+no baseline — never overclaims). @ss/jobs: `scheduleOutcome` (capture tracked-metric
+baseline on IMPLEMENTED, schedule at 30d), `measureOutcome` (post-window lift), `listOutcomes`.
+Wired: applying a move (server action) schedules an outcome; **Monitoring** view (`/monitoring`)
+shows measuring/measured/inconclusive. ADR-007 covers privacy-safe cross-tenant aggregation.
+
+AC results:
+
+- [x] IMPLEMENTED schedules an outcome (baseline captured) — PASS (verified live: clicked Apply
+      → outcome SCHEDULED, baseline 0.717, open moves 5→4)
+- [x] baseline vs measured lift computed (or INCONCLUSIVE) — PASS (computeLift + outcome tests)
+- [x] outcomes display to the merchant — PASS (Monitoring view)
+- [x] cross-tenant aggregation privacy-safe — ADR-007 (aggregate-only; isolation holds)
+
+90 tests green. Remaining: Slice 10 (Stripe billing), 11 (live exports), 12 (hardening),
+13 (onboarding), Clerk auth, + RealShopifyReader/Inngest (live Shopify). Deploy: DEPLOY.md.
 
 ## Build order (chosen 2026-06-27): HEART-FIRST
 

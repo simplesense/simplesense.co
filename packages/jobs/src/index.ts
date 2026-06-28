@@ -12,3 +12,4 @@ export {
   type AnalyzeResult,
 } from './analyze'
 export { collectStore, backfillStore, type BackfillResult } from './backfill'
+export { scheduleOutcome, measureOutcome, listOutcomes } from './outcome'

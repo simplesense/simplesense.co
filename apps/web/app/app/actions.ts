@@ -1,5 +1,6 @@
 'use server'
 import { prisma, getOrgStore, type RecStatus } from '@ss/db'
+import { scheduleOutcome } from '@ss/jobs'
 import { getSession } from '@/lib/auth'
 
 /**
@@ -18,5 +19,7 @@ export async function setMoveStatus(recId: string, status: RecStatus): Promise<{
   const store = await getOrgStore(prisma, orgId, rec.storeId)
   if (!store) return { ok: false } // not this org's store — refuse
   await prisma.recommendation.update({ where: { id: recId }, data: { status } })
+  // Implementing a move starts the flywheel: capture the baseline + schedule measurement (§8.6).
+  if (status === 'IMPLEMENTED') await scheduleOutcome(prisma, recId)
   return { ok: true }
 }
