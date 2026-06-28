@@ -1,5 +1,5 @@
 import type { Analyzer, Metric, Order } from '../types'
-import { ordersInWindow, windowLabel, netRevenue } from '../window'
+import { ordersInWindow, windowLabel, windowBounds, netRevenue } from '../window'
 import { metric, insufficient } from '../metrics'
 import { roundTo, safeShare, median } from '../math'
 
@@ -36,10 +36,22 @@ export const rfmAnalyzer: Analyzer = (ctx) => {
     ]
   }
 
-  // monetary high-value threshold = top 20% by spend
-  const spends = [...byCustomer.values()].map((os) => os.reduce((s, o) => s + netRevenue(o), 0))
+  // High-value = the top 20% of customers by spend, chosen as DISTINCT customers with a
+  // deterministic id tiebreak (so ties don't push >20% over the line).
+  const entries = [...byCustomer.entries()].map(([id, os]) => ({
+    id,
+    freq: os.length,
+    spend: os.reduce((s, o) => s + netRevenue(o), 0),
+    last: os[os.length - 1],
+  }))
   const highValueCount = Math.max(1, Math.ceil(n * 0.2))
-  const highValueFloor = [...spends].sort((a, b) => b - a)[highValueCount - 1] ?? 0
+  const highValueIds = new Set(
+    [...entries]
+      .sort((a, b) => b.spend - a.spend || (a.id < b.id ? -1 : 1))
+      .slice(0, highValueCount)
+      .filter((e) => e.spend > 0)
+      .map((e) => e.id),
+  )
 
   let oneTime = 0
   let repeat = 0
@@ -50,25 +62,21 @@ export const rfmAnalyzer: Analyzer = (ctx) => {
   let champions = 0
   let atRisk = 0
 
-  for (const orders of byCustomer.values()) {
-    const freq = orders.length
-    const spend = orders.reduce((s, o) => s + netRevenue(o), 0)
-    const last = orders[orders.length - 1]
-    const recencyDays = last ? (ctx.now.getTime() - last.createdAt.getTime()) / DAY_MS : Infinity
-    const highValue = spend >= highValueFloor && spend > 0
-
-    if (freq <= 1) oneTime++
-    else if (freq <= 3) repeat++
+  for (const e of entries) {
+    const recencyDays = e.last
+      ? (ctx.now.getTime() - e.last.createdAt.getTime()) / DAY_MS
+      : Infinity
+    if (e.freq <= 1) oneTime++
+    else if (e.freq <= 3) repeat++
     else loyal++
 
     const isActive = recencyDays <= 90
-    const isLapsing = recencyDays > 90 && recencyDays <= 180
     if (isActive) active++
-    else if (isLapsing) lapsing++
+    else if (recencyDays <= 180) lapsing++
     else dormant++
 
-    if (freq >= 4 && isActive && highValue) champions++
-    if (freq >= 2 && recencyDays > 180) atRisk++
+    if (e.freq >= 4 && isActive && highValueIds.has(e.id)) champions++
+    if (e.freq >= 2 && recencyDays > 180) atRisk++
   }
 
   return [
@@ -85,8 +93,11 @@ export const rfmAnalyzer: Analyzer = (ctx) => {
 }
 
 /**
- * Cohort retention / repeat-purchase: repeat rate, median time-to-second-order, and
- * 2nd→3rd-order conversion (all over the window).
+ * Cohort retention / repeat-purchase. `window_customer_count` is everyone who ordered
+ * in the window; `new_customer_count` is the true first-purchase cohort (first-ever
+ * order falls inside the window). Repeat rate, 2nd→3rd conversion and median
+ * time-to-second are over the window; 2nd→3rd is "insufficient" (not a fake 0) when no
+ * one has reordered.
  */
 export const cohortAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
@@ -100,6 +111,18 @@ export const cohortAnalyzer: Analyzer = (ctx) => {
       }),
     ]
   }
+
+  // true new-customer cohort: first-ever order (all store history) inside the window
+  const { start, end } = windowBounds(ctx)
+  const firstEver = new Map<string, number>()
+  for (const o of ctx.store.orders) {
+    if (!o.customerId) continue
+    const t = o.createdAt.getTime()
+    const prev = firstEver.get(o.customerId)
+    if (prev == null || t < prev) firstEver.set(o.customerId, t)
+  }
+  let newCohort = 0
+  for (const t of firstEver.values()) if (t >= start.getTime() && t <= end.getTime()) newCohort++
 
   let withTwo = 0
   let withThree = 0
@@ -116,16 +139,23 @@ export const cohortAnalyzer: Analyzer = (ctx) => {
     if (orders.length >= 3) withThree++
   }
 
+  const s2t3 = safeShare(withThree, withTwo)
   const out: Metric[] = [
-    metric('cohort.new_customers_count', n, { unit: 'count', window: win }),
+    metric('cohort.window_customer_count', n, { unit: 'count', window: win }),
+    metric('cohort.new_customer_count', newCohort, { unit: 'count', window: win }),
     metric('cohort.repeat_purchase_rate', roundTo(safeShare(withTwo, n) ?? 0, 4), {
       unit: 'ratio',
       window: win,
     }),
-    metric('cohort.second_to_third_conversion', roundTo(safeShare(withThree, withTwo) ?? 0, 4), {
-      unit: 'ratio',
-      window: win,
-    }),
+    s2t3 == null
+      ? insufficient('cohort.second_to_third_conversion', 'no customers with two or more orders', {
+          unit: 'ratio',
+          window: win,
+        })
+      : metric('cohort.second_to_third_conversion', roundTo(s2t3, 4), {
+          unit: 'ratio',
+          window: win,
+        }),
   ]
   const t2 = median(timeToSecond)
   out.push(
@@ -149,7 +179,7 @@ export const cohortAnalyzer: Analyzer = (ctx) => {
 export const replenishmentAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
   const orders = ordersInWindow(ctx)
-  // (customerId|productId) -> sorted purchase dates
+  // (customerId|productId) -> purchase dates
   const seq = new Map<string, number[]>()
   for (const o of orders) {
     if (!o.customerId) continue
@@ -162,8 +192,10 @@ export const replenishmentAnalyzer: Analyzer = (ctx) => {
     }
   }
   const intervals: number[] = []
+  let reorderedPairs = 0
   for (const dates of seq.values()) {
     if (dates.length < 2) continue
+    reorderedPairs++
     dates.sort((a, b) => a - b)
     for (let i = 1; i < dates.length; i++) {
       intervals.push(((dates[i] as number) - (dates[i - 1] as number)) / DAY_MS)
@@ -184,6 +216,10 @@ export const replenishmentAnalyzer: Analyzer = (ctx) => {
       unit: 'days',
       window: win,
     }),
-    metric('replenishment.reordered_pair_count', intervals.length, { unit: 'count', window: win }),
+    metric('replenishment.reordered_pair_count', reorderedPairs, { unit: 'count', window: win }),
+    metric('replenishment.reorder_interval_count', intervals.length, {
+      unit: 'count',
+      window: win,
+    }),
   ]
 }

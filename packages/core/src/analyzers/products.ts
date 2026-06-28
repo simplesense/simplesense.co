@@ -117,7 +117,9 @@ export const skuMarginAnalyzer: Analyzer = (ctx) => {
     }),
     metric('sku_margin.negative_margin_sku_count', negativeCount, { unit: 'count', window: win }),
   ]
-  if (worstId) {
+  // Only surface a "worst SKU" when it is actually losing money — otherwise the mere
+  // presence of the metric would read as a money-losing signal (Prime Directive #1).
+  if (worstId && worstMargin < 0) {
     const worst = ctx.store.products.find((p) => p.id === worstId)
     out.push(
       metric('sku_margin.worst_sku_margin', roundTo(worstMargin, 2), {

@@ -31,18 +31,30 @@ export const paretoAnalyzer: Analyzer = (ctx) => {
   }
 
   const total = sum(revenues)
-  const topShare = (pct: number): number => {
+  // For small stores, ceil(n*pct) can collapse several tiers onto the same customer
+  // count. Record the EFFECTIVE percentile so Stage 3 never mislabels e.g. "top 1%"
+  // when it is really "top 10%" (Prime Directive #1).
+  const topShare = (key: string, pct: number) => {
     const count = Math.max(1, Math.ceil(n * pct))
-    return roundTo(safeShare(sum(revenues.slice(0, count)), total) ?? 0, 4)
+    const share = roundTo(safeShare(sum(revenues.slice(0, count)), total) ?? 0, 4)
+    return metric(key, share, {
+      unit: 'ratio',
+      window: win,
+      valueJson: {
+        nominal_pct: pct,
+        effective_customer_count: count,
+        effective_pct: roundTo(count / n, 4),
+      },
+    })
   }
 
   return [
     metric('pareto.customer_count', n, { unit: 'count', window: win }),
     metric('pareto.revenue_total', roundTo(total, 2), { unit: 'USD', window: win }),
-    metric('pareto.top1_revenue_share', topShare(0.01), { unit: 'ratio', window: win }),
-    metric('pareto.top5_revenue_share', topShare(0.05), { unit: 'ratio', window: win }),
-    metric('pareto.top10_revenue_share', topShare(0.1), { unit: 'ratio', window: win }),
-    metric('pareto.top20_revenue_share', topShare(0.2), { unit: 'ratio', window: win }),
+    topShare('pareto.top1_revenue_share', 0.01),
+    topShare('pareto.top5_revenue_share', 0.05),
+    topShare('pareto.top10_revenue_share', 0.1),
+    topShare('pareto.top20_revenue_share', 0.2),
     metric('pareto.top20_customer_count', Math.max(1, Math.ceil(n * 0.2)), {
       unit: 'count',
       window: win,

@@ -7,13 +7,15 @@ import { haversineMiles, hasCoords, regionLabel } from '../geo'
 const RADIUS_MI = 5
 
 /**
- * Geographic concentration. Computes region concentration always, then BRANCHES on
- * store type (Prime Directive #1 + §1.4):
- *  - physical locations → trade-area share within N miles + multi-store overlap, with
- *    a BOPIS/foot-traffic action context.
- *  - online-only → top zip-cluster share with a regional-inventory/offer context.
- * `has_physical_locations` is recorded on the share metrics so Stage 3 picks the
- * correct action and never tells an online-only store to drive foot traffic.
+ * Geographic concentration. Computes region concentration over LOCATED revenue only
+ * (orders with a known region) and reports the unlocatable fraction separately so a
+ * POS-heavy store's missing ship-to data never masquerades as a geographic "unknown"
+ * cluster. Then BRANCHES on store type (§1.4):
+ *  - physical → trade-area share within N miles + multi-store overlap (BOPIS context),
+ *    with the geocoded-revenue fraction emitted so the share is honestly qualified.
+ *  - online-only → top zip-cluster share (regional-inventory context).
+ * `has_physical_locations` is recorded on the share metrics so Stage 3 never tells an
+ * online-only store to drive foot traffic (Prime Directive #1).
  */
 export const geographyAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
@@ -24,18 +26,21 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
   const hasPhysical = ctx.store.hasPhysicalLocations && locationsWithCoords.length > 0
   out.push(metric('geo.has_physical_locations', hasPhysical ? 1 : 0, { unit: 'bool', window: win }))
 
-  // --- region concentration (store-type agnostic) ---
+  // --- region concentration over LOCATED revenue only ---
   const byRegion = new Map<string, number>()
-  let totalRev = 0
+  let allRev = 0
+  let regionRev = 0
   for (const o of orders) {
     const rev = netRevenue(o)
     if (rev <= 0) continue
-    totalRev += rev
+    allRev += rev
     const r = regionLabel(o.shippingAddress)
+    if (r === 'unknown') continue
+    regionRev += rev
     byRegion.set(r, (byRegion.get(r) ?? 0) + rev)
   }
 
-  if (totalRev <= 0) {
+  if (allRev <= 0) {
     out.push(
       insufficient('geo.single_region_share', 'no shipped revenue in window', {
         unit: 'ratio',
@@ -45,31 +50,53 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
     return out
   }
 
+  out.push(
+    metric('geo.unlocatable_revenue_fraction', roundTo((allRev - regionRev) / allRev, 4), {
+      unit: 'ratio',
+      window: win,
+    }),
+  )
+
   const sortedRegions = [...byRegion.entries()].sort((a, b) => b[1] - a[1])
   const top = sortedRegions[0]
-  if (top) {
+  if (!top || regionRev <= 0) {
     out.push(
-      metric('geo.single_region_share', roundTo(top[1] / totalRev, 4), {
+      insufficient('geo.single_region_share', 'no orders carry a region/ship-to', {
         unit: 'ratio',
         window: win,
-        valueJson: { region: top[0], has_physical_locations: hasPhysical },
       }),
     )
+  } else {
+    out.push(
+      metric('geo.single_region_share', roundTo(top[1] / regionRev, 4), {
+        unit: 'ratio',
+        window: win,
+        valueJson: {
+          region: top[0],
+          has_physical_locations: hasPhysical,
+          basis: 'located_revenue',
+        },
+      }),
+    )
+    out.push(metric('geo.region_count', sortedRegions.length, { unit: 'count', window: win }))
   }
-  out.push(metric('geo.region_count', sortedRegions.length, { unit: 'count', window: win }))
 
   // --- branch ---
   if (hasPhysical) {
     let withCoordsRev = 0
+    let geocodedOrders = 0
     let withinRev = 0
-    let overlapRev = 0 // revenue within radius of >= 2 stores (trade-area overlap)
+    let overlapRev = 0
+    let revenueOrders = 0
     for (const o of orders) {
       const rev = netRevenue(o)
       if (rev <= 0) continue
-      const addr = o.shippingAddress
-      if (!hasCoords(addr)) continue
+      revenueOrders++
+      const address = o.shippingAddress
+      if (!hasCoords(address)) continue
       withCoordsRev += rev
-      const distances = locationsWithCoords.map((loc) => haversineMiles(addr, loc) ?? Infinity)
+      geocodedOrders++
+      const distances = locationsWithCoords.map((loc) => haversineMiles(address, loc) ?? Infinity)
       const nearCount = distances.filter((d) => d <= RADIUS_MI).length
       if (nearCount >= 1) withinRev += rev
       if (nearCount >= 2) overlapRev += rev
@@ -82,6 +109,14 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
         }),
       )
     } else {
+      // qualifier: how much of total revenue we could actually place on a map
+      out.push(
+        metric('geo.geocoded_revenue_fraction', roundTo(withCoordsRev / allRev, 4), {
+          unit: 'ratio',
+          window: win,
+          valueJson: { geocoded_order_count: geocodedOrders, revenue_order_count: revenueOrders },
+        }),
+      )
       out.push(
         metric('geo.within_5mi_revenue_share', roundTo(withinRev / withCoordsRev, 4), {
           unit: 'ratio',
@@ -90,6 +125,7 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
             radius_miles: RADIUS_MI,
             has_physical_locations: true,
             action_type: 'bopis',
+            basis: 'geocoded_revenue',
           },
         }),
       )
@@ -98,7 +134,11 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
           metric('geo.trade_area_overlap_share', roundTo(overlapRev / withCoordsRev, 4), {
             unit: 'ratio',
             window: win,
-            valueJson: { radius_miles: RADIUS_MI, store_count: locationsWithCoords.length },
+            valueJson: {
+              radius_miles: RADIUS_MI,
+              store_count: locationsWithCoords.length,
+              basis: 'geocoded_revenue',
+            },
           }),
         )
       }
@@ -132,6 +172,7 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
             zips: top3.map((z) => z[0]),
             has_physical_locations: false,
             action_type: 'regional_inventory',
+            basis: 'zip_coded_revenue',
           },
         }),
       )

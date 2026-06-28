@@ -45,7 +45,8 @@ describe('cohortAnalyzer', () => {
       order({ id: 'c3o1', customerId: 'c3', createdAt: day('2025-04-01') }),
     ]
     const m = cohortAnalyzer(ctxOf({ orders }))
-    expect(num(m, 'cohort.new_customers_count')).toBe(3)
+    expect(num(m, 'cohort.window_customer_count')).toBe(3)
+    expect(num(m, 'cohort.new_customer_count')).toBe(3) // all three first-ordered in window
     expect(num(m, 'cohort.repeat_purchase_rate')).toBe(0.6667) // 2 of 3
     expect(num(m, 'cohort.second_to_third_conversion')).toBe(0.5) // 1 of 2
     expect(num(m, 'cohort.time_to_second_order_median_days')).toBe(20) // median(10,30)
@@ -65,6 +66,7 @@ describe('replenishmentAnalyzer', () => {
     ]
     const m = replenishmentAnalyzer(ctxOf({ orders }))
     expect(num(m, 'replenishment.median_reorder_interval_days')).toBe(20) // median(30,20,10)
-    expect(num(m, 'replenishment.reordered_pair_count')).toBe(3)
+    expect(num(m, 'replenishment.reordered_pair_count')).toBe(2) // distinct (c1,pX) and (c2,pY)
+    expect(num(m, 'replenishment.reorder_interval_count')).toBe(3) // 2 gaps for c1 + 1 for c2
   })
 })

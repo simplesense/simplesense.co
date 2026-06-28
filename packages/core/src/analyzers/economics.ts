@@ -34,6 +34,7 @@ export const discountAnalyzer: Analyzer = (ctx) => {
     }
   }
   const preDiscount = totalPaid + totalDiscount
+  const revShare = safeShare(discountedRev, totalRev)
   return [
     metric(
       'discount.order_share_discounted',
@@ -43,14 +44,15 @@ export const discountAnalyzer: Analyzer = (ctx) => {
         window: win,
       },
     ),
-    metric(
-      'discount.revenue_share_discounted',
-      roundTo(safeShare(discountedRev, totalRev) ?? 0, 4),
-      {
-        unit: 'ratio',
-        window: win,
-      },
-    ),
+    revShare == null
+      ? insufficient('discount.revenue_share_discounted', 'net revenue in window is zero', {
+          unit: 'ratio',
+          window: win,
+        })
+      : metric('discount.revenue_share_discounted', roundTo(revShare, 4), {
+          unit: 'ratio',
+          window: win,
+        }),
     metric('discount.avg_discount_rate', roundTo(safeShare(totalDiscount, preDiscount) ?? 0, 4), {
       unit: 'ratio',
       window: win,
@@ -72,9 +74,17 @@ export const returnsAnalyzer: Analyzer = (ctx) => {
   }
   const refunded = sum(orders.map((o) => o.refundedAmount ?? 0))
   const gross = sum(orders.map((o) => o.totalPrice))
-  const rate = roundTo(safeShare(refunded, gross) ?? 0, 4)
+  const rate = safeShare(refunded, gross)
+  if (rate == null) {
+    return [
+      insufficient('returns.rate_overall', 'no gross revenue in window', {
+        unit: 'ratio',
+        window: win,
+      }),
+    ]
+  }
   return [
-    metric('returns.rate_overall', rate, {
+    metric('returns.rate_overall', roundTo(rate, 4), {
       unit: 'ratio',
       window: win,
       note: refunded === 0 ? 'no refunds recorded in window' : undefined,

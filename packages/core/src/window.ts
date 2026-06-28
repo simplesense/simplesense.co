@@ -1,10 +1,21 @@
 import type { AnalyzerContext, Order } from './types'
 
-/** Inclusive [start, end] bounds for the trailing analysis window. */
+/**
+ * Inclusive [start, end] bounds for the trailing analysis window.
+ * Uses UTC and is month-length safe: subtracting months from a month-end date
+ * (e.g. Jul 31 − 1mo) clamps to the target month's last valid day instead of
+ * overflowing into the next month and silently dropping days from the window.
+ */
 export function windowBounds(ctx: AnalyzerContext): { start: Date; end: Date } {
   const end = ctx.now
-  const start = new Date(ctx.now)
-  start.setMonth(start.getMonth() - ctx.windowMonths)
+  const start = new Date(end.getTime())
+  const day = start.getUTCDate()
+  start.setUTCDate(1) // avoid month-length overflow while shifting months
+  start.setUTCMonth(start.getUTCMonth() - ctx.windowMonths)
+  const daysInStartMonth = new Date(
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0),
+  ).getUTCDate()
+  start.setUTCDate(Math.min(day, daysInStartMonth))
   return { start, end }
 }
 

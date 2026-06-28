@@ -3,35 +3,45 @@ import { ordersInWindow, windowLabel, netRevenue } from '../window'
 import { metric, insufficient } from '../metrics'
 import { roundTo, safeShare } from '../math'
 
-/** Earliest order time per customer across ALL store history (not just the window). */
-function firstOrderTimes(allOrders: Order[]): Map<string, number> {
-  const first = new Map<string, number>()
+/**
+ * The id of each customer's first-ever order across ALL store history. Identity (id),
+ * not timestamp, so two orders sharing a truncated timestamp don't both count as "new".
+ * Ties on time are broken by id for determinism.
+ */
+function firstOrderIds(allOrders: Order[]): Set<string> {
+  const best = new Map<string, { t: number; id: string }>()
   for (const o of allOrders) {
     if (!o.customerId) continue
     const t = o.createdAt.getTime()
-    const prev = first.get(o.customerId)
-    if (prev == null || t < prev) first.set(o.customerId, t)
+    const cur = best.get(o.customerId)
+    if (!cur || t < cur.t || (t === cur.t && o.id < cur.id)) best.set(o.customerId, { t, id: o.id })
   }
-  return first
+  return new Set([...best.values()].map((v) => v.id))
 }
 
 /**
  * New vs returning revenue mix over the window. An order is "new" when it is the
- * customer's first-ever order (all-time), else "returning".
+ * customer's first-ever order (all-time), else "returning". Guest/anonymous orders
+ * (no customerId) carry no identity and are excluded from both buckets — surfaced as a
+ * separate guest share rather than silently counted as returning.
  */
 export const newVsReturningAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
-  const firsts = firstOrderTimes(ctx.store.orders)
+  const firsts = firstOrderIds(ctx.store.orders)
   const orders = ordersInWindow(ctx)
   let newRev = 0
   let retRev = 0
+  let guestRev = 0
   let newOrders = 0
   let retOrders = 0
   for (const o of orders) {
     const rev = netRevenue(o)
     if (rev <= 0) continue
-    const isNew = o.customerId != null && firsts.get(o.customerId) === o.createdAt.getTime()
-    if (isNew) {
+    if (!o.customerId) {
+      guestRev += rev
+      continue
+    }
+    if (firsts.has(o.id)) {
       newRev += rev
       newOrders++
     } else {
@@ -39,27 +49,36 @@ export const newVsReturningAnalyzer: Analyzer = (ctx) => {
       retOrders++
     }
   }
-  const total = newRev + retRev
-  if (total <= 0) {
+  const identified = newRev + retRev
+  if (identified <= 0) {
     return [
-      insufficient('mix.new_revenue_share', 'no attributable revenue in window', {
+      insufficient('mix.new_revenue_share', 'no identified-customer revenue in window', {
         unit: 'ratio',
         window: win,
       }),
     ]
   }
-  return [
-    metric('mix.new_revenue_share', roundTo(safeShare(newRev, total) ?? 0, 4), {
+  const out = [
+    metric('mix.new_revenue_share', roundTo(safeShare(newRev, identified) ?? 0, 4), {
       unit: 'ratio',
       window: win,
     }),
-    metric('mix.returning_revenue_share', roundTo(safeShare(retRev, total) ?? 0, 4), {
+    metric('mix.returning_revenue_share', roundTo(safeShare(retRev, identified) ?? 0, 4), {
       unit: 'ratio',
       window: win,
     }),
     metric('mix.new_order_count', newOrders, { unit: 'count', window: win }),
     metric('mix.returning_order_count', retOrders, { unit: 'count', window: win }),
   ]
+  if (guestRev > 0) {
+    out.push(
+      metric('mix.guest_revenue_share', roundTo(guestRev / (identified + guestRev), 4), {
+        unit: 'ratio',
+        window: win,
+      }),
+    )
+  }
+  return out
 }
 
 /**
