@@ -17,11 +17,42 @@ criterion below it is checked and its tests pass.
 - [x] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [x] Slice 9 — Outcome tracking (flywheel) — schedule/measure + Monitoring view
 - [~] Slice 10 — Stripe billing + gating + Plans page DONE (mock/test-mode); live needs Stripe keys
+- [x] Slice 11 — Integration exports: grounded VIP-segment + SKU-economics CSV downloads
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
-- [ ] Slice 10 — Billing (Stripe tiers) + gating
-- [ ] Slice 11 — Integration exports (Klaviyo/Meta/Google)
-- [ ] Slice 12 — Hardening
-- [ ] Slice 13 — Polish & onboarding
+- [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
+
+## Completed: Marketing + onboarding + move detail + exports + chart (2026-06-28)
+
+Shipped autonomously and deployed to simplesense.co (live; Clerk-gated app, public marketing):
+
+- **Marketing surface (§5/§19.6):** `(marketing)` route group — editorial landing
+  ("Stop drowning in data. Start executing."), `/how-it-works`, `/pricing` (reads TIERS
+  live). Floating pill nav + blossom footer; `marketing.css` ports the warm surface from
+  `@ss/ui` tokens. Public via middleware.
+- **Onboarding (Slice 13):** `/onboarding` 3-step stepper reads live connection + run
+  state and gates each CTA; ClerkProvider redirects sign-up→/onboarding, sign-in→/app.
+- **Move Detail (Slice 7 drill-down):** `/app/moves/[id]` — tenant-scoped, resolves cited
+  `evidenceMetricIds` to real values from the same run (refuses cross-tenant), formats by
+  key/unit. Two-column: evidence table + why + togglable checklist | impact + SVG confidence
+  Ring + apply/schedule + "how we'd ship it". Pure `shipPlan()`/`moveChecklist()` (6 tests).
+- **Exports (Slice 11):** `@ss/core/export` pure `buildVipSegment()`/`buildSkuEconomics()`
+  over the same NormalizedStore the analyzers see; margin fields blank (never fabricated 0)
+  when cost unknown; RFC-4180 `toCsv()` (9 tests). `/api/export/[kind]` tenant-scoped CSV
+  download; ExportButton wired into Customers/Products + move detail.
+- **ParetoChart (§3c):** pure-SVG Lorenz concentration curve on Customers from the real
+  top 1/5/10/20% cumulative shares.
+
+Tests: 116 green. Every slice typechecks + lints clean + `@ss/web build` compiles.
+
+Genuine deadends (require Satya — credentials/decisions, not code):
+- Shopify OAuth real install — needs the app reviewed in the Partner dashboard + a real
+  merchant store to connect (RealShopifyReader implemented, mock-tested).
+- Stripe billing live — needs real secret key + price IDs (test-mode code done).
+- Clerk production — currently DEV keys (dev handshake only); live domain wants a prod
+  instance.
+- Data integrations (GA4 / Meta / Google / Klaviyo) — OAuth apps + keys (export specs ready).
+- **Rotate the secrets pasted in chat** (Anthropic, Supabase DB password, Shopify secret,
+  Clerk secret) — they live only in gitignored env files, but the transcript saw them.
 
 ## Completed: Slice 1 — schema + tenant isolation on Supabase (2026-06-27)
 
