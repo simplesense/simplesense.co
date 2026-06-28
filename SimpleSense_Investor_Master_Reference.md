@@ -9,7 +9,7 @@
 ## 0. What was kept, what was corrected (executive summary)
 
 **Kept (this is genuinely strong work):**
-- **$49 / $99 pricing** — accessible, matches the "can't afford a CMO" ICP, and undercuts Triple Whale / Polar. *(Better than the $99/$299/$699 in the other deck — adopt this one.)*
+- **$0 / $99 / $299 flat pricing** — accessible, matches the "can't afford a CMO" ICP, and sits 2–13× under Triple Whale's GMV-tiered $549–1,349+/mo while never taxing growth. *(Settles the $49/$99 vs $99/$299/$699 debate: two flat paid tiers + free Audit, geo in Basic.)*
 - **Three-scenario ARR projections** (Base / Best / Worst) — the right way to show a forecast; far more credible than a single hockey-stick line.
 - **Conservative, benchmark-cited unit economics** (ARPU, churn, CAC, LTV:CAC, payback, gross margin).
 - **Community-led, founder-led GTM** (Shopify App Store + r/shopify + Talk Shop Discord + build-in-public).
@@ -55,10 +55,11 @@ Your materials make **operator credibility the moat** ("Operator Credibility as 
 
 | Tier | Price | Includes |
 |---|---|---|
-| **Basic** | **$49/mo** | Core geo + Pareto analysis, prescriptive recommendations, basic dashboard, Klaviyo segment export |
-| **Pro** | **$99/mo** | Everything in Basic + cohort/LTV analysis, one-click Klaviyo/Flow actions, priority support, multi-store, API access |
+| **Free Audit** | **$0** | One-time deep store audit, top prescriptive moves (incl. a geo teaser), shareable report — the front door |
+| **Basic** | **$99/mo** | Ranked Moves (core engine), **geo + Pareto** analysis, prescriptive recommendations, Klaviyo/segment export, 1 store |
+| **Pro** | **$299/mo** | Everything in Basic + **one-click execution** (Klaviyo/Flow/ads), full cohort/LTV/retention, outcome-tracking depth, multi-store, API, priority support |
 
-Deliberately accessible vs **Triple Whale (~$99–219+/mo, GMV-tiered)** and **Polar (~$300–750+/mo)** — the right wedge for the $1–15M-GMV operator who can't afford a CMO. *(Replace the $99/$299/$699 tiers in the other deck with this.)*
+Deliberately flat vs **Triple Whale (~$549–1,349+/mo at $1–2.5M GMV, GMV-tiered and climbing)** and **Polar (~$300–750+/mo, GMV-based)** — the right wedge for the $1–15M-GMV operator who can't afford a CMO, and a structural advantage: **we don't charge more as you grow.** Geo lives in Basic on purpose — it's the omnichannel hook, not a paywall.
 
 ---
 
@@ -68,13 +69,13 @@ Conservative and grounded in cited 2026 SaaS / Shopify-app benchmarks. *(Keep yo
 
 | Assumption | Value | Rationale |
 |---|---|---|
-| Blended ARPU | **~$68 (Y1) → ~$82 (Y3)** | $49 Basic / $99 Pro mix |
+| Blended ARPU | **~$150 (Y1) → ~$195 (Y3)** | $99 Basic / $299 Pro mix (Pro share ~25% → ~48%) |
 | Monthly gross churn | **~4.0% (Y1) → 2.5–2.8% (Y2+)** | B2B SaaS median ~3.5–3.8%; daily prescriptive value + one-click actions improve retention |
 | Avg customer lifetime | **~25–30 months** | 1 / monthly churn; switching costs once prescriptions are operationalized |
-| LTV (blended) | **~$1,900–2,400** | Conservative |
+| LTV (blended) | **~$4,000–5,000** | Tracks the ~2.5× ARPU increase at the same churn |
 | CAC (blended) | **Early $250–350 → Mature $450–600** | Low early via App Store + community; founder credibility accelerates trust |
-| LTV:CAC | **6–8:1 once established** | Healthy vs 3:1 floor; top-quartile SaaS ~5.6:1+ |
-| Payback | **4–6 months** | Strong vs 6–12-month SaaS norm |
+| LTV:CAC | **~8–12:1 once established** | Higher price, flat CAC; shown conservatively — true ratio is higher, signaling room to spend on growth |
+| Payback | **~2–3 months** | ~2.5× ARPU on flat CAC pulls payback in |
 | Gross margin | **75–82%** | Low variable cost = LLM inference + infra; the inference line is the swing factor — keep it monitored |
 
 *Sources (as cited in your addendum; retain attribution, keep current): Prys 2026 Shopify App Benchmarks, ChartMogul, Recurly/Vitally churn studies, competitor pricing pages.*
@@ -87,13 +88,13 @@ One reconciled set (your two documents differed slightly — use these):
 
 | Scenario | Year 1 ARR | Year 2 ARR | Year 3 ARR | Drivers |
 |---|---|---|---|---|
-| **Moderate (Base)** | $60–90k (80–110 cust.) | $300–430k (380–480) | **$1.1–1.5M (1,300–1,600)** | Steady App Store + community flywheel; churn → ~2.8%; break-even ~early Y2 |
-| **Best** | $150–220k (180–240) | $800k–1.1M (950–1,200) | **$3.0–4.0M (3,200–4,000)** | Strong reviews + viral content + credibility accelerate; clean Series A path |
-| **Worst** | $30–42k (35–50) | $125–160k (140–180) | **$400–550k (420–550)** | Slower reviews, "AI-generic" perception risk; still viable on tight execution |
+| **Moderate (Base)** | $80–120k (45–70 cust.) | $360–540k (180–270) | **$1.5–2.0M (700–850)** | Steady App Store + community flywheel; churn → ~2.8%; break-even ~late Y1 — flat $99–299 pricing means ~half the customers for a stronger ARR |
+| **Best** | $200–300k (110–170) | $1.1–1.6M (550–800) | **$3.0–4.5M (1,300–1,900)** | Strong reviews + viral content + credibility accelerate; clean Series A path |
+| **Worst** | $40–60k (25–35) | $170–240k (85–120) | **$0.5–0.75M (230–340)** | Slower reviews, "AI-generic" perception risk; still viable on tight execution |
 
 *Frame these as illustrative, assumption-driven scenarios — not a forecast or guarantee. The Base case is the credible planning number; the Best case is the upside, not the expectation.*
 
-> **Note on your other deck:** its single "$13M ARR by Year 3" base case is **not consistent with this pricing and GTM** and reads as too aggressive. At ~$82 blended ARPU, $13M would require ~160k customers — far beyond the SOM. Bring that deck's projections down to these scenarios, or reframe its number as a long-horizon upside, not a Year-3 base.
+> **Note on your other deck:** its single "$13M ARR by Year 3" base case is **not consistent with this pricing and GTM** and reads as too aggressive. At ~$185 blended ARPU, $13M would require ~5,900 customers — still well beyond the SOM. Bring that deck's projections down to these scenarios, or reframe its number as a long-horizon upside, not a Year-3 base.
 
 ---
 
@@ -101,7 +102,7 @@ One reconciled set (your two documents differed slightly — use these):
 
 - **TAM — ~$25–29B (2026), ~14–17% CAGR.** Global e-commerce analytics software market. Multiple firms converge here ([Coherent Market Insights](https://www.coherentmarketinsights.com/industry-reports/e-commerce-analytics-market), [Business Research Insights](https://www.businessresearchinsights.com/market-reports/e-commerce-analytics-market-102447)). *(Use this well-sourced figure; the "$12.5B prescriptive subset" in the deck is a narrower, harder-to-defend cut — if you keep it, label it explicitly as the prescriptive sub-segment.)*
 - **SAM — ~250–400k stores.** Shopify + WooCommerce + BigCommerce merchants at $1–15M annual revenue needing decision support beyond dashboards. At ~$1k blended ACV, that's a **~$0.25–0.4B/yr serviceable revenue** opportunity.
-- **SOM — ~2,500–8,000 stores (3–5 yrs, ~1–3% of SAM)**, supporting **~$2–7.7M ARR** at $68–82 blended ARPU. Consistent with the Base/Best scenarios above.
+- **SOM — ~1,600–4,000 stores (3–5 yrs, ~0.5–1.5% of SAM)**, supporting **~$3.5–9M ARR** at $150–195 blended ARPU. Consistent with the Base/Best scenarios above.
 
 ---
 
@@ -109,13 +110,13 @@ One reconciled set (your two documents differed slightly — use these):
 
 | Competitor | Core focus | Pricing (approx) | Key weakness vs Simple Sense |
 |---|---|---|---|
-| **Triple Whale** | Attribution, profitability, AI agents (Moby) | ~$99–219+/mo (GMV-tiered) | Dashboard/attribution-heavy; AI is general agents, not specialized prescriptive operator guidance |
+| **Triple Whale** | Attribution, profitability, AI agents (Moby) | ~$549–1,349+/mo at $1–2.5M GMV (GMV-tiered, climbing) | Dashboard/attribution-heavy; AI is general agents, not specialized prescriptive operator guidance |
 | **Polar Analytics** | Data unification, AI insights, warehouse | ~$300–750+/mo | Higher price, BI/warehouse-focused; still a reporting + insights layer, not prescriptions |
 | **Littledata** | Server-side tracking / data layer | ~$199+/mo + per-order | Narrower (tracking-first); complementary, not a prescription platform |
 | **Northbeam** | Attribution, incrementality, MMM | Enterprise | Complex/expensive; geared to $40M+ brands; less accessible for $1–15M |
 | **Lifetimely / BeProfit / Saras, etc.** | Profit tracking, P&L, cohorts | $50–few hundred | Dashboards / narrow metrics; lack operator-level prescriptions |
 
-**Takeaway:** the market is strong at *what happened* and *where attribution broke*. The repeated merchant complaint — *"I see the numbers but don't know what to change"* — remains largely unaddressed at the prescriptive depth Simple Sense targets. Reconcile the one internal inconsistency in your materials: Triple Whale's effective price is **GMV-tiered (~$99 entry, materially higher for real stores)** — state it that way consistently.
+**Takeaway:** the market is strong at *what happened* and *where attribution broke*. The repeated merchant complaint — *"I see the numbers but don't know what to change"* — remains largely unaddressed at the prescriptive depth Simple Sense targets. Reconcile the one internal inconsistency in your materials: Triple Whale's effective price is **GMV-tiered (~$549–1,349/mo at $1–2.5M GMV, climbing — far above the ~$99–219 some sources show for sub-$250k GMV)** — state it that way consistently, and lead with your flat-pricing advantage.
 
 *Comparable funding context (verified): Triple Whale raised a $2.7M seed (NFX) then scaled to a $25M Series B on traction ([TechCrunch](https://techcrunch.com/2023/02/02/triple-whale-raises-25m-for-its-shopify-data-platform/)); Polar raised a ~$1.4M seed (2021) then $9M + ~$18–19M Series A rounds ([Polar](https://www.polaranalytics.com/post/polar-analytics-raises-9m-to-empower-modern-retail-brands-to-scale-seamlessly-within-the-shopify-ecosystem-and-beyond)). The pattern — small seed → prove → scale — is exactly the staged path in Section 10.*
 
@@ -152,7 +153,7 @@ Why this corrects the uploaded $400–500k @ $4–6M pre:
 
 **A strategic fork worth naming (your own numbers surface it):** your sober financials show a credible path to **break-even on very little capital**. That gives you leverage and two honest options — (a) raise a lean **$1.0–1.5M pre-seed** to go faster and de-risk the hire + GTM, or (b) **bootstrap toward profitability** and raise a larger seed later from maximum strength. Either is defensible. What you should *not* do is raise $400–500k — it's the worst of both: enough to dilute, too little to meaningfully accelerate.
 
-**The $5M is your *next* round** — a real seed in 12–18 months, priced on traction (live on the App Store, 150–250 paying customers, signed agency channel, ROI case studies). That's the Triple Whale / Polar path.
+**The $5M is your *next* round** — a real seed in 12–18 months, priced on traction (live on the App Store, ~250–400 paying customers, ~$0.6–0.9M ARR exit run-rate, signed agency channel, ROI case studies). That's the Triple Whale / Polar path.
 
 **On the slide:** *"Raising $1.0M pre-seed. Instrument and valuation to be set with counsel."* Carry the cap verbally: *"$1.0M on a post-money SAFE, targeting a ~$10M cap, with a clear path to a $5M seed on traction."*
 
@@ -177,7 +178,7 @@ You have two decks and several memos. Pick **one** deck to send and align it to 
 
 - **Founder bio:** remove "sold for ~$400M"; use the verified bio in Section 1. *(Both decks / addendum.)*
 - **Moat slide:** retitle from "Operator Credibility as the Moat" → credibility as wedge + **outcome-data flywheel** as the moat. *(Uploaded deck slide 10 / addendum §6.)*
-- **Pricing:** standardize on **$49 / $99**. *(The other deck's $99/$299/$699 → replace.)*
+- **Pricing:** standardize on **$0 / $99 / $299 flat** (geo in Basic). *(Resolves the $49/$99 vs $99/$299/$699 question — two flat paid tiers + free Audit.)*
 - **Projections:** use the **three-scenario** set in Section 5; bring the other deck's "$13M Y3" down or reframe as long-horizon upside.
 - **The ask:** **$1.0M pre-seed, ~$10M SAFE cap**, "to be set with counsel." *(Replace $400–500k @ $4–6M and the $5M memo.)*
 - **Stage label:** "pre-seed," not "seed." *(Uploaded deck title "Seed Investment Memorandum" → "Pre-Seed.")*

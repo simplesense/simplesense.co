@@ -39,7 +39,26 @@ AC results:
       keys; the Org/User schema + isolation are done, and a dev-auth shim / Clerk wiring is the
       remaining piece. Tracked for the auth pass.
 
-Next: wire persistence (store analysis runs/recommendations) + auth shim, then Slice 2 (Shopify OAuth).
+## Completed: Persistence + dev-auth shim (2026-06-27)
+
+The dashboard + Audit now read from **Supabase**, not in-memory fixtures:
+- `@ss/db`: `loadNormalizedStore` (DB→domain), `ingestNormalizedStore` (idempotent
+  domain→DB upserts), seed now ingests the demo analytics (68 orders, locations, store flags).
+- `@ss/jobs`: `analyzeStore` (load → analyze → grounded engine → PERSIST run/metrics/recs);
+  `openRecommendations`/`latestMetricValue` read helpers.
+- `apps/web`: dev-auth shim (`getSession` → demo org; Clerk-ready), `getDashboard`
+  (tenant-scoped, triggers a run on first load), `setMoveStatus` server action
+  (tenant-scoped persistence of VIEWED/IMPLEMENTED/DISMISSED).
+- Schema evolved: Store gains currency/hasPhysicalLocations/freeShippingThreshold;
+  StoreLocation model; Order gains ship-to fields (pushed to Supabase).
+
+Verified live: /app analyzes once (54s, live Claude), persists, then reloads in ~1s from
+DB; dismiss persists across reloads (5→4); 1 run / 5 recs / 47 metrics in Supabase.
+
+Pricing updated to the RESOLVED $0/$99/$299 tiers (geo+Pareto in Basic, one-click in Pro).
+
+Next: Slice 2 (Shopify OAuth — build flow + HMAC + token encryption with mocks; live
+connect needs Shopify dev-store creds), then GitHub/Vercel hosted preview.
 
 ## Build order (chosen 2026-06-27): HEART-FIRST
 

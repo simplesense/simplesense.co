@@ -1,19 +1,26 @@
 'use client'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import type { Recommendation } from '@ss/core'
 import { MoveCard, recommendationToMove } from '@ss/ui'
+import { setMoveStatus } from '@/app/app/actions'
 
 type Status = 'NEW' | 'IMPLEMENTED' | 'DISMISSED'
 
 /**
- * Interactive "This week's moves" list. Apply marks a move IMPLEMENTED (which, once the
- * DB + flywheel land, schedules the §8.6 outcome job); "Not now" dismisses it. State is
- * local for the demo — persistence arrives with the data slices.
+ * Interactive "This week's moves" list. Apply marks a move IMPLEMENTED, "Not now"
+ * dismisses it — both persist to the DB via a tenant-scoped server action (optimistic
+ * local update). IMPLEMENTED will trigger the §8.6 outcome job once Slice 9 lands.
  */
 export function MovesList({ recommendations }: { recommendations: Recommendation[] }) {
   const [statuses, setStatuses] = useState<Record<string, Status>>({})
+  const [, startTransition] = useTransition()
   const statusOf = (id: string): Status => statuses[id] ?? 'NEW'
-  const set = (id: string, s: Status) => setStatuses((prev) => ({ ...prev, [id]: s }))
+  const set = (id: string, s: Status) => {
+    setStatuses((prev) => ({ ...prev, [id]: s })) // optimistic
+    startTransition(() => {
+      void setMoveStatus(id, s)
+    })
+  }
 
   const open = recommendations.filter((r) => statusOf(r.id) === 'NEW')
   const applied = recommendations.filter((r) => statusOf(r.id) === 'IMPLEMENTED')

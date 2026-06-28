@@ -67,23 +67,24 @@
 
 ## C. Confirm early — building to the default, but tell me before it's expensive to change
 
-### 9. Pricing tier split — Basic $49 / Pro $99
-- **Proposed default:** Two tiers (deliberately under Triple Whale ~$99–219+ and Polar ~$300–750+), with a **free Simple Sense Audit** as the front door:
+### 9. Pricing tier split — Free Audit $0 / Basic $99 / Pro $299 ✅ RESOLVED
+- **Decision (Satya, this session):** Two flat paid tiers plus the free Audit. **Geo + Pareto live in Basic** — geo is the omnichannel *wedge*, so it's the hook, not a paywall. Pro earns its upgrade on execution + scale, not on gating the wedge.
 
-  | | **Basic — $49/mo** | **Pro — $99/mo** |
-  |---|---|---|
-  | Ranked **Moves** (core engine) | ✅ | ✅ |
-  | Free store Audit | ✅ | ✅ |
-  | Stores included | 1 | Multi-store |
-  | Cohort / LTV / retention depth | basic | ✅ full |
-  | Integration **exports** + one-click actions (Klaviyo, Shopify Flow, ads) | export only | ✅ one-click |
-  | Outcome-tracking depth (the flywheel loop) | summary | ✅ full |
-  | Re-analysis frequency | standard | more frequent |
-  | API access | — | ✅ |
-  | Priority support | — | ✅ |
+  | | **Free Audit — $0** | **Basic — $99/mo** | **Pro — $299/mo** |
+  |---|---|---|---|
+  | Who | The front door | Single-store operators | Multi-location / scaling operators |
+  | Ranked **Moves** (core engine) | top moves only | ✅ full | ✅ full |
+  | **Geo + Pareto** analysis | teaser in audit | ✅ | ✅ |
+  | Klaviyo / segment **export** | — | ✅ | ✅ |
+  | **One-click execution** (Klaviyo, Shopify Flow, ads) | — | — | ✅ |
+  | Cohort / LTV / retention depth | — | basic | ✅ full |
+  | Outcome-tracking depth (flywheel loop) | — | summary | ✅ full |
+  | Re-analysis frequency | one-time | standard | more frequent |
+  | Stores · API · priority support | — | 1 store | multi-store · API · priority |
 
-- **Why confirm:** The exact feature line between Basic and Pro drives blended ARPU (~$68→$82/mo in the model), the upgrade narrative, and what gets gated in the UI — changing it after build means re-touching billing, entitlements, and several screens.
-- **Status:** 🟠 **CONFIRM exact split.** Default above is buildable today; flag for Satya's sign-off before wiring Stripe entitlements.
+- **Pricing context (web-verified):** Triple Whale is **GMV-tiered and far above the deck's old "$99–219"** — roughly $549/mo (Foundation) to $1,349/mo (Automate) at $1–2.5M GMV, climbing with revenue. So $99/$299 *flat* sits 2–13× under the incumbent **and** doesn't tax growth — a sharper wedge than the number alone. Sources: triplewhale.com/pricing; headwestguide.com/tools/triple-whale; getpulsesignal.com/pricing/triplewhale.
+- **Model impact (now reflected in deck + Master Reference):** Blended ARPU ~$68→82/mo → **~$150→195/mo** (assumes Pro mix ~25%→~48%). Base Y3 reframed to **~$1.5–2.0M ARR on only ~700–850 customers** (was 1,300–1,600); LTV ~$4–5k; CAC payback ~2–3 mo; break-even pulled to ~late Y1.
+- **Status:** ✅ **RESOLVED — wire Stripe entitlements to $0 / $99 / $299, with geo entitled at Basic.** Deferred sub-question: a 3rd "Scale" tier (heavy multi-store / API) once outcome data justifies it — not in MVP.
 
 ### 10. Attribution / outcome window
 - **Proposed default:** **30-day** window to attribute a measured lift to an implemented Move.
@@ -101,15 +102,4 @@
 
 _The build agent adds any decision it hits that isn't covered above — with its chosen default, a one-line rationale, and a Status — so this stays the single decision record._
 
-- **D.1 — Local/test database engine.** Host has no Docker/Postgres/`psql`, and §5
-  assumed managed Postgres. **Default chosen:** PGlite (embedded WASM Postgres) when
-  `DATABASE_URL` is empty; Neon/Supabase via `DATABASE_URL` in prod. Prisma schema is
-  the single source of truth. Risk: **low** (real PG semantics; reversible). See ADR-002.
-- **D.2 — Package manager.** No global `pnpm`; global npm install lacked perms. **Default:**
-  pnpm via corepack, pinned `pnpm@9.15.0` in `packageManager`. Risk: **low**. See ADR-003.
-- **D.3 — Default `LLM_MODEL`.** Set `claude-sonnet-4-6` as the cost-balanced default for
-  Stage-3 synthesis (env-overridable; Opus tier available for higher quality). Aligns with
-  the "prefer lowest-cost workable tier" preference. Risk: **low** (model-agnostic engine).
-  Confirm the exact current model string at launch (ties to §11). See ADR-004.
-- **D.4 — Linter.** oxlint (not ESLint) for speed and to host the bundle's
-  `_adherence.oxlintrc.json` brand-adherence rules. Risk: **low**. See ADR-005.
+- _(none yet)_

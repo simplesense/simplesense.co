@@ -1,34 +1,37 @@
 import { prisma } from '../src/client'
+import { DEMO } from '../src/demo-ids'
+import { makeSeedStore } from '../src/demo-fixture'
+import { ingestNormalizedStore } from '../src/ingest'
 
-/** Idempotent seed: a demo org/user/store. Safe to re-run (fixed ids + upserts). */
+/** Idempotent seed: demo org/user/store/subscription + ingested demo analytics. */
 async function main(): Promise<void> {
   const org = await prisma.organization.upsert({
-    where: { id: 'demo_org' },
+    where: { id: DEMO.orgId },
     update: {},
-    create: { id: 'demo_org', name: 'Wildflower Skincare' },
+    create: { id: DEMO.orgId, name: DEMO.storeName },
   })
   await prisma.user.upsert({
-    where: { email: 'owner@wildflower.example' },
+    where: { email: DEMO.userEmail },
     update: {},
-    create: { id: 'demo_user', orgId: org.id, email: 'owner@wildflower.example', role: 'OWNER' },
+    create: { id: DEMO.userId, orgId: org.id, email: DEMO.userEmail, role: 'OWNER' },
   })
   await prisma.store.upsert({
-    where: { shopDomain: 'wildflower.myshopify.com' },
+    where: { shopDomain: DEMO.shopDomain },
     update: {},
-    create: {
-      id: 'demo_store',
-      orgId: org.id,
-      shopDomain: 'wildflower.myshopify.com',
-      syncStatus: 'READY',
-    },
+    create: { id: DEMO.storeId, orgId: org.id, shopDomain: DEMO.shopDomain, syncStatus: 'PENDING' },
   })
   await prisma.subscription.upsert({
     where: { orgId: org.id },
     update: {},
     create: { id: 'demo_sub', orgId: org.id, tier: 'PRO', status: 'ACTIVE' },
   })
+
+  // Ingest the demo analytics (idempotent upserts) so the dashboard has real DB data.
+  const store = makeSeedStore(new Date())
+  await ingestNormalizedStore(prisma, DEMO.orgId, DEMO.storeId, store)
+
   // eslint-disable-next-line no-console
-  console.log('Seeded demo org/user/store/subscription')
+  console.log(`Seeded ${DEMO.orgId}: org/user/store/subscription + ${store.orders.length} orders`)
 }
 
 main()

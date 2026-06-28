@@ -1,5 +1,7 @@
 import { MoveCard, recommendationToMove } from '@ss/ui'
-import { buildAudit } from '@/lib/demo/audit'
+import { buildAudit } from '@/lib/audit'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AuditPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

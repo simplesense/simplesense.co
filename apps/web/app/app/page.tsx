@@ -1,7 +1,10 @@
 import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { MovesList } from '@/components/MovesList'
-import { runDemo, metricValue } from '@/lib/demo/run-demo'
+import { getDashboard } from '@/lib/dashboard'
+
+// Always render fresh from the DB (recommendations change as the user applies/dismisses).
+export const dynamic = 'force-dynamic'
 
 const usd = (v: number | null): string =>
   v == null
@@ -14,11 +17,10 @@ const usd = (v: number | null): string =>
 const pct = (v: number | null): string => (v == null ? '—' : `${Math.round(v * 100)}%`)
 
 export default async function MovesPage() {
-  const demo = await runDemo()
-  const m = demo.metrics
+  const data = await getDashboard()
 
   return (
-    <AppShell storeName={demo.storeName} openMoves={demo.recommendations.length} model={demo.model}>
+    <AppShell storeName={data.storeName} openMoves={data.recommendations.length} model={data.model}>
       <div
         style={{
           display: 'grid',
@@ -29,29 +31,21 @@ export default async function MovesPage() {
       >
         <MetricCard
           label="Open moves"
-          value={demo.recommendations.length}
+          value={data.recommendations.length}
           icon="compass"
           delta="ranked"
           deltaTone="primary"
         />
         <MetricCard
           label="Trailing revenue (24m)"
-          value={usd(metricValue(m, 'pareto.revenue_total'))}
+          value={usd(data.metrics.revenue)}
           icon="cash-coin"
         />
-        <MetricCard
-          label="Top-20% revenue share"
-          value={pct(metricValue(m, 'pareto.top20_revenue_share'))}
-          icon="people"
-        />
-        <MetricCard
-          label="Revenue within 5 mi"
-          value={pct(metricValue(m, 'geo.within_5mi_revenue_share'))}
-          icon="geo-alt"
-        />
+        <MetricCard label="Top-20% revenue share" value={pct(data.metrics.top20)} icon="people" />
+        <MetricCard label="Revenue within 5 mi" value={pct(data.metrics.within5)} icon="geo-alt" />
       </div>
 
-      <MovesList recommendations={demo.recommendations} />
+      <MovesList recommendations={data.recommendations} />
     </AppShell>
   )
 }

@@ -11,21 +11,35 @@ describe('SIGNAL_THRESHOLDS', () => {
 })
 
 describe('tiers', () => {
-  it('prices match the $49 / $99 decision', () => {
-    expect(TIERS.basic.priceMonthly).toBe(49)
-    expect(TIERS.pro.priceMonthly).toBe(99)
+  it('prices match the $0 / $99 / $299 decision', () => {
+    expect(TIERS.free.priceMonthly).toBe(0)
+    expect(TIERS.basic.priceMonthly).toBe(99)
+    expect(TIERS.pro.priceMonthly).toBe(299)
   })
 
-  it('gating: Pro unlocks multi-store + API; Basic does not', () => {
+  it('geo + Pareto is the wedge: entitled at Basic, teaser at Free', () => {
+    expect(tierAllows('basic', 'geoPareto')).toBe(true)
+    expect(tierAllows('pro', 'geoPareto')).toBe(true)
+    expect(tierAllows('free', 'geoPareto')).toBe(false)
+  })
+
+  it('one-click execution is Pro-only; export is Basic+', () => {
+    expect(tierAllows('pro', 'oneClickExecution')).toBe(true)
+    expect(tierAllows('basic', 'oneClickExecution')).toBe(false)
+    expect(tierAllows('basic', 'segmentExport')).toBe(true)
+    expect(tierAllows('free', 'segmentExport')).toBe(false)
+  })
+
+  it('Pro unlocks multi-store + API; Basic does not', () => {
     expect(tierAllows('pro', 'multiStore')).toBe(true)
     expect(tierAllows('pro', 'apiAccess')).toBe(true)
     expect(tierAllows('basic', 'multiStore')).toBe(false)
     expect(tierAllows('basic', 'apiAccess')).toBe(false)
   })
 
-  it('the free Audit + ranked Moves are in every tier', () => {
+  it('the free Audit is available in every tier', () => {
+    expect(tierAllows('free', 'freeAudit')).toBe(true)
     expect(tierAllows('basic', 'freeAudit')).toBe(true)
-    expect(tierAllows('basic', 'rankedMoves')).toBe(true)
     expect(tierAllows('pro', 'freeAudit')).toBe(true)
   })
 })

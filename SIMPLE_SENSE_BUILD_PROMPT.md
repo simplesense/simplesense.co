@@ -1,9 +1,11 @@
 # SIMPLE SENSE — COMPOUND ENGINEERING BUILD PROMPT
-**Version 1.2 · June 2026 · Single self-contained build specification for an autonomous coding agent**
+**Version 1.3 · June 2026 · Single self-contained build specification for an autonomous coding agent**
 
-*v1.1 updates: pricing → \$49 Basic / \$99 Pro; geo prescriptions now branch on physical-store presence (omnichannel beachhead vs online-only); analyzer catalog aligned to `SimpleSense_Insight_Library.md` and expanded (returns, per-SKU margin, free-ship threshold, replenishment cadence, channel profitability as a gated fast-follow).*
+*v1.1 updates: pricing → \$0 Audit / \$99 Basic / \$299 Pro (flat); geo prescriptions now branch on physical-store presence (omnichannel beachhead vs online-only); analyzer catalog aligned to `SimpleSense_Insight_Library.md` and expanded (returns, per-SKU margin, free-ship threshold, replenishment cadence, channel profitability as a gated fast-follow).*
 
 *v1.2 updates: added **§19 Design System & UI Implementation** — the SimpleSense Design System handoff (warm cream / signal-blue / clay; Instrument Serif + Inter + Manrope; Bootstrap Icons) is now the canonical UI source of truth, with verbatim tokens, the component inventory, the `MoveCard` ⇄ `Recommendation` mapping, and a screen→slice map. Cross-referenced from §0, §6, §8.3, §11.4, and Slices 2/7/8/9/10.*
+
+*v1.3 updates: **pricing finalized** — Free Audit \$0 / Basic \$99 / Pro \$299, two flat paid tiers (not GMV-tiered). **Geo + Pareto are entitled at Basic** — the omnichannel wedge, the hook rather than a paywall; Pro adds one-click execution, full cohort/LTV/retention depth, multi-store, API, and priority support. Wire Stripe entitlements to these three plans. See `OPEN_QUESTIONS.md` #9 (RESOLVED).*
 
 > You are an autonomous senior full-stack engineer. This document is your complete brief. Read it **in full** before writing any code. It defines *what* to build (Simple Sense), *how* the system is architected, and — critically — the **self-driving build loop** you will run end to end. You will plan, build, test, self-review, record what you learned, and repeat, slice by slice, until the Definition of Done is met. Do not wait for further human prompting except where this document explicitly tells you to pause.
 
@@ -38,7 +40,7 @@ DTC / omnichannel merchants doing **\$1M–\$15M GMV** on **Shopify** (Woo / Big
 
 ### 1.3 The wedge and the business
 - **Wedge:** a free **"Simple Sense Audit"** — connect your store, get one high-signal report that proves value in a single sitting.
-- **Tiers (config, not hardcoded business logic):** Basic \$49/mo, Pro \$99/mo. The free Audit is the front door; **Pro** adds cohort/LTV analysis, one-click actions, multi-store, API access, and priority support.
+- **Tiers (config, not hardcoded business logic):** Basic \$99/mo, Pro \$299/mo — both flat, never GMV-tiered. The free Audit is the front door; **geo + Pareto are entitled at Basic** (the omnichannel wedge); **Pro** adds one-click execution (Klaviyo/Flow/ads), full cohort/LTV/retention, outcome-tracking depth, multi-store, API access, and priority support.
 - **The moat (build for it from day one):** a **compounding outcome loop** — every recommendation is tagged with the *measured* revenue lift it produced, so prescriptions get sharper as the install base grows. Dashboards stop at "here's your data"; we record **what actually worked**.
 
 ### 1.4 Two reference insights the product must be able to generate
@@ -398,7 +400,7 @@ When a recommendation is marked `IMPLEMENTED`: schedule a job that, after the at
 | **Klaviyo** | Generate/export the recommended segment definition (e.g., top-20% VIP) | One-click create segment + flow via API |
 | **Meta Ads** | Output the geo-fence / audience action as a clear, copy-ready spec | API-driven campaign edits |
 | **Google Ads** | Same — export the recommended change | API-driven changes |
-| **Stripe** | Tiered subscriptions (\$49 Basic / \$99 Pro), plan gating, webhooks for status | Usage-based add-ons |
+| **Stripe** | Tiered subscriptions (\$0 Audit / \$99 Basic / \$299 Pro, flat), plan gating, webhooks for status | Usage-based add-ons |
 | **Resend** | Transactional: welcome, sync-complete, "your audit is ready", outcome report | Lifecycle campaigns |
 
 **Note on inbound data:** the Meta / Google / Klaviyo rows above are MVP **outbound** (action exports) only. Their **inbound read scopes** — ad spend (Meta/Google) and email/SMS revenue + flow inventory (Klaviyo) — are what power the **fast-follow channel-profitability and owned-channel analyzers** in §8.1. Wire the inbound side later; do not block MVP on it.
@@ -589,7 +591,7 @@ The human (Satya) will confirm these; until then, make the **stated default assu
 1. **Auth provider:** default **Clerk** for speed. (Alt: Auth.js.)
 2. **Embedded vs standalone Shopify app:** default **standalone connect-your-store** for MVP (fits the free-Audit wedge). Embedded App Bridge is later.
 3. **DuckDB vs pure Postgres** for analyzers: default **Postgres-only** for MVP simplicity; add DuckDB only if performance demands.
-4. **Tier feature gating specifics:** default — **Basic (\$49)** = core ranked recommendations + 1 store + the free Audit; **Pro (\$99)** = + cohort/LTV analysis, integration exports + one-click actions, outcome-tracking depth, multi-store, API access, priority support, more frequent re-analysis. **Confirm the exact split.**
+4. **Tier feature gating specifics:** **Basic (\$99)** = core ranked Moves + geo + Pareto + Klaviyo/segment export + 1 store + the free Audit; **Pro (\$299)** = + one-click execution (Klaviyo/Flow/ads), full cohort/LTV/retention, outcome-tracking depth, multi-store, API access, priority support, more frequent re-analysis. **RESOLVED — geo entitled at Basic; see `OPEN_QUESTIONS.md` #9.**
 5. **Attribution window for outcome measurement:** default **30 days**; confirm.
 6. **LLM model + token budget:** set via env; confirm the current recommended Claude model at build time.
 7. **Hosting accounts/keys:** assume the human provisions Shopify dev store, Anthropic, Stripe, Inngest, Neon/Supabase, Clerk, Resend keys. Flag any missing key as an external blocker.
@@ -645,12 +647,12 @@ App shell = **fixed left sidebar (`16.5rem`) + sticky blurred topbar (`4rem`)**,
 - **"Geography"** · `geo-alt` → geo / trade-area detail — the **omnichannel hero**; branches physical (BOPIS) vs online-only (regional) per §1.4 / §8.1.
 - **"Products"** · `box-seam` → per-SKU true-margin detail.
 - **"Connections"** · `plug` → **Slice 2** — Shopify + integrations connect.
-- **"Plans & billing"** · `credit-card` → **Slice 10** — Stripe; pricing shows **\$49 Basic / \$99 Pro**.
+- **"Plans & billing"** · `credit-card` → **Slice 10** — Stripe; pricing shows **\$0 Audit / \$99 Basic / \$299 Pro (flat)**.
 - **"Settings"** · `gear` → account / store settings.
 - **Onboarding** (`Onboarding.jsx`, separate flow) → post-connect onboarding.
 
 ### 19.6 Marketing surface (`ui_kits/marketing/`)
-`index.html` (warm editorial landing: floating pill nav, Instrument Serif hero, full-bleed product video with a faint white tint, integrations band, blossom footer), `how-it-works.html`, `pricing.html`, `marketing.css`. The **pricing page must reflect \$49 / \$99** with the free Audit as the wedge. Centered, max-width ~1024–1152px.
+`index.html` (warm editorial landing: floating pill nav, Instrument Serif hero, full-bleed product video with a faint white tint, integrations band, blossom footer), `how-it-works.html`, `pricing.html`, `marketing.css`. The **pricing page must reflect \$0 / \$99 / \$299 (flat, geo in Basic)** with the free Audit as the wedge. Centered, max-width ~1024–1152px.
 
 ### 19.7 Brand reconciliation (decision flag for Satya)
 This warm system — **cream / signal-blue / clay, Instrument Serif + Inter + Manrope** — is the canonical **product-UI** brand and **supersedes the investor deck's navy/teal + Cambria** for the app and marketing site. The bundle even ships updated warm-style deck slides (`slides/`). **Decide:** either re-skin the investor deck to this warm system (one coherent brand) or knowingly keep two aesthetics (deck = navy/teal artifact; product = warm editorial). Don't let the build silently fork the brand without that call.

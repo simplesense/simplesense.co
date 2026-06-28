@@ -63,6 +63,19 @@ Result: **5 moves, 0 rejected** on the next live run, while the `$999,999` hallu
 and the uncontextualized-`24` tests still reject. Lesson: validate the grounded layer
 against the *real* model early — synthetic mocks won't surface prompt/validator mismatch.
 
+### Next env loading + persistence (2026-06-27)
+
+- **Next loads `apps/web/.env.local`, NOT the repo-root `.env`.** The dashboard's Prisma
+  client threw `Environment variable not found: DATABASE_URL` until DATABASE_URL/DIRECT_URL
+  were added to `apps/web/.env.local` (root `.env` is for CLI tooling like Prisma migrate/seed).
+- **Persistence replaces the in-memory demo cache.** `/app` now: load 68 orders from
+  Supabase → analyze → live Claude → persist AnalysisRun+Metrics+Recommendations. First
+  load ~54s; reload ~1s (reads the persisted run; no repeat Claude call). Verified rows in
+  Supabase: 1 run, 5 recs, 47 metrics.
+- **Honor persisted status on reload.** The dashboard must query OPEN moves
+  (status NEW/VIEWED) — `openRecommendations` — or dismissed/applied moves reappear after a
+  refresh. Verified: dismiss → 5→4 cards across reloads.
+
 ### Supabase connectivity (2026-06-27)
 
 The direct host `db.<ref>.supabase.co` is **IPv6-only** (AAAA only). This machine has IPv6,

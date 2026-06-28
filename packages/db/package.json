@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^6.2.1"
+    "@prisma/client": "^6.2.1",
+    "@ss/core": "workspace:*"
   },
   "devDependencies": {
     "prisma": "^6.2.1",

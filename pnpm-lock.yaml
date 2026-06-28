@@ -32,9 +32,15 @@ importers:
       '@ss/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@ss/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@ss/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@ss/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
       '@ss/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -85,6 +91,9 @@ importers:
       '@prisma/client':
         specifier: ^6.2.1
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@ss/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       prisma:
         specifier: ^6.2.1
@@ -104,6 +113,28 @@ importers:
       '@ss/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
+  packages/jobs:
+    dependencies:
+      '@ss/config':
+        specifier: workspace:*
+        version: link:../config
+      '@ss/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ss/db':
+        specifier: workspace:*
+        version: link:../db
+      '@ss/engine':
+        specifier: workspace:*
+        version: link:../engine
     devDependencies:
       typescript:
         specifier: ^5.7.3

@@ -83,23 +83,40 @@ model User {
 }
 
 model Store {
-  id             String       @id @default(cuid())
-  orgId          String
-  shopDomain     String       @unique
-  accessTokenEnc String? // ENCRYPTED at rest, never logged
-  syncStatus     SyncStatus   @default(PENDING)
-  lastSyncedAt   DateTime?
-  createdAt      DateTime     @default(now())
-  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id                    String       @id @default(cuid())
+  orgId                 String
+  shopDomain            String       @unique
+  accessTokenEnc        String? // ENCRYPTED at rest, never logged
+  currency              String       @default("USD")
+  hasPhysicalLocations  Boolean      @default(false)
+  freeShippingThreshold Decimal?
+  syncStatus            SyncStatus   @default(PENDING)
+  lastSyncedAt          DateTime?
+  createdAt             DateTime     @default(now())
+  org                   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  customers     Customer[]
-  products      Product[]
-  orders        Order[]
-  analysisRuns  AnalysisRun[]
+  customers       Customer[]
+  products        Product[]
+  orders          Order[]
+  locations       StoreLocation[]
+  analysisRuns    AnalysisRun[]
   recommendations Recommendation[]
-  audits        Audit[]
+  audits          Audit[]
 
   @@index([orgId])
+}
+
+model StoreLocation {
+  id      String  @id @default(cuid())
+  storeId String
+  name    String
+  lat     Float?
+  lng     Float?
+  city    String?
+  region  String?
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
 }
 
 // --- Ingested analytics data (idempotent upserts keyed on shopify ids) ---
@@ -148,6 +165,13 @@ model Order {
   refundedAmount Decimal         @default(0)
   sourceName     String?
   createdAt      DateTime
+  // ship-to (Shopify orders carry their own destination, distinct from the customer)
+  shipCity       String?
+  shipRegion     String?
+  shipCountry    String?
+  shipZip        String?
+  shipLat        Float?
+  shipLng        Float?
   store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
   lineItems      OrderLineItem[]

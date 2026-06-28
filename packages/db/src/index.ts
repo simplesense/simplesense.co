@@ -5,3 +5,7 @@
 export { prisma } from './client'
 export * from '@prisma/client'
 export * from './tenancy'
+export * from './load-store'
+export * from './ingest'
+export { makeSeedStore } from './demo-fixture'
+export { DEMO } from './demo-ids'
