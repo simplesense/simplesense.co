@@ -41,3 +41,15 @@ export function safeShare(numerator: number, denominator: number): number | null
   if (denominator === 0) return null
   return numerator / denominator
 }
+
+/**
+ * Median of a list (linear interpolation of the two middle values for even counts).
+ * Empty list → null (insufficient data). Does not mutate the input.
+ */
+export function median(xs: readonly number[]): number | null {
+  if (xs.length === 0) return null
+  const sorted = [...xs].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 1) return sorted[mid] as number
+  return ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2
+}

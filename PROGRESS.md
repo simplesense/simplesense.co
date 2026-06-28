@@ -21,7 +21,40 @@ criterion below it is checked and its tests pass.
 - [ ] Slice 12 — Hardening
 - [ ] Slice 13 — Polish & onboarding
 
-## Current slice: Slice 0 — Repo, tooling, CI
+## Build order (chosen 2026-06-27): HEART-FIRST
+
+Satya chose heart-first + autonomous (commit per slice). Execution order:
+**Slice 4 (analyzers) → 5 (signals) → 6 (engine: grounding+ranking, mock LLM) → UI port
+(packages/ui) → 7 (dashboard) → 8 (public Audit)** on a seed fixture store — a runnable,
+grounded demo with no credentials. Then the plumbing: **1 (schema/tenant) → 2 (Shopify
+OAuth) → 3 (ingestion) → 9 (outcomes) → 10 (billing) → 11 (exports) → 12 (hardening) →
+13 (onboarding)**, each behind typed interfaces with mocks until keys are supplied.
+
+## Current slice: Slice 4 — Analyzers (pure, deterministic)
+
+Plan:
+
+- packages/core: normalized domain types (Order/Customer/Product/LineItem/Address/
+  StoreLocation/NormalizedStore), the Metric model, pure helpers (math/geo/window).
+- MVP analyzers: pareto, geography (physical-vs-online branch + trade-area overlap),
+  rfm, cohort (+2nd→3rd, time-to-second), replenishment, affinity, sku-margin,
+  discount, returns, aov+freeship, new-vs-returning, acquisition. Gated
+  (channel-profitability, owned-channel) emit flagged "insufficient".
+- Known-answer fixtures + tests for every analyzer; insufficient-data paths tested.
+
+Acceptance criteria results:
+
+- [x] AC1 — MVP analyzers (§8.1) implemented in core, each emits Metric with window — PASS
+- [x] AC2 — geo records has_physical_locations + branches physical/online + trade-area overlap — PASS
+- [x] AC3 — sparse/empty data yields "insufficient data", never a fabricated number — PASS
+- [x] AC4 — channel-profitability/LTV:CAC + owned-channel stubbed behind flags — PASS (flagged insufficient)
+- [x] AC5 — known-answer fixtures for every analyzer; empty-data behavior — PASS (27 core tests)
+
+Blockers:
+
+- None. Adversarial audit workflow running; folding any real findings before commit.
+
+## Completed: Slice 0 — Repo, tooling, CI
 
 Plan:
 

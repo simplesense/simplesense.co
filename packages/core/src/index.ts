@@ -5,3 +5,8 @@
  */
 
 export * from './math'
+export * from './geo'
+export * from './window'
+export * from './metrics'
+export * from './types'
+export * from './analyzers'
