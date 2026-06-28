@@ -74,6 +74,25 @@ export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
   }
 }
 
+export interface StripeConfig {
+  secretKey: string | null
+  webhookSecret: string | null
+  priceBasic: string | null
+  pricePro: string | null
+  hasCredentials: boolean
+}
+
+export function stripeConfig(src: EnvSource = process.env): StripeConfig {
+  const secretKey = str(src, 'STRIPE_SECRET_KEY')
+  return {
+    secretKey,
+    webhookSecret: str(src, 'STRIPE_WEBHOOK_SECRET'),
+    priceBasic: str(src, 'STRIPE_PRICE_BASIC'),
+    pricePro: str(src, 'STRIPE_PRICE_PRO'),
+    hasCredentials: secretKey != null,
+  }
+}
+
 /**
  * Fail fast in production if a required secret is missing (§12). Call at server startup.
  * Mockable integrations (Shopify/Stripe/Clerk/Resend) are intentionally NOT required —

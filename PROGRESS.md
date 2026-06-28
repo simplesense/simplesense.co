@@ -16,6 +16,8 @@ criterion below it is checked and its tests pass.
 - [x] Slice 7 — Dashboard ("This week's moves") + design-system port (@ss/ui)
 - [x] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [x] Slice 9 — Outcome tracking (flywheel) — schedule/measure + Monitoring view
+- [~] Slice 10 — Stripe billing + gating + Plans page DONE (mock/test-mode); live needs Stripe keys
+- [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [ ] Slice 10 — Billing (Stripe tiers) + gating
 - [ ] Slice 11 — Integration exports (Klaviyo/Meta/Google)
 - [ ] Slice 12 — Hardening

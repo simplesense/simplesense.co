@@ -18,6 +18,15 @@ export {
   type ShopInfo,
 } from './shopify/reader'
 export {
+  RealStripeClient,
+  MockStripeClient,
+  createStripeClient,
+  verifyStripeSignature,
+  type StripeClient,
+  type StripeEvent,
+  type CheckoutParams,
+} from './stripe'
+export {
   RealShopifyClient,
   MockShopifyClient,
   type ShopifyClient,

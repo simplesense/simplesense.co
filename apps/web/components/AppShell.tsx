@@ -18,7 +18,7 @@ function navItems(openMoves: number): NavItem[] {
     { label: 'Geography', icon: 'geo-alt', href: '#' },
     { label: 'Products', icon: 'box-seam', href: '#' },
     { label: 'Connections', icon: 'plug', href: '/connections' },
-    { label: 'Plans & billing', icon: 'credit-card', href: '#' },
+    { label: 'Plans & billing', icon: 'credit-card', href: '/plans' },
     { label: 'Settings', icon: 'gear', href: '#' },
   ]
 }
