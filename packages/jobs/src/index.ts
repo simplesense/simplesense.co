@@ -8,6 +8,7 @@ export {
   latestRunId,
   latestRecommendations,
   openRecommendations,
+  latestMetrics,
   latestMetricValue,
   type AnalyzeResult,
 } from './analyze'

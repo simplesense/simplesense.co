@@ -113,6 +113,13 @@ export async function openRecommendations(
   })
 }
 
+/** All metrics from the latest completed run (for detail screens). */
+export async function latestMetrics(db: PrismaClient, storeId: string) {
+  const runId = await latestRunId(db, storeId)
+  if (!runId) return []
+  return db.metric.findMany({ where: { runId } })
+}
+
 /** A metric value from the latest run (for KPI tiles). */
 export async function latestMetricValue(
   db: PrismaClient,

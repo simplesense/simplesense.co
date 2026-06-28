@@ -111,6 +111,17 @@ AC results:
 90 tests green. Remaining: Slice 10 (Stripe billing), 11 (live exports), 12 (hardening),
 13 (onboarding), Clerk auth, + RealShopifyReader/Inngest (live Shopify). Deploy: DEPLOY.md.
 
+## Post-MVP (2026-06-28): live + auth + detail screens
+
+- **Deployed live on Fly** (simplesense-co.fly.dev); Supabase via aws-1-us-west-1 pooler.
+- **Live Shopify**: RealShopifyReader (GraphQL incl product COGS via read_inventory) +
+  connect→Sync→dashboard loop; conservative geo (physical-store toggle in Settings).
+- **Clerk auth** wired (login, org mapping, route protection; demo store read-only for new
+  orgs). **Stripe billing** + Plans gating (mock until keys). **Slice 12 hardening** done.
+- **Detail screens**: Customers (Pareto/RFM), Geography (trade-area vs regional), Products
+  (margin/affinity) — read the latest run's metrics. All nav items now route.
+- **Domain**: simplesense.co cert provisioned on Fly; awaiting DNS A/AAAA at the registrar.
+
 ## Build order (chosen 2026-06-27): HEART-FIRST
 
 Satya chose heart-first + autonomous (commit per slice). Execution order:
