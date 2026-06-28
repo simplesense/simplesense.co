@@ -1,0 +1,89 @@
+/* ============================================================
+   SimpleSense — Color tokens
+   A warm reworking of the Athena UI admin palette: cool slate
+   neutrals are shifted toward warm cream / taupe, paired with a
+   confident signal blue and a clay accent. Cherry-blossom pink
+   appears only as soft decoration.
+   ============================================================ */
+
+:root {
+  /* --- Brand: signal blue (trust / primary action) --- */
+  --ss-blue-50: #eaf3fd;
+  --ss-blue-100: #cfe3fb;
+  --ss-blue-300: #6fabf1;
+  --ss-blue-500: #0871e7; /* primary */
+  --ss-blue-600: #0860c4; /* hover */
+  --ss-blue-700: #074fa0; /* active / pressed */
+
+  /* --- Accent: clay / terracotta (warmth, highlights) --- */
+  --ss-clay-100: #f6e3da;
+  --ss-clay-300: #e0a98f;
+  --ss-clay-500: #c25a3c;
+  --ss-clay-600: #a8492f;
+
+  /* --- Decorative: blossom pink (illustration, soft fills) --- */
+  --ss-blossom-100: #f7e4ea;
+  --ss-blossom-300: #e8a0b4;
+  --ss-blossom-500: #d46f8c;
+
+  /* --- Warm neutrals (the "warm" rework of Athena slate) --- */
+  --ss-cream: #f4f1ea; /* app / page background */
+  --ss-paper: #fffdf9; /* card / surface */
+  --ss-sand: #ece7dc; /* soft surface, hover wells */
+  --ss-border: #e4ddcf; /* hairline borders */
+  --ss-border-2: #d8cfbd; /* stronger dividers */
+  --ss-ink: #211c15; /* primary text (warm near-black) */
+  --ss-ink-soft: #4a4234; /* secondary text */
+  --ss-muted: #837a68; /* muted text / captions */
+
+  /* --- Semantic (warmed) --- */
+  --ss-success: #1f8a5b;
+  --ss-success-bg: #e2f1e9;
+  --ss-warning: #cd8420;
+  --ss-warning-bg: #f8ecd5;
+  --ss-danger: #c8442e;
+  --ss-danger-bg: #f7e1db;
+  --ss-info: #0871e7;
+  --ss-info-bg: #e3eefc;
+
+  /* --- Data-viz sequence (warm) --- */
+  --ss-chart-1: #0871e7; /* blue */
+  --ss-chart-2: #1f8a5b; /* green */
+  --ss-chart-3: #cd8420; /* amber */
+  --ss-chart-4: #c25a3c; /* clay */
+  --ss-chart-5: #8a5cc4; /* plum */
+
+  /* ===== Semantic aliases (use these in components) ===== */
+  --surface-page: var(--ss-cream);
+  --surface-card: var(--ss-paper);
+  --surface-soft: var(--ss-sand);
+  --surface-inset: #f7f4ed;
+
+  --text-strong: var(--ss-ink);
+  --text-body: var(--ss-ink-soft);
+  --text-muted: var(--ss-muted);
+  --text-onbrand: #ffffff;
+  --text-link: var(--ss-blue-600);
+
+  --border-hairline: var(--ss-border);
+  --border-strong: var(--ss-border-2);
+
+  --action-primary: var(--ss-blue-500);
+  --action-primary-hover: var(--ss-blue-600);
+  --action-primary-active: var(--ss-blue-700);
+  --accent: var(--ss-clay-500);
+
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--ss-blue-500) 30%, transparent);
+
+  /* ===== Athena UI compatibility layer =====
+     Lets imported Athena markup pick up the warm palette unchanged. */
+  --bs-primary: var(--ss-blue-500);
+  --bs-primary-rgb: 8, 113, 231; /* @kind color */
+  --athena-bg: var(--ss-cream);
+  --athena-surface: var(--ss-paper);
+  --athena-surface-soft: var(--ss-sand);
+  --athena-border: var(--ss-border);
+  --athena-text: var(--ss-ink);
+  --athena-muted: var(--ss-muted);
+  --athena-nav: var(--ss-ink-soft);
+}

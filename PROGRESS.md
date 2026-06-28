@@ -13,7 +13,7 @@ criterion below it is checked and its tests pass.
 - [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
 - [x] Slice 5 — Signal detection (+ packages/config)
 - [x] Slice 6 — LLM synthesis + grounding validation + ranking (@ss/engine)
-- [ ] Slice 7 — Dashboard (ranked prescriptions / "This week's moves")
+- [x] Slice 7 — Dashboard ("This week's moves") + design-system port (@ss/ui)
 - [ ] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [ ] Slice 9 — Outcome tracking (flywheel)
 - [ ] Slice 10 — Billing (Stripe tiers) + gating
@@ -67,7 +67,30 @@ AC results:
 - [x] AC5 — fixture store → Pareto VIP + geo-concentration moves, each citing real metric ids — PASS
 
 Slice 6 done 2026-06-27. The deterministic + grounded HEART is complete (60 tests).
-Next: design-system port (packages/ui) → Slice 7 dashboard → Slice 8 public Audit.
+
+## Completed: Slice 7 — dashboard + design-system port
+
+@ss/ui: tokens vendored verbatim from the bundle (colors/typography/spacing/base);
+ported Button, Badge, Card, MetricCard, MoveCard (the hero) + recommendationToMove
+(the §19 MoveCard⇄Recommendation contract). apps/web: app shell (sidebar 16.5rem +
+sticky blurred topbar 4rem), seed store (Wildflower Skincare), runDemo() runs the full
+pipeline server-side, "This week's moves" renders ranked MoveCards with interactive
+apply/dismiss. Bootstrap Icons vendored; fonts via Google.
+
+AC results:
+
+- [x] AC1 — app shell (sidebar + topbar, §19) lists recs sorted by rank as MoveCards
+      (rank/pattern/why/✓moves/impact/confidence) — PASS (verified: 5 grounded cards render,
+      VIP "top 20% drive 72%", geo BOPIS within 5mi; prod build green)
+- [x] AC2 — mark DISMISSED works ("Not now"); apply marks IMPLEMENTED — PASS (client state)
+- [x] AC3 — empty state handled — PASS
+- [x] AC4 — visuals match §19 (token-driven, no hardcoded hex/px) — PASS
+- [~] MoveDetailView (single-move route) — DEFERRED (card is self-contained; detail route later)
+- [~] Playwright e2e — DEFERRED to when auth lands (Slice 1); covered now by the runDemo
+      unit test + a prod-build/HTTP render smoke check
+- Note: auth gating of /app deferred to Slice 1 (route is currently open for the demo).
+
+Slice 7 done 2026-06-27. Next: Slice 8 — public, shareable Simple Sense Audit (the wedge).
 
 ## Completed: Slice 4 — Analyzers (pure, deterministic)
 

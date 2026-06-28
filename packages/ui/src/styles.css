@@ -1,0 +1,10 @@
+/*
+ * @ss/ui canonical stylesheet — the design-system tokens (§19), vendored verbatim
+ * from simplesense-design-system/project/tokens/. Fonts are loaded by the app shell
+ * (Google Fonts) rather than the bundle's local-Inter fonts.css. Import once at the
+ * app root: `import '@ss/ui/styles.css'`.
+ */
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/base.css';

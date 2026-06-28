@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@ss/core": "workspace:*",
+    "@ss/config": "workspace:*",
+    "@ss/engine": "workspace:*",
+    "@ss/ui": "workspace:*",
     "next": "^15.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

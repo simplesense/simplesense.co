@@ -1,0 +1,82 @@
+/* ============================================================
+   SimpleSense — base element styles & a few brand primitives.
+   Kept minimal: tokens do the heavy lifting.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--lh-normal);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-strong);
+  margin: 0;
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--action-primary-active);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-xs);
+}
+
+::selection {
+  background: var(--ss-blue-100);
+  color: var(--ss-ink);
+}
+
+/* --- Brand primitives reusable in plain HTML --- */
+
+/* Spaced editorial eyebrow — the deck's S I M P L E S E N S E treatment */
+.ss-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Editorial display headline */
+.ss-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-strong);
+}
+
+/* Italic serif emphasis inside display copy */
+.ss-display em {
+  font-style: italic;
+}
+
+/* Reading measure for long-form */
+.ss-prose {
+  max-width: 65ch;
+  line-height: var(--lh-relaxed);
+}
