@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createHmac } from 'node:crypto'
 import {
   buildAuthorizeUrl,
@@ -8,6 +8,7 @@ import {
 } from '../src/shopify/oauth'
 import { verifyWebhookHmac } from '../src/shopify/webhooks'
 import { MockShopifyClient } from '../src/shopify/client'
+import { RealShopifyReader } from '../src/shopify/reader'
 
 const SECRET = 'test_api_secret'
 
@@ -76,5 +77,101 @@ describe('mock shopify client', () => {
       'https://cb',
     )
     expect(c.registered.map((r) => r.topic)).toEqual(['orders/create', 'app/uninstalled'])
+  })
+})
+
+const gqlOk = (data: unknown) => ({
+  ok: true,
+  status: 200,
+  headers: { get: () => null },
+  json: () => Promise.resolve({ data }),
+  text: () => Promise.resolve(''),
+})
+
+describe('RealShopifyReader live mapping', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  it('maps GROSS totalPriceSet to totalPrice with refunds separate (no double-count)', async () => {
+    const page = gqlOk({
+      orders: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          {
+            id: 'gid://shopify/Order/1',
+            createdAt: '2026-01-01T00:00:00Z',
+            totalPriceSet: { shopMoney: { amount: '100.00', currencyCode: 'USD' } },
+            totalDiscountsSet: { shopMoney: { amount: '0' } },
+            totalRefundedSet: { shopMoney: { amount: '30.00' } },
+            customer: { id: 'gid://shopify/Customer/9' },
+            shippingAddress: {
+              city: 'Austin',
+              provinceCode: 'TX',
+              countryCodeV2: 'US',
+              zip: '78701',
+              latitude: 30.2,
+              longitude: -97.7,
+            },
+            lineItems: {
+              nodes: [
+                {
+                  quantity: 2,
+                  product: { id: 'gid://shopify/Product/5' },
+                  originalUnitPriceSet: { shopMoney: { amount: '50' } },
+                  discountedUnitPriceSet: { shopMoney: { amount: '45' } },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(page))
+
+    const reader = new RealShopifyReader()
+    const orders = []
+    for await (const p of reader.orders('shop.myshopify.com', 'tok')) orders.push(...p)
+
+    expect(orders).toHaveLength(1)
+    const o = orders[0]!
+    expect(o.totalPrice).toBe(100) // gross — NOT currentTotalPriceSet (net of returns)
+    expect(o.refundedAmount).toBe(30)
+    expect(o.totalPrice - (o.refundedAmount ?? 0)).toBe(70) // netRevenue contract holds
+    expect(o.currency).toBe('USD')
+    expect(o.customerId).toBe('gid://shopify/Customer/9')
+    expect(o.shippingAddress?.region).toBe('TX')
+    expect(o.lineItems[0]).toMatchObject({ quantity: 2, price: 50, discount: 10 }) // (50−45)*2
+  })
+
+  it('retries on a THROTTLED GraphQL error then succeeds', async () => {
+    vi.useFakeTimers()
+    const throttled = {
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: () => Promise.resolve({ errors: [{ extensions: { code: 'THROTTLED' } }] }),
+      text: () => Promise.resolve(''),
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(throttled)
+      .mockResolvedValueOnce(
+        gqlOk({ orders: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [] } }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const reader = new RealShopifyReader()
+    const run = (async () => {
+      const out = []
+      for await (const p of reader.orders('s.myshopify.com', 'tok')) out.push(...p)
+      return out
+    })()
+    await vi.runAllTimersAsync()
+    const out = await run
+
+    expect(out).toEqual([])
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })

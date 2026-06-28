@@ -21,6 +21,15 @@ export async function GET(req: Request): Promise<Response> {
       { status: 503 },
     )
   }
+  // The redirect_uri is built from appUrl and must match the Partner-dashboard allowlist. A
+  // localhost fallback in production means a misconfigured APP_URL/SHOPIFY_APP_URL — Shopify
+  // would reject the authorize request, so fail loudly here instead of bouncing the merchant.
+  if (process.env.NODE_ENV === 'production' && /localhost|127\.0\.0\.1/.test(cfg.appUrl)) {
+    return NextResponse.json(
+      { error: 'Server misconfigured: SHOPIFY_APP_URL/APP_URL must be the public https origin.' },
+      { status: 503 },
+    )
+  }
   const shop = new URL(req.url).searchParams.get('shop') ?? ''
   if (!isValidShopDomain(shop)) {
     return NextResponse.json(

@@ -65,7 +65,12 @@ export class MockShopifyReader implements ShopifyReader {
 
 const API_VERSION = '2024-10'
 const num = (s?: string | null): number => (s ? Number.parseFloat(s) : 0)
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
+interface GqlError {
+  message?: string
+  extensions?: { code?: string }
+}
 interface MoneyBag {
   shopMoney?: { amount?: string; currencyCode?: string }
 }
@@ -100,18 +105,33 @@ export class RealShopifyReader implements ShopifyReader {
     query: string,
     cursor: string | null,
   ): Promise<T> {
-    const res = await fetch(
-      `https://${normalizeShop(shop)}/admin/api/${API_VERSION}/graphql.json`,
-      {
+    const url = `https://${normalizeShop(shop)}/admin/api/${API_VERSION}/graphql.json`
+    const body = JSON.stringify({ query, variables: { cursor } })
+    const maxAttempts = 5
+    for (let attempt = 1; ; attempt++) {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'X-Shopify-Access-Token': token },
-        body: JSON.stringify({ query, variables: { cursor } }),
-      },
-    )
-    if (!res.ok) throw new Error(`Shopify GraphQL ${res.status}: ${await res.text()}`)
-    const json = (await res.json()) as { data?: T; errors?: unknown }
-    if (!json.data) throw new Error(`Shopify GraphQL error: ${JSON.stringify(json.errors)}`)
-    return json.data
+        body,
+      })
+      // HTTP 429 = REST-style rate limit; honor Retry-After, else exponential backoff.
+      if (res.status === 429 && attempt < maxAttempts) {
+        const retryAfter = Number.parseFloat(res.headers.get('retry-after') ?? '')
+        await sleep(Number.isFinite(retryAfter) ? retryAfter * 1000 : 2 ** attempt * 500)
+        continue
+      }
+      if (!res.ok) throw new Error(`Shopify GraphQL ${res.status}: ${await res.text()}`)
+      const json = (await res.json()) as { data?: T; errors?: GqlError[] }
+      // GraphQL-level throttle returns 200 with a THROTTLED error — retry, don't fail the store.
+      const throttled =
+        Array.isArray(json.errors) && json.errors.some((e) => e?.extensions?.code === 'THROTTLED')
+      if (throttled && attempt < maxAttempts) {
+        await sleep(2 ** attempt * 500)
+        continue
+      }
+      if (!json.data) throw new Error(`Shopify GraphQL error: ${JSON.stringify(json.errors)}`)
+      return json.data
+    }
   }
 
   private async *paginate<N, T>(
@@ -146,22 +166,27 @@ export class RealShopifyReader implements ShopifyReader {
   }
 
   orders(shop: string, token: string): AsyncGenerator<Order[]> {
-    const query = `query($cursor:String){ orders(first:100, after:$cursor, sortKey:CREATED_AT){
+    // Page sizes kept small so the calculated query cost stays under Shopify's 1000-point
+    // single-query cap: orders(40) x lineItems(20) ≈ 922. (100 x 100 ≈ 10,000 → rejected.)
+    // totalPriceSet is the GROSS order total (before returns); refunds are subtracted ONCE
+    // downstream via netRevenue. Using currentTotalPriceSet (net of returns) would
+    // double-count refunds and inflate the return rate past 100%.
+    const query = `query($cursor:String){ orders(first:40, after:$cursor, sortKey:CREATED_AT){
       pageInfo{ hasNextPage endCursor }
       nodes{ id createdAt
-        currentTotalPriceSet{ shopMoney{ amount currencyCode } }
+        totalPriceSet{ shopMoney{ amount currencyCode } }
         totalDiscountsSet{ shopMoney{ amount } }
         totalRefundedSet{ shopMoney{ amount } }
         customer{ id }
         shippingAddress{ city provinceCode countryCodeV2 zip latitude longitude }
-        lineItems(first:100){ nodes{ quantity product{ id }
+        lineItems(first:20){ nodes{ quantity product{ id }
           originalUnitPriceSet{ shopMoney{ amount } }
           discountedUnitPriceSet{ shopMoney{ amount } } } }
       } } }`
     interface OrderNode {
       id: string
       createdAt: string
-      currentTotalPriceSet?: MoneyBag
+      totalPriceSet?: MoneyBag
       totalDiscountsSet?: MoneyBag
       totalRefundedSet?: MoneyBag
       customer?: { id: string } | null
@@ -184,10 +209,10 @@ export class RealShopifyReader implements ShopifyReader {
         id: n.id,
         customerId: n.customer?.id ?? null,
         createdAt: new Date(n.createdAt),
-        totalPrice: num(n.currentTotalPriceSet?.shopMoney?.amount),
+        totalPrice: num(n.totalPriceSet?.shopMoney?.amount),
         discountTotal: num(n.totalDiscountsSet?.shopMoney?.amount),
         refundedAmount: num(n.totalRefundedSet?.shopMoney?.amount),
-        currency: n.currentTotalPriceSet?.shopMoney?.currencyCode ?? 'USD',
+        currency: n.totalPriceSet?.shopMoney?.currencyCode ?? 'USD',
         sourceName: null,
         shippingAddress: mapAddress(n.shippingAddress),
         lineItems: (n.lineItems?.nodes ?? []).map((li) => {

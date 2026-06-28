@@ -9,7 +9,7 @@ import {
   isValidShopDomain,
   DEFAULT_WEBHOOK_TOPICS,
 } from '@ss/integrations'
-import { prisma } from '@ss/db'
+import { prisma, DEMO } from '@ss/db'
 import { getSession } from '@/lib/auth'
 
 /**
@@ -37,13 +37,25 @@ export async function GET(req: Request): Promise<Response> {
     return NextResponse.json({ error: 'invalid shop domain' }, { status: 400 })
   }
 
+  // Fail closed: never attach a live store + access token to the shared DEMO org. The merchant
+  // must be signed into SimpleSense so getSession() resolves to THEIR org. (getSession falls back
+  // to DEMO when there's no Clerk session — that must not silently capture a real connection.)
+  const { orgId, userId } = await getSession()
+  if (!userId || orgId === DEMO.orgId) {
+    return NextResponse.json(
+      { error: 'Sign in to SimpleSense before connecting a store.' },
+      { status: 401 },
+    )
+  }
+
   const client = createShopifyClient()
   const token = await client.exchangeCodeForToken(shop, code)
 
-  const { orgId } = await getSession()
+  // Re-home on update too: whoever can complete this HMAC-verified OAuth controls the Shopify
+  // store, so the store belongs to the connecting org even if a prior org (or DEMO) held it.
   await prisma.store.upsert({
     where: { shopDomain: shop },
-    update: { accessTokenEnc: encryptSecret(token), syncStatus: 'PENDING' },
+    update: { orgId, accessTokenEnc: encryptSecret(token), syncStatus: 'PENDING' },
     create: {
       orgId,
       shopDomain: shop,
@@ -52,17 +64,22 @@ export async function GET(req: Request): Promise<Response> {
     },
   })
 
-  await client.registerWebhooks(
-    shop,
-    token,
-    DEFAULT_WEBHOOK_TOPICS,
-    `${cfg.appUrl}/api/webhooks/shopify`,
-  )
+  // Webhook registration is best-effort: a transient failure here must not 500 an otherwise
+  // successful connect (the token is already stored; webhooks can be re-registered on sync).
+  try {
+    await client.registerWebhooks(
+      shop,
+      token,
+      DEFAULT_WEBHOOK_TOPICS,
+      `${cfg.appUrl}/api/webhooks/shopify`,
+    )
+  } catch (err) {
+    console.error('[connect] webhook registration failed (continuing):', (err as Error).message)
+  }
   jar.delete('ss_oauth_state')
 
-  // Backfill (Slice 3, built + tested): backfillStore(prisma, store.id, new RealShopifyReader(),
-  // { shop, token }) — idempotent, SYNCING→READY — once RealShopifyReader's GraphQL mapping is
-  // implemented. Run it durably via Inngest (not inline) so this request returns fast.
-
+  // The merchant lands on /connections and clicks "Sync now", which runs the backfill
+  // (RealShopifyReader) + grounded analysis via syncStoreAction. Kept off this request so the
+  // OAuth redirect returns immediately.
   return NextResponse.redirect(`${cfg.appUrl}/connections?connected=${encodeURIComponent(shop)}`)
 }

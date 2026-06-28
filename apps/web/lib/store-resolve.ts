@@ -9,15 +9,15 @@ import { prisma, DEMO, type Store } from '@ss/db'
 export async function resolveActiveStore(
   orgId: string,
 ): Promise<{ store: Store; isDemo: boolean }> {
-  const run = await prisma.analysisRun.findFirst({
-    where: { status: 'DONE', store: { orgId } },
-    orderBy: { startedAt: 'desc' },
-    select: { storeId: true },
+  // The org's OWN connected store wins as soon as it's connected — even before the first
+  // analysis completes — so a freshly-connected merchant sees their real store (syncing /
+  // honestly-empty), never the demo data dressed up as theirs.
+  const own = await prisma.store.findFirst({
+    where: { orgId, accessTokenEnc: { not: null } },
+    orderBy: { createdAt: 'desc' },
   })
-  if (run) {
-    const store = await prisma.store.findUnique({ where: { id: run.storeId } })
-    if (store) return { store, isDemo: false }
-  }
+  if (own) return { store: own, isDemo: false }
+
   const demo = await prisma.store.findUnique({ where: { id: DEMO.storeId } })
   if (!demo) throw new Error('demo store missing — run `pnpm --filter @ss/db seed`')
   return { store: demo, isDemo: true }

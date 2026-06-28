@@ -63,8 +63,8 @@ export default async function ProductsPage() {
         <Panel title="Worst-margin SKU">
           <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
             <strong style={{ color: 'var(--text-strong)' }}>{worst?.title ?? 'A SKU'}</strong> is
-            losing {usd(m.num('sku_margin.worst_sku_margin'))} after discounts — reprice, bundle, or
-            retire it.
+            losing {usd(Math.abs(m.num('sku_margin.worst_sku_margin') ?? 0))} per unit after
+            discounts — reprice, bundle, or retire it.
           </p>
         </Panel>
       ) : null}
