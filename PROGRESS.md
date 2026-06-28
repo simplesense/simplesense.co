@@ -21,6 +21,26 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Adversarial review of the 2026-06-28 diff — 7 defects folded
+
+Ran a multi-agent review workflow (5 dimensions × find→adversarially-verify) over this
+session's 34-file diff. 8 candidates → 7 confirmed real, all fixed with regression tests
+(116 → 123 green). Highlights:
+
+- **CRITICAL — Clerk split-brain:** provider/UI gated on the build-inlined publishable key,
+  middleware + getSession() on the runtime secret. A divergent config looked authed while
+  protecting nothing and returning the shared DEMO org to everyone (tenant-isolation collapse).
+  Unified all gates on the publishable key + both-or-neither assertServerEnv check, now wired
+  at boot via `apps/web/instrumentation.ts` (split config refuses to start).
+- **HIGH — CSV formula injection:** toCsv() now apostrophe-defangs cells starting with = + - @
+  tab/CR before quoting (customer email/city/title are merchant-uncontrolled).
+- **HIGH — VIP over-inclusion:** zero-spend cutoff admitted the whole base; now drops
+  non-paying customers (net <= 0) before ranking via the shared `netRevenue` helper.
+- **MED/LOW — SKU marginRate** fabricated 0 when known-cost revenue netted to 0 → now blank.
+- **LOW — header injection:** export filename sanitized; OAuth callback rejects non-myshopify
+  domains.
+One candidate (SKU marginRate "flips positive on negative revenue") was refuted on inspection.
+
 ## Completed: Marketing + onboarding + move detail + exports + chart (2026-06-28)
 
 Shipped autonomously and deployed to simplesense.co (live; Clerk-gated app, public marketing):
