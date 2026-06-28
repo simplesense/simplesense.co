@@ -2,6 +2,7 @@ import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import { DemoBanner, PageHeading, MetricGrid, Panel, ExportButton } from '@/components/detail'
+import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,7 @@ export default async function ProductsPage() {
   return (
     <AppShell storeName={m.storeName} openMoves={0} model="">
       <DemoBanner show={m.isDemo} />
+      <PartialHistoryNotice show={m.historyLimited} />
       <PageHeading
         eyebrow="PRODUCTS"
         title="Per-SKU margin & affinity"

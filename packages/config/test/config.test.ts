@@ -6,7 +6,23 @@ import {
   llmConfig,
   appEnv,
   assertServerEnv,
+  shopifyConfig,
 } from '../src/index'
+
+describe('shopifyConfig.hasAllOrdersScope', () => {
+  it('is false for the default scopes (read_all_orders not granted → 60-day cap)', () => {
+    expect(shopifyConfig({}).hasAllOrdersScope).toBe(false)
+  })
+  it('is true only when read_all_orders is in SHOPIFY_SCOPES', () => {
+    expect(
+      shopifyConfig({ SHOPIFY_SCOPES: 'read_orders, read_all_orders, read_customers' })
+        .hasAllOrdersScope,
+    ).toBe(true)
+    expect(shopifyConfig({ SHOPIFY_SCOPES: 'read_orders,read_customers' }).hasAllOrdersScope).toBe(
+      false,
+    )
+  })
+})
 
 describe('SIGNAL_THRESHOLDS', () => {
   it('are all sane ratios in (0, 1)', () => {

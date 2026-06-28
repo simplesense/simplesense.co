@@ -1,5 +1,6 @@
 import { MetricCard, ParetoChart, type ParetoPoint } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
+import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import {
   DemoBanner,
@@ -36,6 +37,7 @@ export default async function CustomersPage() {
   return (
     <AppShell storeName={m.storeName} openMoves={0} model="">
       <DemoBanner show={m.isDemo} />
+      <PartialHistoryNotice show={m.historyLimited} />
       <PageHeading
         eyebrow="CUSTOMERS"
         title="Customer concentration & segments"

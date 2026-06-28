@@ -2,7 +2,7 @@ import type { Recommendation as PrismaRecommendation } from '@ss/db'
 import { prisma, DEMO } from '@ss/db'
 import { analyzeStore, openRecommendations, latestRunId, latestMetricValue } from '@ss/jobs'
 import { createLlmClient } from '@ss/engine'
-import { llmConfig } from '@ss/config'
+import { llmConfig, shopifyConfig } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
@@ -13,6 +13,8 @@ export interface DashboardData {
   isDemo: boolean
   /** A background sync/analysis is in flight — show a "preparing your moves" state. */
   syncing: boolean
+  /** Real store capped at ~60 days of orders (no read_all_orders) — show the partial-history notice. */
+  historyLimited: boolean
   recommendations: Recommendation[]
   metrics: {
     revenue: number | null
@@ -75,6 +77,7 @@ export async function getDashboard(): Promise<DashboardData> {
     isDemo,
     // "Preparing your moves" while a sync runs OR before the first run lands on a real store.
     syncing: !isDemo && (syncing || !hasRun),
+    historyLimited: !isDemo && !shopifyConfig().hasAllOrdersScope,
     recommendations: rows.map(toCore),
     metrics: {
       revenue: await latestMetricValue(prisma, store.id, 'pareto.revenue_total'),

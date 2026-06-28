@@ -52,25 +52,36 @@ export interface ShopifyConfig {
   appUrl: string
   /** False → the Shopify client runs as a mock (no live OAuth) until creds are supplied. */
   hasCredentials: boolean
+  /**
+   * Whether `read_all_orders` is among the granted scopes. Without it Shopify hard-caps order
+   * reads to the last ~60 days, so the analysis window is truncated — the UI must say so rather
+   * than present a partial window as the full trailing-24-months. Requires Shopify approval.
+   */
+  hasAllOrdersScope: boolean
 }
 
 export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
   const apiKey = str(src, 'SHOPIFY_API_KEY')
   const apiSecret = str(src, 'SHOPIFY_API_SECRET')
+  const scopes = str(
+    src,
+    'SHOPIFY_SCOPES',
+    'read_orders,read_customers,read_products,read_locations,read_inventory',
+  ) as string
   return {
     apiKey,
     apiSecret,
-    scopes: str(
-      src,
-      'SHOPIFY_SCOPES',
-      'read_orders,read_customers,read_products,read_locations,read_inventory',
-    ) as string,
+    scopes,
     appUrl: str(
       src,
       'SHOPIFY_APP_URL',
       str(src, 'APP_URL', 'http://localhost:3000') as string,
     ) as string,
     hasCredentials: apiKey != null && apiSecret != null,
+    hasAllOrdersScope: scopes
+      .split(',')
+      .map((s) => s.trim())
+      .includes('read_all_orders'),
   }
 }
 

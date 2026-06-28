@@ -2,6 +2,7 @@ import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { MovesList } from '@/components/MovesList'
 import { SyncingBanner } from '@/components/SyncingBanner'
+import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
 import { getDashboard } from '@/lib/dashboard'
 
 // Always render fresh from the DB (recommendations change as the user applies/dismisses).
@@ -44,6 +45,7 @@ export default async function MovesPage() {
         </a>
       ) : null}
       {data.syncing ? <SyncingBanner /> : null}
+      <PartialHistoryNotice show={data.historyLimited} />
       <div
         style={{
           display: 'grid',
