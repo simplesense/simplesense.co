@@ -59,3 +59,18 @@ Decision: Vitest (unit/integration), Playwright (e2e, added at first user-facing
 slice), **oxlint** (fast; will absorb the adherence config so hardcoded colors/px
 fail CI), Prettier (format). TypeScript strict with `noUncheckedIndexedAccess`.
 Consequences: Sub-second lint; one linter for correctness + brand adherence.
+
+## ADR-006: Supabase schema via `db push` + baseline migration (not `migrate dev`)
+
+Date: 2026-06-27
+Context: Supabase's managed `postgres` role cannot CREATE DATABASE, so Prisma's
+`migrate dev` (which spins up a shadow database to diff) fails on a hosted Supabase
+project. We still want a committed migration history for reproducible deploys.
+Decision: For the initial sync, run `prisma db push` (no shadow DB) to create tables,
+then generate a baseline migration offline with `prisma migrate diff --from-empty
+--to-schema-datamodel … --script` and record it with `prisma migrate resolve --applied
+0_init`. Going forward, author migrations and apply with `prisma migrate deploy`
+(also no shadow DB). The direct host `db.<ref>.supabase.co` is IPv6-only and reachable
+from this machine, so it serves both DATABASE_URL and DIRECT_URL.
+Alternatives: a dedicated shadow database URL (extra provisioning); staying on PGlite
+(rejected now that real Supabase works). Consequences: clean history + Supabase-compatible.

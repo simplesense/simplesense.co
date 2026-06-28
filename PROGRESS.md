@@ -7,7 +7,7 @@ criterion below it is checked and its tests pass.
 ## Backlog
 
 - [x] Slice 0 — Repo, tooling, CI
-- [ ] Slice 1 — Auth, org/user, schema, migrations
+- [~] Slice 1 — Schema/migrations/seed/tenant-isolation DONE on Supabase; auth (Clerk) deferred
 - [ ] Slice 2 — Shopify OAuth connect
 - [ ] Slice 3 — Historical ingestion (background)
 - [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
@@ -20,6 +20,26 @@ criterion below it is checked and its tests pass.
 - [ ] Slice 11 — Integration exports (Klaviyo/Meta/Google)
 - [ ] Slice 12 — Hardening
 - [ ] Slice 13 — Polish & onboarding
+
+## Completed: Slice 1 — schema + tenant isolation on Supabase (2026-06-27)
+
+@ss/db: Prisma schema for the full §7 model (Organization/User/Store/Customer/Product/
+Order/OrderLineItem/AnalysisRun/Metric/Recommendation/RecommendationOutcome/Audit/
+Subscription) + enums; tenant-scoped client + tenancy helpers; seed. Live on the user's
+**Supabase** project (IPv6 direct connection): schema pushed (`db push`), baseline
+migration generated + `migrate resolve --applied` (managed `postgres` role can't create
+the shadow DB `migrate dev` needs — ADR-006). Seed wrote demo org/user/store/subscription.
+
+AC results:
+
+- [x] Prisma schema + migrations applied (Supabase in sync; baseline migration recorded) — PASS
+- [x] seed creates a demo org/user(/store/subscription) — PASS (wrote to Supabase)
+- [x] a test proves a query scoped to org A cannot read org B's rows — PASS (tenancy.test, 3 tests)
+- [~] "a user can sign up and is attached to an Organization" — DEFERRED: auth (Clerk) needs
+      keys; the Org/User schema + isolation are done, and a dev-auth shim / Clerk wiring is the
+      remaining piece. Tracked for the auth pass.
+
+Next: wire persistence (store analysis runs/recommendations) + auth shim, then Slice 2 (Shopify OAuth).
 
 ## Build order (chosen 2026-06-27): HEART-FIRST
 

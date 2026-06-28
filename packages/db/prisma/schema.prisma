@@ -1,0 +1,262 @@
+// Simple Sense data model (§7). Tenant-scoped: every domain row resolves to an
+// organizationId. Money is Decimal. Postgres (Supabase) in prod via DATABASE_URL;
+// migrations use DIRECT_URL. See DECISIONS.md ADR-002.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  READY
+  ERROR
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  DONE
+  ERROR
+}
+
+enum Effort {
+  LOW
+  MED
+  HIGH
+}
+
+enum RecStatus {
+  NEW
+  VIEWED
+  IMPLEMENTED
+  DISMISSED
+}
+
+enum OutcomeStatus {
+  SCHEDULED
+  MEASURED
+  INCONCLUSIVE
+}
+
+enum Tier {
+  BASIC
+  PRO
+}
+
+enum SubStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Organization {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  users        User[]
+  stores       Store[]
+  subscription Subscription?
+}
+
+model User {
+  id        String       @id @default(cuid())
+  orgId     String
+  email     String       @unique
+  role      Role         @default(OWNER)
+  createdAt DateTime     @default(now())
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+model Store {
+  id             String       @id @default(cuid())
+  orgId          String
+  shopDomain     String       @unique
+  accessTokenEnc String? // ENCRYPTED at rest, never logged
+  syncStatus     SyncStatus   @default(PENDING)
+  lastSyncedAt   DateTime?
+  createdAt      DateTime     @default(now())
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  customers     Customer[]
+  products      Product[]
+  orders        Order[]
+  analysisRuns  AnalysisRun[]
+  recommendations Recommendation[]
+  audits        Audit[]
+
+  @@index([orgId])
+}
+
+// --- Ingested analytics data (idempotent upserts keyed on shopify ids) ---
+
+model Customer {
+  id           String    @id @default(cuid())
+  storeId      String
+  shopifyId    BigInt
+  email        String?
+  city         String?
+  region       String?
+  country      String?
+  zip          String?
+  lat          Float?
+  lng          Float?
+  firstOrderAt DateTime?
+  store        Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@unique([storeId, shopifyId])
+  @@index([storeId])
+}
+
+model Product {
+  id        String  @id @default(cuid())
+  storeId   String
+  shopifyId BigInt
+  title     String
+  type      String?
+  unitCost  Decimal?
+  store     Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  lineItems OrderLineItem[]
+
+  @@unique([storeId, shopifyId])
+  @@index([storeId])
+}
+
+model Order {
+  id             String          @id @default(cuid())
+  storeId        String
+  shopifyId      BigInt
+  customerId     String?
+  totalPrice     Decimal
+  currency       String
+  discountTotal  Decimal         @default(0)
+  refundedAmount Decimal         @default(0)
+  sourceName     String?
+  createdAt      DateTime
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lineItems      OrderLineItem[]
+
+  @@unique([storeId, shopifyId])
+  @@index([storeId])
+  @@index([customerId])
+}
+
+model OrderLineItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String?
+  qty       Int
+  price     Decimal
+  discount  Decimal  @default(0)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// --- Analysis outputs ---
+
+model AnalysisRun {
+  id              String           @id @default(cuid())
+  storeId         String
+  startedAt       DateTime         @default(now())
+  finishedAt      DateTime?
+  status          RunStatus        @default(PENDING)
+  store           Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  metrics         Metric[]
+  recommendations Recommendation[]
+
+  @@index([storeId])
+}
+
+model Metric {
+  id           String      @id @default(cuid())
+  runId        String
+  key          String
+  valueNumeric Float?
+  valueJson    Json?
+  unit         String?
+  window       String?
+  run          AnalysisRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([runId, key])
+}
+
+model Recommendation {
+  id                String                  @id @default(cuid())
+  runId             String
+  storeId           String
+  category          String
+  title             String
+  rationale         String
+  evidenceMetricIds String[]
+  impactLow         Float
+  impactHigh        Float
+  impactUnit        String
+  effort            Effort
+  confidence        Float
+  rankScore         Float
+  status            RecStatus               @default(NEW)
+  suggestedExecution Json
+  createdAt         DateTime                @default(now())
+  run               AnalysisRun             @relation(fields: [runId], references: [id], onDelete: Cascade)
+  store             Store                   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  outcomes          RecommendationOutcome[]
+
+  @@index([storeId])
+  @@index([runId])
+}
+
+model RecommendationOutcome {
+  id                   String         @id @default(cuid())
+  recommendationId     String
+  implementedAt        DateTime       @default(now())
+  measurementWindowDays Int
+  baselineValue        Float?
+  measuredValue        Float?
+  liftValue            Float?
+  liftConfidence       Float?
+  status               OutcomeStatus  @default(SCHEDULED)
+  recommendation       Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@index([recommendationId])
+}
+
+model Audit {
+  id                String   @id @default(cuid())
+  storeId           String
+  createdAt         DateTime @default(now())
+  publicSlug        String   @unique
+  recommendationIds String[]
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+}
+
+model Subscription {
+  id               String       @id @default(cuid())
+  orgId            String       @unique
+  stripeCustomerId String?
+  tier             Tier         @default(BASIC)
+  status           SubStatus    @default(TRIALING)
+  currentPeriodEnd DateTime?
+  org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
