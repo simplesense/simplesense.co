@@ -1,15 +1,16 @@
 import type { Recommendation as PrismaRecommendation } from '@ss/db'
-import { prisma, getOrgStore, DEMO } from '@ss/db'
+import { prisma, DEMO } from '@ss/db'
 import { analyzeStore, openRecommendations, latestRunId, latestMetricValue } from '@ss/jobs'
 import { createLlmClient } from '@ss/engine'
 import { llmConfig } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
-import { resolveStoreId } from './store-resolve'
+import { resolveActiveStore } from './store-resolve'
 
 export interface DashboardData {
   storeName: string
   model: string
+  isDemo: boolean
   recommendations: Recommendation[]
   metrics: {
     revenue: number | null
@@ -56,14 +57,13 @@ async function ensureRun(storeId: string): Promise<void> {
 /** Dashboard data for the current session's org, read from the DB (tenant-scoped). */
 export async function getDashboard(): Promise<DashboardData> {
   const { orgId } = await getSession()
-  const storeId = await resolveStoreId(orgId)
-  const store = await getOrgStore(prisma, orgId, storeId)
-  if (!store) throw new Error('store not found — run `pnpm --filter @ss/db seed`')
+  const { store, isDemo } = await resolveActiveStore(orgId)
   await ensureRun(store.id)
   const rows = await openRecommendations(prisma, store.id)
   return {
-    storeName: store.shopDomain === DEMO.shopDomain ? DEMO.storeName : store.shopDomain,
+    storeName: isDemo ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
+    isDemo,
     recommendations: rows.map(toCore),
     metrics: {
       revenue: await latestMetricValue(prisma, store.id, 'pareto.revenue_total'),

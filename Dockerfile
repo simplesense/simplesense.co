@@ -14,6 +14,11 @@ WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile
 
+# NEXT_PUBLIC_* are inlined at build, so the Clerk publishable key (public, not secret)
+# must be present here. Passed via `fly deploy --build-arg`.
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
 # Build the Next app (force-dynamic pages → no DB needed at build).
 RUN pnpm --filter @ss/web build
 

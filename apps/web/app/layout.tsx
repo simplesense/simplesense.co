@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
+import { ClerkProvider } from '@clerk/nextjs'
 import '@ss/ui/styles.css'
 import './globals.css'
 
@@ -8,8 +9,10 @@ export const metadata: Metadata = {
   description: 'The co-pilot that tells your store where to turn next.',
 }
 
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
+  const shell = (
     <html lang="en">
       <head>
         {/* Fonts: Instrument Serif (display) + Manrope (in-product) + Inter (UI/body). */}
@@ -25,4 +28,5 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>{children}</body>
     </html>
   )
+  return hasClerk ? <ClerkProvider>{shell}</ClerkProvider> : shell
 }

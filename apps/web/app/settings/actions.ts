@@ -4,7 +4,7 @@ import { analyzeStore } from '@ss/jobs'
 import { createLlmClient } from '@ss/engine'
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/auth'
-import { resolveStoreId } from '@/lib/store-resolve'
+import { ownStoreId } from '@/lib/store-resolve'
 
 /**
  * Update store settings (physical retail toggle + free-ship threshold) and re-analyze so
@@ -16,7 +16,8 @@ export async function updateStoreSettings(input: {
   freeShippingThreshold: number | null
 }): Promise<{ ok: boolean }> {
   const { orgId } = await getSession()
-  const storeId = await resolveStoreId(orgId)
+  const storeId = await ownStoreId(orgId)
+  if (!storeId) return { ok: false }
   const store = await getOrgStore(prisma, orgId, storeId)
   if (!store) return { ok: false }
 

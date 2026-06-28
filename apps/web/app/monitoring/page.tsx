@@ -1,8 +1,8 @@
-import { prisma, getOrgStore, DEMO } from '@ss/db'
 import { listOutcomes } from '@ss/jobs'
 import { Badge } from '@ss/ui'
+import { prisma, DEMO } from '@ss/db'
 import { getSession } from '@/lib/auth'
-import { resolveStoreId } from '@/lib/store-resolve'
+import { resolveActiveStore } from '@/lib/store-resolve'
 import { AppShell } from '@/components/AppShell'
 
 export const dynamic = 'force-dynamic'
@@ -11,11 +11,12 @@ const fmt = (v: number | null): string => (v == null ? '—' : v.toLocaleString(
 
 export default async function MonitoringPage() {
   const { orgId } = await getSession()
-  const store = await getOrgStore(prisma, orgId, await resolveStoreId(orgId))
-  const outcomes = store ? await listOutcomes(prisma, store.id) : []
+  const { store, isDemo } = await resolveActiveStore(orgId)
+  const outcomes = await listOutcomes(prisma, store.id)
+  const storeName = isDemo ? DEMO.storeName : store.shopDomain
 
   return (
-    <AppShell storeName={DEMO.storeName} openMoves={0} model="">
+    <AppShell storeName={storeName} openMoves={0} model="">
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         MONITORING
       </p>

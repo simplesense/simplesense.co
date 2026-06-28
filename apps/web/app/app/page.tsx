@@ -21,6 +21,27 @@ export default async function MovesPage() {
 
   return (
     <AppShell storeName={data.storeName} openMoves={data.recommendations.length} model={data.model}>
+      {data.isDemo ? (
+        <a
+          href="/connections"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--ss-info-bg)',
+            color: 'var(--text-link)',
+            border: '1px solid var(--ss-blue-300)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: 13.5,
+            marginBottom: 20,
+            textDecoration: 'none',
+          }}
+        >
+          <i className="bi bi-info-circle" />
+          You're viewing demo data. Connect your Shopify store to see your own moves →
+        </a>
+      ) : null}
       <div
         style={{
           display: 'grid',

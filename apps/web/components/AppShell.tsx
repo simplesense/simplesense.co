@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react'
+import { UserButton } from '@clerk/nextjs'
+
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 interface NavItem {
   label: string
@@ -144,9 +147,12 @@ function Topbar({ storeName, model }: { storeName: string; model?: string }) {
           Synced
         </span>
       </div>
-      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-        {model === 'mock' ? 'Demo data · mock synthesis' : `Synthesis · ${model ?? 'live'}`}
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          {model === 'mock' ? 'Demo data · mock synthesis' : model ? `Synthesis · ${model}` : ''}
+        </span>
+        {hasClerk ? <UserButton /> : null}
+      </div>
     </header>
   )
 }

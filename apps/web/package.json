@@ -9,8 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ss/core": "workspace:*",
+    "@clerk/nextjs": "^7.5.9",
     "@ss/config": "workspace:*",
+    "@ss/core": "workspace:*",
     "@ss/db": "workspace:*",
     "@ss/engine": "workspace:*",
     "@ss/integrations": "workspace:*",
