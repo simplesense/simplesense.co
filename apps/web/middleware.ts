@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server'
 // Clerk-session-authed). Everything else requires login.
 const isPublic = createRouteMatcher([
   '/',
+  '/how-it-works',
+  '/pricing',
   '/audit(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',

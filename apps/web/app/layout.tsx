@@ -28,5 +28,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>{children}</body>
     </html>
   )
-  return hasClerk ? <ClerkProvider>{shell}</ClerkProvider> : shell
+  return hasClerk ? (
+    <ClerkProvider signUpForceRedirectUrl="/onboarding" signInForceRedirectUrl="/app">
+      {shell}
+    </ClerkProvider>
+  ) : (
+    shell
+  )
 }
