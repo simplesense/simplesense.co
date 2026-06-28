@@ -7,4 +7,5 @@ export { Badge, type BadgeProps, type BadgeTone, type BadgeVariant } from './com
 export { Card, type CardProps } from './components/Card'
 export { MetricCard, type MetricCardProps } from './components/MetricCard'
 export { MoveCard, type MoveCardProps } from './components/MoveCard'
+export { ParetoChart, type ParetoChartProps, type ParetoPoint } from './components/ParetoChart'
 export { recommendationToMove, formatImpact } from './recommendation-to-move'

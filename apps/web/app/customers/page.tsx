@@ -1,4 +1,4 @@
-import { MetricCard } from '@ss/ui'
+import { MetricCard, ParetoChart, type ParetoPoint } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import {
@@ -20,6 +20,18 @@ export default async function CustomersPage() {
   const m = await loadStoreMetrics()
   const top20 = m.num('pareto.top20_revenue_share')
   const top20Count = m.num('pareto.top20_customer_count')
+
+  // Cumulative revenue concentration at the measured percentiles → a grounded Lorenz curve.
+  const concentration: ParetoPoint[] = (
+    [
+      [0.01, m.num('pareto.top1_revenue_share')],
+      [0.05, m.num('pareto.top5_revenue_share')],
+      [0.1, m.num('pareto.top10_revenue_share')],
+      [0.2, top20],
+    ] as const
+  )
+    .filter(([, share]) => share != null)
+    .map(([customerFraction, share]) => ({ customerFraction, revenueShare: share as number }))
 
   return (
     <AppShell storeName={m.storeName} openMoves={0} model="">
@@ -53,6 +65,34 @@ export default async function CustomersPage() {
           icon="clock"
         />
       </MetricGrid>
+
+      {concentration.length >= 2 ? (
+        <Panel title="Revenue concentration">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+              gap: 20,
+              alignItems: 'center',
+            }}
+          >
+            <ParetoChart points={concentration} />
+            <div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-body)' }}>
+                The blue curve is your real revenue concentration; the dashed line is what perfectly
+                even spending would look like. The wider the gap, the more your revenue leans on a
+                few customers.
+              </p>
+              {top20 != null ? (
+                <p style={{ margin: '14px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
+                  Top 20% of customers ·{' '}
+                  <strong style={{ color: 'var(--text-strong)' }}>{pct(top20)}</strong> of revenue
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </Panel>
+      ) : null}
 
       <Panel title="RFM segments">
         <StatBars
