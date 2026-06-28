@@ -54,5 +54,9 @@ export async function GET(req: Request): Promise<Response> {
   )
   jar.delete('ss_oauth_state')
 
+  // Backfill (Slice 3, built + tested): backfillStore(prisma, store.id, new RealShopifyReader(),
+  // { shop, token }) — idempotent, SYNCING→READY — once RealShopifyReader's GraphQL mapping is
+  // implemented. Run it durably via Inngest (not inline) so this request returns fast.
+
   return NextResponse.redirect(`${cfg.appUrl}/connections?connected=${encodeURIComponent(shop)}`)
 }

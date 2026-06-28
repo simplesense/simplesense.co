@@ -16,6 +16,7 @@
     "@ss/core": "workspace:*",
     "@ss/config": "workspace:*",
     "@ss/engine": "workspace:*",
+    "@ss/integrations": "workspace:*",
     "@ss/db": "workspace:*"
   },
   "devDependencies": {

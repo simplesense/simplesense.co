@@ -9,7 +9,7 @@ criterion below it is checked and its tests pass.
 - [x] Slice 0 — Repo, tooling, CI
 - [~] Slice 1 — Schema/migrations/seed/tenant-isolation DONE on Supabase; auth (Clerk) deferred
 - [~] Slice 2 — Shopify OAuth flow + crypto + HMAC + disconnect DONE (mock); live needs Shopify creds
-- [ ] Slice 3 — Historical ingestion (background)
+- [~] Slice 3 — Ingestion: paginated reader + idempotent backfill + status machine DONE (mock-tested); RealShopifyReader mapping + Inngest durability pending creds
 - [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
 - [x] Slice 5 — Signal detection (+ packages/config)
 - [x] Slice 6 — LLM synthesis + grounding validation + ranking (@ss/engine)
@@ -75,7 +75,22 @@ AC results:
 - [x] disconnect purges store data (tenant-scoped) — PASS (disconnect.test)
 - [x] callback handler logic w/ mocked Shopify; encryption round-trip; webhook HMAC — PASS (80 tests)
 
-Next: GitHub repo + Vercel hosted preview (needs gh auth + Vercel account/env).
+## Completed: Slice 3 — historical ingestion core (2026-06-27)
+
+@ss/integrations: `ShopifyReader` (page generators of normalized domain) — `MockShopifyReader`
+(fully working/tested) + `RealShopifyReader` (throws clearly until the live GraphQL→domain
+mapping is implemented; never silently empty). @ss/jobs: `collectStore` (drains all pages) +
+`backfillStore` (SYNCING → idempotent upsert ingest → READY; ERROR + rethrow on failure).
+
+AC results:
+
+- [x] paginates + upserts; re-run produces no duplicates (idempotent) — PASS (backfill.test)
+- [x] progress + syncStatus PENDING→SYNCING→READY (and →ERROR) — PASS
+- [x] pagination over a mocked multi-page dataset — PASS (collectStore, pageSize 7)
+- [x] failure-resume (ERROR + rethrow so the runner retries) — PASS
+- [~] LIVE backfill — needs RealShopifyReader GraphQL mapping (Shopify creds) + Inngest durability
+
+Next: Slice 9 (outcome flywheel), then GitHub/Vercel deploy (DEPLOY.md done — needs Vercel account).
 
 ## Build order (chosen 2026-06-27): HEART-FIRST
 

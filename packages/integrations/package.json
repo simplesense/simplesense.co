@@ -13,7 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ss/config": "workspace:*"
+    "@ss/config": "workspace:*",
+    "@ss/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

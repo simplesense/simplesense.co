@@ -129,6 +129,9 @@ importers:
       '@ss/config':
         specifier: workspace:*
         version: link:../config
+      '@ss/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^5.7.3
@@ -151,6 +154,9 @@ importers:
       '@ss/engine':
         specifier: workspace:*
         version: link:../engine
+      '@ss/integrations':
+        specifier: workspace:*
+        version: link:../integrations
     devDependencies:
       typescript:
         specifier: ^5.7.3

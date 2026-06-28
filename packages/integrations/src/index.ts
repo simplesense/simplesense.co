@@ -12,6 +12,12 @@ export {
 } from './shopify/oauth'
 export { verifyWebhookHmac } from './shopify/webhooks'
 export {
+  MockShopifyReader,
+  RealShopifyReader,
+  type ShopifyReader,
+  type ShopInfo,
+} from './shopify/reader'
+export {
   RealShopifyClient,
   MockShopifyClient,
   type ShopifyClient,

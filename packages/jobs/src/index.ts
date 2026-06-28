@@ -11,3 +11,4 @@ export {
   latestMetricValue,
   type AnalyzeResult,
 } from './analyze'
+export { collectStore, backfillStore, type BackfillResult } from './backfill'
