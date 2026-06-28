@@ -91,4 +91,26 @@ describe('assertServerEnv', () => {
   it('never throws outside production', () => {
     expect(() => assertServerEnv({ NODE_ENV: 'development' })).not.toThrow()
   })
+
+  const baseProd = { NODE_ENV: 'production', APP_ENCRYPTION_KEY: 'k', DATABASE_URL: 'postgres://x' }
+  it('throws on a half-configured Clerk (publishable without secret)', () => {
+    expect(() =>
+      assertServerEnv({ ...baseProd, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_x' }),
+    ).toThrow(/half-configured|CLERK_SECRET_KEY/)
+  })
+  it('throws on a half-configured Clerk (secret without publishable)', () => {
+    expect(() => assertServerEnv({ ...baseProd, CLERK_SECRET_KEY: 'sk_test_x' })).toThrow(
+      /half-configured|NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY/,
+    )
+  })
+  it('passes when both Clerk keys are set, or neither', () => {
+    expect(() =>
+      assertServerEnv({
+        ...baseProd,
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_x',
+        CLERK_SECRET_KEY: 'sk_test_x',
+      }),
+    ).not.toThrow()
+    expect(() => assertServerEnv(baseProd)).not.toThrow()
+  })
 })

@@ -83,6 +83,27 @@ describe('buildVipSegment', () => {
     expect(c3.city).toBe('')
     expect(c3.firstOrderAt).toBe('')
   })
+
+  it('excludes non-paying customers so a zero-spend cutoff cannot admit the whole base', () => {
+    // 1 whale + 9 fully-refunded customers. Old code: cutoff customer spend 0 → threshold 0
+    // → every customer's spend >= 0 → all 10 returned. Fixed: only the paying whale.
+    const customers = Array.from({ length: 10 }, (_, i) => ({ id: `c${i}`, email: `c${i}@x.com` }))
+    const orders = customers.map((c, i) =>
+      i === 0
+        ? order({ id: `o${i}`, customerId: c.id, totalPrice: 1000 })
+        : order({ id: `o${i}`, customerId: c.id, totalPrice: 100, refundedAmount: 100 }),
+    )
+    const seg = buildVipSegment(store({ customers, orders }), 0.2)
+    expect(seg.map((r) => r.customerId)).toEqual(['c0'])
+  })
+
+  it('excludes over-refunded (net-negative) customers entirely', () => {
+    const s = store({
+      customers: [{ id: 'c1', email: 'a@x.com' }],
+      orders: [order({ id: 'o1', customerId: 'c1', totalPrice: 100, refundedAmount: 300 })],
+    })
+    expect(buildVipSegment(s, 1)).toEqual([])
+  })
 })
 
 describe('buildSkuEconomics', () => {
@@ -120,6 +141,20 @@ describe('buildSkuEconomics', () => {
     expect(p2.marginRate).toBe('')
   })
 
+  it('blanks marginRate (never a fabricated 0) when known-cost revenue nets to 0', () => {
+    // price 50, qty 1, discount 50 → revenue 0; unitCost 10 → grossProfit -10 (a real loss).
+    const s0 = store({
+      products: [{ id: 'p', title: 'Comped SKU', unitCost: 10 }],
+      orders: [
+        order({ id: 'o1', lineItems: [{ productId: 'p', quantity: 1, price: 50, discount: 50 }] }),
+      ],
+    })
+    const row = buildSkuEconomics(s0)[0]!
+    expect(row.grossRevenue).toBe(0)
+    expect(row.grossProfit).toBe(-10)
+    expect(row.marginRate).toBe('') // undefined margin → blank, not 0%
+  })
+
   it('sorts money-losing SKUs first', () => {
     const loss = store({
       products: [
@@ -154,5 +189,26 @@ describe('toCsv', () => {
 
   it('emits just the header for no rows', () => {
     expect(toCsv(['a', 'b'], [])).toBe('a,b\r\n')
+  })
+
+  it('defangs spreadsheet formula triggers (= + - @ tab/CR) with a leading apostrophe', () => {
+    const csv = toCsv(
+      ['email'],
+      [
+        { email: '=HYPERLINK("http://evil","x")' },
+        { email: '+1-555' },
+        { email: '-2+3' },
+        { email: '@SUM(A1)' },
+        { email: '\tTAB' },
+        { email: 'safe@x.com' }, // @ not leading → untouched
+      ],
+    )
+    const lines = csv.trim().split('\r\n')
+    expect(lines[1]).toBe('"\'=HYPERLINK(""http://evil"",""x"")"')
+    expect(lines[2]).toBe("'+1-555")
+    expect(lines[3]).toBe("'-2+3")
+    expect(lines[4]).toBe("'@SUM(A1)")
+    expect(lines[5]).toBe("'\tTAB") // apostrophe-defanged; tab is not an RFC quote trigger
+    expect(lines[6]).toBe('safe@x.com') // interior @ is fine
   })
 })

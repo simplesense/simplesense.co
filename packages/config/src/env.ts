@@ -96,7 +96,8 @@ export function stripeConfig(src: EnvSource = process.env): StripeConfig {
 /**
  * Fail fast in production if a required secret is missing (§12). Call at server startup.
  * Mockable integrations (Shopify/Stripe/Clerk/Resend) are intentionally NOT required —
- * they degrade to mocks until supplied.
+ * they degrade to mocks until supplied. The one exception is Clerk's two keys, which must be
+ * all-or-nothing (see below) to avoid a split build-time/runtime auth config.
  */
 export function assertServerEnv(src: EnvSource = process.env): void {
   if ((str(src, 'NODE_ENV') ?? 'development') !== 'production') return
@@ -104,6 +105,19 @@ export function assertServerEnv(src: EnvSource = process.env): void {
   if (!str(src, 'APP_ENCRYPTION_KEY')) missing.push('APP_ENCRYPTION_KEY')
   if (!str(src, 'DATABASE_URL')) missing.push('DATABASE_URL')
   if (missing.length) throw new Error(`Missing required env in production: ${missing.join(', ')}`)
+
+  // Clerk must be all-or-nothing. The provider/UI activate on the build-inlined publishable
+  // key while auth() needs the runtime secret; a split config silently collapses auth onto
+  // the shared demo org. Refuse to boot rather than serve every tenant the same store.
+  const clerkPub = str(src, 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+  const clerkSecret = str(src, 'CLERK_SECRET_KEY')
+  if (!!clerkPub !== !!clerkSecret) {
+    const have = clerkPub ? 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY' : 'CLERK_SECRET_KEY'
+    const need = clerkPub ? 'CLERK_SECRET_KEY' : 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'
+    throw new Error(
+      `Clerk is half-configured: ${have} is set but ${need} is missing. Set both or neither — a split config collapses tenant isolation.`,
+    )
+  }
 }
 
 /** Attribution window for the outcome flywheel (§8.6, OPEN_QUESTIONS §10). */

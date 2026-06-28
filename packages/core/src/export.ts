@@ -1,4 +1,5 @@
 import type { NormalizedStore } from './types'
+import { netRevenue } from './window'
 
 /**
  * Grounded execution exports (§ "Export to Klaviyo" / "Export segments" / "Export CSV").
@@ -31,30 +32,32 @@ export interface SkuRow {
 
 const round2 = (n: number): number => Math.round(n * 100) / 100
 const blank = (s: string | null | undefined): string => (s == null ? '' : s)
-const netOf = (o: NormalizedStore['orders'][number]): number =>
-  Math.max(0, o.totalPrice - (o.refundedAmount ?? 0))
 
 /**
  * The top `topPct` of customers by net lifetime spend — the VIP segment behind the
- * Pareto/RFM moves. Ranked desc; guest/no-customer orders are excluded (can't segment them).
- * Default 0.2 (top 20%). Ties at the cutoff are kept (>= threshold), so the count can exceed
- * the exact percentile but never fabricates membership.
+ * Pareto/RFM moves. Per-order net is `netRevenue` (the SAME helper the analyzers use, so the
+ * export and the recommendation never disagree). Guest/no-customer orders and non-paying
+ * customers (lifetime net <= 0) are excluded — matching paretoAnalyzer's `> 0` filter — so a
+ * zero-spend cutoff can never admit the whole base. Ties at the cutoff are kept (>= threshold).
  */
 export function buildVipSegment(store: NormalizedStore, topPct = 0.2): VipRow[] {
   const byCustomer = new Map<string, { spent: number; orders: number }>()
   for (const o of store.orders) {
     if (!o.customerId) continue
     const agg = byCustomer.get(o.customerId) ?? { spent: 0, orders: 0 }
-    agg.spent += netOf(o)
+    agg.spent += netRevenue(o)
     agg.orders += 1
     byCustomer.set(o.customerId, agg)
   }
-  if (byCustomer.size === 0) return []
 
   const custById = new Map(store.customers.map((c) => [c.id, c]))
+  // Only paying customers can be segmented — drop lifetime net <= 0 before ranking so the
+  // threshold is always a real (positive) spend figure.
   const ranked = [...byCustomer.entries()]
     .map(([customerId, agg]) => ({ customerId, ...agg }))
+    .filter((r) => r.spent > 0)
     .sort((a, b) => b.spent - a.spent)
+  if (ranked.length === 0) return []
 
   const cutoffIndex = Math.max(1, Math.ceil(ranked.length * Math.min(1, Math.max(0, topPct))))
   const threshold = ranked[cutoffIndex - 1]?.spent ?? 0
@@ -103,8 +106,9 @@ export function buildSkuEconomics(store: NormalizedStore): SkuRow[] {
     const knownCost = p.unitCost != null
     const estimatedCost = knownCost ? round2(p.unitCost! * a.units) : ''
     const grossProfit = knownCost ? round2(revenue - (estimatedCost as number)) : ''
-    const marginRate =
-      knownCost && revenue !== 0 ? round2((grossProfit as number) / revenue) : knownCost ? 0 : ''
+    // Margin is undefined when revenue is 0 (units sold but net revenue netted to zero):
+    // emit blank, never a fabricated 0 that would read as break-even on a loss-making row.
+    const marginRate = knownCost && revenue !== 0 ? round2((grossProfit as number) / revenue) : ''
     rows.push({
       productId,
       title: p.title,
@@ -126,10 +130,17 @@ export function buildSkuEconomics(store: NormalizedStore): SkuRow[] {
   })
 }
 
-/** RFC-4180 CSV serializer: quotes any field containing a comma, quote, or newline. */
+/**
+ * RFC-4180 CSV serializer with formula-injection defense. Quotes any field containing a
+ * comma, quote, or newline; and because these files are opened in spreadsheets, neutralizes
+ * cells that a spreadsheet would execute as a formula — anything starting with = + - @ or a
+ * leading tab/CR (DDE/HYPERLINK exfiltration) is prefixed with a `'` so it stays literal text.
+ * The customer email/city/region and product titles are merchant-uncontrolled, so this matters.
+ */
 export function toCsv(headers: string[], rows: readonly object[]): string {
   const esc = (v: unknown): string => {
-    const s = v == null ? '' : String(v)
+    let s = v == null ? '' : String(v)
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}` // defang formula triggers before quoting
     return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const head = headers.map(esc).join(',')

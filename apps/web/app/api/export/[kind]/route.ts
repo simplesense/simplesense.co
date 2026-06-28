@@ -50,8 +50,16 @@ export async function GET(
     return NextResponse.json({ error: 'no store data' }, { status: 404 })
   }
 
-  const slug = isDemo ? DEMO.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : store.shopDomain
-  const stamp = store.id.slice(-6)
+  // Sanitize anything that flows into the Content-Disposition header: collapse to a safe
+  // [a-z0-9.-] slug so a crafted shopDomain can't inject CRLF/quotes into the response header.
+  const safeSlug = (s: string): string =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'store'
+  const slug = safeSlug(isDemo ? DEMO.storeName : store.shopDomain)
+  const stamp = safeSlug(store.id.slice(-6))
 
   let csv: string
   let filename: string

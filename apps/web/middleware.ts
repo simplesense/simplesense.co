@@ -16,7 +16,11 @@ const isPublic = createRouteMatcher([
   '/api/stores/connect(.*)',
 ])
 
-const hasClerk = !!process.env.CLERK_SECRET_KEY
+// Gate on the SAME signal the ClerkProvider uses (the build-inlined publishable key) so the
+// middleware (auth enforcement) and the provider (UI) can never diverge — a build with the
+// publishable key but no runtime secret now throws loudly inside auth.protect() instead of
+// silently passing every request through. assertServerEnv refuses to boot on a split config.
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 export default hasClerk
   ? clerkMiddleware(async (auth, req) => {

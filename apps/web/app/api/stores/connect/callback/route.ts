@@ -6,6 +6,7 @@ import {
   createShopifyClient,
   encryptSecret,
   normalizeShop,
+  isValidShopDomain,
   DEFAULT_WEBHOOK_TOPICS,
 } from '@ss/integrations'
 import { prisma } from '@ss/db'
@@ -30,6 +31,11 @@ export async function GET(req: Request): Promise<Response> {
   const shop = normalizeShop(query.shop ?? '')
   const code = query.code
   if (!shop || !code) return NextResponse.json({ error: 'missing shop/code' }, { status: 400 })
+  // Even though the HMAC authenticates the callback, only persist a well-formed *.myshopify.com
+  // domain — matches the start route and keeps anything odd out of the stored shopDomain.
+  if (!isValidShopDomain(shop)) {
+    return NextResponse.json({ error: 'invalid shop domain' }, { status: 400 })
+  }
 
   const client = createShopifyClient()
   const token = await client.exchangeCodeForToken(shop, code)

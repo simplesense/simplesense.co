@@ -6,7 +6,10 @@ export interface Session {
   userId: string
 }
 
-const hasClerk = !!process.env.CLERK_SECRET_KEY
+// Same signal as the middleware + ClerkProvider (build-inlined publishable key). With a split
+// config (publishable present, secret missing) auth() throws loudly rather than this silently
+// returning the shared DEMO org for every request — which would collapse tenant isolation.
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 /**
  * Resolve the current tenant. With Clerk configured, maps the signed-in user (or their
