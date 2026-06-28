@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" viewport="700x120" name="Data-viz Sequence" subtitle="Warm categorical order for charts" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-card); font-family: var(--font-sans); }
+  .wrap { display: flex; padding: 24px; gap: 0; }
+  .bar { flex: 1; height: 56px; display: flex; align-items: flex-end; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; font-family: var(--font-mono); padding-bottom: 6px; }
+  .bar:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+  .bar:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar" style="background:var(--ss-chart-1)">01</div>
+    <div class="bar" style="background:var(--ss-chart-2)">02</div>
+    <div class="bar" style="background:var(--ss-chart-3)">03</div>
+    <div class="bar" style="background:var(--ss-chart-4)">04</div>
+    <div class="bar" style="background:var(--ss-chart-5)">05</div>
+  </div>
+</body>
+</html>

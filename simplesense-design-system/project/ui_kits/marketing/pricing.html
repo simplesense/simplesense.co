@@ -1,0 +1,241 @@
+<!-- @dsCard group="Marketing Site" viewport="1280x900" name="Pricing" subtitle="Free / Basic / Pro · monthly–yearly toggle · FAQ" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleSense — Pricing</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="marketing.css">
+<style>
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* billing toggle */
+  .toggle { display: inline-flex; align-items: center; gap: 3px; background: var(--surface-soft); padding: 4px; border-radius: var(--radius-pill); margin: 4px 0 10px; }
+  .toggle button { border: none; cursor: pointer; padding: 8px 18px; border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 14px; font-weight: 500; color: var(--text-muted); background: transparent; transition: all var(--dur-fast); }
+  .toggle button.on { background: var(--surface-card); color: var(--text-strong); font-weight: 600; box-shadow: var(--shadow-xs); }
+  .toggle .save { font-size: 11px; font-weight: 700; color: var(--ss-success); margin-left: 4px; }
+
+  /* plan grid */
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 30px; align-items: stretch; }
+  @media (max-width: 860px) { .plans { grid-template-columns: 1fr; max-width: 440px; margin-inline: auto; } }
+  .plan { position: relative; display: flex; flex-direction: column; background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-xl); box-shadow: var(--shadow-xs); padding: 28px; }
+  .plan.feat { border: 1.5px solid var(--ss-blue-500); box-shadow: var(--shadow-md); }
+  .plan .ribbon { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ss-blue-700); background: var(--ss-blue-50); padding: 4px 10px; border-radius: var(--radius-pill); }
+  .plan .pname { font-family: var(--font-ui-display); font-weight: 700; font-size: 20px; color: var(--text-strong); }
+  .plan .pblurb { font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0; min-height: 38px; }
+  .plan .price { display: flex; align-items: baseline; gap: 5px; margin: 16px 0 2px; }
+  .plan .price .amt { font-family: var(--font-display); font-size: 52px; line-height: 1; color: var(--text-strong); }
+  .plan .price .per { font-size: 14px; color: var(--text-muted); }
+  .plan .billed { font-size: 12.5px; color: var(--text-muted); min-height: 18px; }
+  .plan .feats { list-style: none; margin: 18px 0 24px; padding: 18px 0 0; border-top: 1px solid var(--border-hairline); display: grid; gap: 11px; }
+  .plan .feats li { display: flex; gap: 10px; font-size: 14px; line-height: 1.4; color: var(--text-body); }
+  .plan .feats i { color: var(--ss-success); margin-top: 2px; }
+  .plan .pcta { margin-top: auto; }
+  .plan .pcta a, .plan .pcta button { width: 100%; justify-content: center; box-sizing: border-box; }
+  .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 600; padding: 13px 20px; border-radius: var(--radius-pill); cursor: pointer; background: var(--surface-card); color: var(--text-strong); border: 1px solid var(--border-strong); transition: background var(--dur-fast); text-decoration: none; }
+  .btn-secondary:hover { background: var(--surface-soft); }
+
+  /* faq */
+  .faq { max-width: 760px; margin: 0 auto; display: grid; gap: 0; }
+  .faq details { border-bottom: 1px solid var(--border-hairline); padding: 20px 4px; }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: var(--font-ui-display); font-weight: 600; font-size: 17px; color: var(--text-strong); }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary i { color: var(--text-muted); transition: transform var(--dur-fast); }
+  .faq details[open] summary i { transform: rotate(45deg); }
+  .faq p { font-size: 14.5px; line-height: 1.6; color: var(--text-body); margin: 12px 0 0; max-width: 64ch; }
+  .section { padding: 70px 0 0; }
+  .section-head { text-align: center; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav">
+      <a class="brand" href="index.html">SimpleSense</a>
+      <div class="nav-links">
+        <a href="index.html">Product</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="pricing.html" class="active">Pricing</a>
+        <a href="#">Story</a>
+      </div>
+      <a class="cta" href="../app/onboarding.html"><span class="glint"></span>Get your free audit</a>
+    </nav>
+  </div>
+
+  <!-- HERO -->
+  <header class="m-hero" style="padding-bottom:8px">
+    <div class="eyebrow-pill"><span class="tag">PRICING</span> Start free · pay when the moves pay off</div>
+    <h1>Priced like software.<br><em>Worth like an operator.</em></h1>
+    <p class="sub">Begin with a free audit — no card. Upgrade when the weekly moves are already making you money.</p>
+    <div class="toggle" id="toggle">
+      <button class="on" data-cycle="mo">Monthly</button>
+      <button data-cycle="yr">Yearly <span class="save">save 23%</span></button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- PLANS -->
+    <section class="plans">
+      <!-- Free -->
+      <div class="plan">
+        <div class="pname">Free audit</div>
+        <p class="pblurb">See the gaps. No card required.</p>
+        <div class="price"><span class="amt">$0</span></div>
+        <div class="billed">One-time, yours to keep</div>
+        <ul class="feats">
+          <li><i class="bi bi-check2"></i> Full store audit</li>
+          <li><i class="bi bi-check2"></i> Operator score</li>
+          <li><i class="bi bi-check2"></i> Top 3 gaps identified</li>
+          <li><i class="bi bi-check2"></i> 1 data source</li>
+        </ul>
+        <div class="pcta"><a class="btn-secondary" href="../app/onboarding.html">Get the free audit</a></div>
+      </div>
+
+      <!-- Basic -->
+      <div class="plan">
+        <div class="pname">Basic</div>
+        <p class="pblurb">Weekly moves for a focused store.</p>
+        <div class="price"><span class="amt" data-mo="49" data-yr="39">$49</span><span class="per">/mo</span></div>
+        <div class="billed" data-billed>billed monthly</div>
+        <ul class="feats">
+          <li><i class="bi bi-check2"></i> Everything in Free</li>
+          <li><i class="bi bi-check2"></i> Weekly ranked moves</li>
+          <li><i class="bi bi-check2"></i> 2 data sources</li>
+          <li><i class="bi bi-check2"></i> Email digest</li>
+          <li><i class="bi bi-check2"></i> 12 months of history</li>
+        </ul>
+        <div class="pcta"><a class="btn-secondary" href="../app/onboarding.html">Start Basic</a></div>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan feat">
+        <span class="ribbon">Most popular</span>
+        <div class="pname">Pro</div>
+        <p class="pblurb">The full co-pilot, all sources.</p>
+        <div class="price"><span class="amt" data-mo="129" data-yr="99">$129</span><span class="per">/mo</span></div>
+        <div class="billed" data-billed>billed monthly</div>
+        <ul class="feats">
+          <li><i class="bi bi-check2"></i> Everything in Basic</li>
+          <li><i class="bi bi-check2"></i> All data sources</li>
+          <li><i class="bi bi-check2"></i> Unlimited history</li>
+          <li><i class="bi bi-check2"></i> Real-time alerts + SMS</li>
+          <li><i class="bi bi-check2"></i> Auto-apply moves</li>
+          <li><i class="bi bi-check2"></i> Priority support</li>
+        </ul>
+        <div class="pcta"><a class="cta" href="../app/onboarding.html" style="padding:13px 20px;font-size:15px"><span class="glint"></span>Start Pro</a></div>
+      </div>
+    </section>
+
+    <div style="text-align:center;margin-top:22px;font-size:13.5px;color:var(--text-muted)">
+      <i class="bi bi-shield-check" style="color:var(--ss-blue-500)"></i> 30-day money-back. Cancel anytime. Read-only access — we never write to your store without you applying a move.
+    </div>
+
+    <!-- VALUE LINE -->
+    <section class="section" style="padding-top:64px">
+      <div class="cta-band" style="background:var(--surface-card);color:var(--text-strong);border:1px solid var(--border-hairline);box-shadow:var(--shadow-sm)">
+        <h2 style="color:var(--text-strong)">One applied move usually covers <em style="color:var(--ss-clay-500)">a year of Pro.</em></h2>
+        <p style="color:var(--text-body)">The average store finds <b style="color:var(--text-strong)">$72k/mo</b> of lift on the table in its first audit. Pro is $129.</p>
+        <a class="cta btn-lg" href="../app/onboarding.html"><span class="glint"></span>See your number free <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section">
+      <div class="section-head">
+        <div class="sec-eyebrow">Questions</div>
+        <h2 class="sec-title">Good to know</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>Is the audit really free?<i class="bi bi-plus-lg"></i></summary>
+          <p>Yes. Connect Shopify and SimpleSense reads your history and returns your operator score, the top three gaps, and what they're worth — no card, no trial clock. You only pay if you want the weekly moves.</p>
+        </details>
+        <details>
+          <summary>Do you write to my store?<i class="bi bi-plus-lg"></i></summary>
+          <p>Never without you. SimpleSense is read-only by default. It only pushes changes — Klaviyo segments, Shopify Flows, ad audiences — at the moment you apply a specific move, and you can undo any of them.</p>
+        </details>
+        <details>
+          <summary>What size store is this for?<i class="bi bi-plus-lg"></i></summary>
+          <p>Stores doing roughly $1–15M a year get the most out of it — enough history for the patterns to be real, small enough that a few right moves move the whole business.</p>
+        </details>
+        <details>
+          <summary>How is impact estimated?<i class="bi bi-plus-lg"></i></summary>
+          <p>Each move carries a ranged estimate modeled on your own trailing-12-month figures, plus a confidence score. We show the working behind every number — and we'd rather be honestly ranged than falsely precise.</p>
+        </details>
+        <details>
+          <summary>Can I switch plans or cancel?<i class="bi bi-plus-lg"></i></summary>
+          <p>Anytime, from Settings. Upgrades take effect immediately; downgrades at the end of the cycle. There's a 30-day money-back guarantee on every paid plan.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+      <div class="cta-band">
+        <h2>Your free audit is <em>one click away.</em></h2>
+        <p>Connect Shopify and see the moves worth making this week — before you pay a cent.</p>
+        <a class="cta btn-lg" href="../app/onboarding.html" style="background:#fff;color:var(--ss-ink);border-color:#fff"><span class="glint" style="background:linear-gradient(to bottom,#fff,transparent)"></span>Get your free audit <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-art"></div>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="wm">SimpleSense</div>
+        <p>The co-pilot every $1–15M store has been missing — operator judgment, at software price.</p>
+        <div class="sub-row">
+          <input type="email" placeholder="Enter your store email" aria-label="Email">
+          <button class="cta"><span class="glint"></span>Start free</button>
+        </div>
+      </div>
+      <div class="fcol">
+        <h4>Product</h4>
+        <a href="how-it-works.html">How it works</a>
+        <a href="../app/onboarding.html">Free audit</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#">Integrations</a>
+      </div>
+      <div class="fcol">
+        <h4>Company</h4>
+        <a href="#">Story</a>
+        <a href="#">Build in public</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 SimpleSense.co · Made by an operator who has run the stores.</span>
+      <div class="socials">
+        <a href="#" aria-label="X"><i class="bi bi-twitter-x"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        <a href="#" aria-label="GitHub"><i class="bi bi-github"></i></a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+<script>
+  (function(){
+    var toggle = document.getElementById('toggle');
+    var btns = toggle.querySelectorAll('button');
+    function setCycle(cycle){
+      btns.forEach(function(b){ b.classList.toggle('on', b.dataset.cycle === cycle); });
+      document.querySelectorAll('.amt[data-mo]').forEach(function(el){
+        el.firstChild ? el.textContent = '$' + el.dataset[cycle] : null;
+      });
+      document.querySelectorAll('[data-billed]').forEach(function(el){
+        el.textContent = cycle === 'yr' ? 'billed yearly' : 'billed monthly';
+      });
+    }
+    btns.forEach(function(b){ b.addEventListener('click', function(){ setCycle(b.dataset.cycle); }); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!-- @dsCard group="Components" viewport="700x520" name="App — MoveCard & Metrics" subtitle="The signature prescriptive recommendation + KPI tiles" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
+<style>
+  body { margin: 0; background: var(--surface-page); font-family: var(--font-sans); padding: 24px; }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { MetricCard, MoveCard } = window.SimpleSenseDesignSystem_33cb4c;
+    function Demo() {
+      return (
+        <div>
+          <div className="metrics">
+            <MetricCard label="Conversion rate" value="1.8%" delta="+0.4pt" icon="graph-up-arrow" />
+            <MetricCard label="Repeat revenue" value="38%" delta="+5pt" icon="arrow-repeat" />
+            <MetricCard label="Refund rate" value="3.1%" delta="Watch" deltaTone="warning" icon="arrow-counterclockwise" />
+          </div>
+          <MoveCard
+            rank={1}
+            category="Geographic concentration"
+            pattern="82% of your customers come from within 5 miles of your stores."
+            why="You're paying national ad rates to reach an audience that's effectively local."
+            moves={[
+              "Geo-fence Meta & Google to a 5-mile radius",
+              "Turn on local pickup (BOPIS) via Shopify Flow",
+              "Shift budget from national spray to local high-intent",
+            ]}
+            impact="+$4–7k / mo"
+            confidence="Grounded in 3.2 yrs of order data"
+          />
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="Closing slide" subtitle="Cream-to-blossom band, the rallying line" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html,body { margin: 0; }
+  .slide { width: 1280px; height: 720px; position: relative; overflow: hidden; box-sizing: border-box;
+    background: var(--surface-page); display: flex; flex-direction: column; justify-content: center; padding: 0 110px; }
+  .art { position: absolute; right: 0; bottom: 0; top: 0; width: 44%; background-image: url('../assets/img/footer-blossom.jpg'); background-size: cover; background-position: bottom center; }
+  .art::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, var(--surface-page) 2%, rgba(244,241,234,0.5) 30%, transparent 64%); }
+  .wm { position: relative; font-size: 13px; font-weight: 600; letter-spacing: 0.4em; text-transform: uppercase; color: var(--accent); margin-bottom: 30px; }
+  h1 { position: relative; font-family: var(--font-display); font-weight: 400; font-size: 78px; line-height: 1.0; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; max-width: 15ch; }
+  h1 em { font-style: italic; color: var(--ss-clay-500); }
+  .sub { position: relative; font-size: 20px; color: var(--ss-ink-soft); margin-top: 28px; max-width: 40ch; line-height: 1.55; }
+  .foot { position: absolute; left: 110px; bottom: 54px; font-size: 14px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="art"></div>
+    <div class="wm">SimpleSense</div>
+    <h1>Stop drowning in data.<br><em>Start executing.</em></h1>
+    <p class="sub">The co-pilot every $1–15M store has been missing — operator judgment, at software price.</p>
+    <div class="foot">SimpleSense.co · Satya Sivunigunta, Founder</div>
+  </div>
+</body>
+</html>

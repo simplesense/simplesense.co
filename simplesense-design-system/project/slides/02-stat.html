@@ -1,0 +1,33 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="Stat slide" subtitle="The problem, framed with one big number" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html,body { margin: 0; }
+  .slide { width: 1280px; height: 720px; background: var(--surface-page); box-sizing: border-box; padding: 96px 110px;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 70px; align-items: center; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 22px; }
+  h2 { font-family: var(--font-display); font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; color: var(--text-strong); margin: 0 0 26px; }
+  p { font-size: 19px; line-height: 1.6; color: var(--ss-ink-soft); margin: 0; max-width: 42ch; }
+  .stats { display: grid; gap: 22px; }
+  .stat { background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 30px 32px; }
+  .stat .big { font-family: var(--font-display); font-size: 76px; line-height: 1; color: var(--ss-clay-500); letter-spacing: -0.01em; }
+  .stat .lbl { font-size: 16px; color: var(--ss-ink-soft); margin-top: 10px; line-height: 1.45; }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div>
+      <div class="eyebrow">The problem</div>
+      <h2>Merchants aren't missing data. They're drowning in it.</h2>
+      <p>Shopify, GA4, Meta and Google each tell a different story. The hard part isn't seeing the numbers — it's deciding what to change on Monday.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big">10–15<span style="font-size:32px"> hrs</span></div><div class="lbl">per week reconciling numbers instead of running the business</div></div>
+      <div class="stat"><div class="big">0.3%</div><div class="lbl">the conversion rate merchants report — even after going viral</div></div>
+    </div>
+  </div>
+</body>
+</html>

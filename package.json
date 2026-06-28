@@ -1,0 +1,28 @@
+{
+  "name": "simple-sense",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Simple Sense — prescriptive e-commerce analytics SaaS for Shopify merchants.",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @ss/web dev",
+    "build": "pnpm --filter @ss/web build",
+    "start": "pnpm --filter @ss/web start",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "oxlint apps packages",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "oxlint": "^0.15.6",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

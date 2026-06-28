@@ -1,0 +1,42 @@
+/*
+ * Slice 0 baseline. The full design-system token pipeline (packages/ui →
+ * tokens/*.css + Tailwind theme) lands with the UI slices; this is the minimal
+ * warm-cream baseline so the hello route already reads as Simple Sense.
+ */
+:root {
+  --surface-page: #f4f1ea;
+  --text-strong: #211c15;
+  --text-body: #4a4234;
+  --accent: #c25a3c;
+  --action-primary: #0871e7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--surface-page);
+  color: var(--text-body);
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ss-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}

@@ -1,0 +1,229 @@
+<!-- @dsCard group="Marketing Site" viewport="1280x900" name="Landing — Hero & Footer" subtitle="Warm editorial hero, floating pill nav, blossom footer" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleSense — The AI operator for your store</title>
+<script>document.documentElement.classList.add('preanim');</script>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
+<style>
+  body { margin: 0; background: var(--surface-page); color: var(--text-body); }
+  .page { overflow-x: hidden; }
+
+  /* ---------- Floating pill nav ---------- */
+  .nav-wrap { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); width: 94%; max-width: 1040px; z-index: 50; pointer-events: none; }
+  .nav { pointer-events: auto; display: flex; align-items: center; justify-content: space-between;
+    background: color-mix(in srgb, var(--surface-card) 80%, transparent); backdrop-filter: blur(14px);
+    border: 1px solid var(--border-hairline); border-radius: var(--radius-pill); padding: 9px 9px 9px 22px; box-shadow: var(--shadow-sm); }
+  .brand { font-family: var(--font-display); font-size: 24px; letter-spacing: -0.01em; color: var(--text-strong); }
+  .nav-links { display: flex; gap: 30px; }
+  .nav-links a { font-size: 14px; color: var(--ss-ink-soft); transition: opacity var(--dur-fast); }
+  .nav-links a:hover { opacity: 0.55; }
+  @media (max-width: 760px) { .nav-links { display: none; } }
+  .cta { position: relative; display: inline-flex; align-items: center; gap: 7px; background: var(--ss-blue-500);
+    color: #fff; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: var(--radius-pill);
+    border: 1px solid var(--ss-blue-500); box-shadow: var(--shadow-inset-glint), var(--shadow-sm); overflow: hidden; cursor: pointer; transition: background var(--dur-fast); }
+  .cta:hover { background: var(--ss-blue-600); color: #fff; }
+  .cta .glint { position: absolute; top: 1px; left: 10%; width: 80%; height: 15px; border-radius: 12px;
+    background: linear-gradient(to bottom, #DEF0FC, transparent); transition: width var(--dur-base) var(--ease-out); }
+  .cta:hover .glint { width: 86%; }
+
+  /* ---------- Hero ---------- */
+  .hero { min-height: 100vh; padding: 150px 24px 60px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+  .eyebrow-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-card);
+    border: 1px solid var(--border-hairline); border-radius: var(--radius-pill); padding: 6px 14px 6px 8px; font-size: 12.5px; color: var(--ss-ink-soft); box-shadow: var(--shadow-xs); margin-bottom: 28px; }
+  .eyebrow-pill .tag { background: var(--ss-clay-100); color: var(--ss-clay-600); font-weight: 600; font-size: 11px; padding: 2px 9px; border-radius: var(--radius-pill); }
+  h1.hero-h { font-family: var(--font-display); font-weight: 400; font-size: clamp(42px, 8vw, 80px);
+    line-height: 1.0; letter-spacing: -0.025em; color: var(--text-strong); margin: 0 0 30px; max-width: 15ch; }
+  h1.hero-h em { font-style: italic; color: var(--ss-clay-500); }
+  .hero-sub { font-size: clamp(16px, 2vw, 19px); line-height: 1.6; color: var(--ss-ink-soft); max-width: 38ch; margin: 0 auto 32px; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn-lg { font-size: 16px; padding: 14px 26px; }
+  .btn-ghost-lg { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; padding: 14px 22px; border-radius: var(--radius-pill);
+    color: var(--text-strong); border: 1px solid var(--border-strong); background: var(--surface-card); cursor: pointer; transition: background var(--dur-fast); }
+  .btn-ghost-lg:hover { background: var(--surface-soft); }
+  .trust { margin-top: 22px; font-size: 13px; color: var(--text-muted); }
+
+  /* ---------- Product preview ---------- */
+  .preview { margin-top: 56px; width: min(960px, 100%); position: relative; }
+  .preview-frame { background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg); padding: 16px; }
+  .preview-bar { display: flex; align-items: center; gap: 8px; padding: 4px 6px 14px; }
+  .preview-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .preview-bar .title { margin-left: 10px; font-size: 12.5px; color: var(--text-muted); }
+  .preview-body { background: var(--surface-page); border-radius: var(--radius-md); padding: 22px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; text-align: left; }
+  @media (max-width: 720px) { .preview-body { grid-template-columns: 1fr; } }
+
+  .digest h3 { font-family: var(--font-ui-display); font-weight: 700; font-size: 26px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0 0 4px; }
+  .digest .when { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  .mini-metric { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-top: 1px solid var(--border-hairline); }
+  .mini-metric:first-of-type { border-top: none; }
+  .mini-metric .v { font-size: 20px; font-weight: 700; color: var(--text-strong); }
+  .mini-metric .l { font-size: 13px; color: var(--text-muted); }
+  .mini-metric .d { margin-left: auto; font-size: 12px; font-weight: 600; }
+
+  .move { background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 18px; }
+  .move-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .rank { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--ss-blue-500); color: #fff; font-family: var(--font-display); font-size: 18px; box-shadow: var(--shadow-inset-glint); }
+  .move-cat { font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .impact { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--ss-success); background: var(--ss-success-bg); padding: 3px 10px; border-radius: var(--radius-pill); }
+  .move-pattern { font-family: var(--font-ui-display); font-weight: 600; font-size: 19px; line-height: 1.25; letter-spacing: -0.01em; color: var(--text-strong); margin: 0 0 10px; }
+  .move-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  .move-list li { display: flex; gap: 9px; font-size: 13px; line-height: 1.4; color: var(--text-body); }
+  .move-list i { color: var(--ss-success); font-size: 14px; margin-top: 1px; }
+
+  /* ---------- Logos band ---------- */
+  .logos { padding: 40px 24px 10px; text-align: center; }
+  .logos p { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 18px; }
+  .logos .row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: center; opacity: 0.7; }
+  .logos .row span { font-size: 17px; font-weight: 600; color: var(--ss-ink-soft); display: inline-flex; align-items: center; gap: 8px; }
+
+  /* ---------- Footer (blossom) ---------- */
+  footer { position: relative; margin-top: 80px; background: var(--surface-page); padding: 64px 7vw 40px; overflow: hidden; }
+  .footer-art { position: absolute; right: 0; bottom: 0; top: 0; width: 46%; max-width: 620px; background-image: url('../../assets/img/footer-blossom.jpg'); background-size: cover; background-position: bottom center; pointer-events: none; }
+  .footer-art::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, var(--surface-page) 0%, rgba(244,241,234,0.55) 24%, transparent 60%); }
+  @media (max-width: 860px) { .footer-art { display: none; } }
+  .footer-grid { position: relative; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; max-width: 1000px; }
+  @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  .footer-brand .wm { font-family: var(--font-display); font-size: 38px; letter-spacing: -0.01em; color: var(--text-strong); }
+  .footer-brand p { max-width: 30ch; font-size: 14px; color: var(--ss-ink-soft); margin: 12px 0 22px; }
+  .sub-row { display: flex; gap: 8px; max-width: 360px; }
+  .sub-row input { flex: 1; height: 44px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--surface-card); font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); }
+  .sub-row input:focus { outline: none; border-color: var(--ss-blue-500); box-shadow: var(--focus-ring); }
+  .sub-row button { white-space: nowrap; }
+  .fcol h4 { font-size: 13px; font-weight: 700; color: var(--text-strong); margin: 0 0 14px; }
+  .fcol a { display: block; font-size: 14px; color: var(--ss-ink-soft); margin-bottom: 11px; }
+  .fcol a:hover { color: var(--text-strong); }
+  .footer-base { position: relative; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--border-strong); max-width: 1000px; font-size: 13px; color: var(--text-muted); }
+  .footer-base .socials { display: flex; gap: 16px; font-size: 17px; }
+  .footer-base .socials a { color: var(--ss-clay-500); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav">
+      <span class="brand">SimpleSense</span>
+      <div class="nav-links">
+        <a href="#">Product</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#">Story</a>
+      </div>
+      <button class="cta" id="navCta"><span class="glint"></span>Get your free audit</button>
+    </nav>
+  </div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="eyebrow-pill"><span class="tag">NEW</span> The prescriptive operator brain for e-commerce</div>
+    <h1 class="hero-h">Stop drowning in data.<br><em>Start executing.</em></h1>
+    <p class="hero-sub">SimpleSense reads your whole store — Shopify, GA4, Meta, Klaviyo — and tells you the few moves to make this week, and why.</p>
+    <div class="hero-actions">
+      <button class="cta btn-lg" id="heroCta"><span class="glint"></span>Get your free audit <i class="bi bi-arrow-right"></i></button>
+      <button class="btn-ghost-lg"><i class="bi bi-play-circle"></i> Watch a 2-min tour</button>
+    </div>
+    <div class="trust">No credit card · Connect Shopify in one click · Your first 3 moves in 24 hours</div>
+
+    <!-- PRODUCT PREVIEW -->
+    <div class="preview">
+      <div class="preview-frame">
+        <div class="preview-bar">
+          <span class="dot" style="background:#e0a98f"></span>
+          <span class="dot" style="background:#dcc98a"></span>
+          <span class="dot" style="background:#a9c4a0"></span>
+          <span class="title">Monday digest · Maple &amp; Oak Goods</span>
+        </div>
+        <div class="preview-body">
+          <div class="digest">
+            <h3 data-comment-anchor="f5e474410d-h3">This week's moves</h3>
+            <div class="when">Generated Monday, 6:00 AM · 3.2 yrs analyzed</div>
+            <div class="mini-metric"><span class="v">1.8%</span><span class="l">conversion</span><span class="d" style="color:var(--ss-success)">+0.4pt</span></div>
+            <div class="mini-metric"><span class="v">38%</span><span class="l">repeat revenue</span><span class="d" style="color:var(--ss-success)">+5pt</span></div>
+            <div class="mini-metric"><span class="v">$72k</span><span class="l">est. lift on table</span><span class="d" style="color:var(--accent)">3 moves</span></div>
+          </div>
+          <div class="move">
+            <div class="move-head">
+              <span class="rank">1</span>
+              <span class="move-cat">Geographic concentration</span>
+              <span class="impact"><i class="bi bi-graph-up-arrow"></i> +$4–7k/mo</span>
+            </div>
+            <p class="move-pattern" data-comment-anchor="1de1342ec4-p">82% of your customers live within 5 miles of your stores.</p>
+            <ul class="move-list">
+              <li><i class="bi bi-check2"></i> Geo-fence Meta &amp; Google to a 5-mile radius</li>
+              <li><i class="bi bi-check2"></i> Turn on local pickup (BOPIS) via Shopify Flow</li>
+              <li><i class="bi bi-check2"></i> Shift budget from national spray to local high-intent</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- LOGOS -->
+  <section class="logos">
+    <p>Reads the whole stack</p>
+    <div class="row">
+      <span><i class="bi bi-bag-check"></i> Shopify</span>
+      <span><i class="bi bi-graph-up"></i> GA4</span>
+      <span><i class="bi bi-meta"></i> Meta</span>
+      <span><i class="bi bi-google"></i> Google Ads</span>
+      <span><i class="bi bi-envelope-paper"></i> Klaviyo</span>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-art"></div>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="wm">SimpleSense</div>
+        <p>The co-pilot every $1–15M store has been missing — operator judgment, at software price.</p>
+        <div class="sub-row">
+          <input type="email" placeholder="Enter your store email" aria-label="Email">
+          <button class="cta" id="footCta"><span class="glint"></span>Start free</button>
+        </div>
+      </div>
+      <div class="fcol">
+        <h4>Product</h4>
+        <a href="how-it-works.html">How it works</a>
+        <a href="../app/onboarding.html">Free audit</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#">Integrations</a>
+      </div>
+      <div class="fcol">
+        <h4>Company</h4>
+        <a href="#">Story</a>
+        <a href="#">Build in public</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 SimpleSense.co · Made by an operator who has run the stores.</span>
+      <div class="socials">
+        <a href="#" aria-label="X"><i class="bi bi-twitter-x"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        <a href="#" aria-label="GitHub"><i class="bi bi-github"></i></a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+<script>
+  ['navCta','heroCta','footCta'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', function(){
+      var label = el.childNodes;
+      el.style.transform = 'scale(0.98)';
+      setTimeout(function(){ el.style.transform=''; }, 120);
+    });
+  });
+</script>
+</body>
+</html>

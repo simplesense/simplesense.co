@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp.*
+.yarn/*
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Env & secrets — NEVER commit real values
+.env
+.env.local
+.env.*.local
+
+# Local databases (PGlite embeds its data on disk)
+.pglite/
+*.db
+*.sqlite
+
+# Test / coverage
+coverage/
+.vitest/
+playwright-report/
+test-results/
+
+# Tooling caches
+.turbo/
+.eslintcache
+.oxlint*cache
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# The design-system handoff zip (the unzipped folder is kept)
+SimpleSense Design System-handoff.zip

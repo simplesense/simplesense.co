@@ -1,0 +1,21 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Imagery" subtitle="Warm, painterly ink-wash blossoms anchor footers & bands" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-card); font-family: var(--font-sans); }
+  .wrap { display: flex; gap: 0; height: 180px; }
+  .img { flex: 1; background-size: cover; background-position: center; }
+  .cap { position: absolute; left: 16px; bottom: 12px; background: rgba(255,253,249,.85); padding: 4px 10px; border-radius: var(--radius-pill); font-size: 11px; color: var(--text-body); font-family: var(--font-mono); }
+  .rel { position: relative; flex: 1; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="rel"><div class="img" style="height:100%;background-image:url('../assets/img/footer-blossom-nivora.jpeg')"></div><span class="cap">blossom · footer</span></div>
+    <div class="rel"><div class="img" style="height:100%;background-image:url('../assets/img/footer-lantern-avanor.jpeg')"></div><span class="cap">lantern · band</span></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220" role="img" aria-labelledby="title desc">
+  <title id="title">Empty state illustration</title>
+  <desc id="desc">A simple dashboard panel with empty rows.</desc>
+  <rect x="24" y="24" width="312" height="172" rx="18" fill="#f8fafc" stroke="#cbd5e1"></rect>
+  <rect x="48" y="52" width="92" height="14" rx="7" fill="#2563eb"></rect>
+  <rect x="48" y="92" width="264" height="16" rx="8" fill="#e2e8f0"></rect>
+  <rect x="48" y="124" width="220" height="16" rx="8" fill="#e2e8f0"></rect>
+  <rect x="48" y="156" width="168" height="16" rx="8" fill="#e2e8f0"></rect>
+</svg>

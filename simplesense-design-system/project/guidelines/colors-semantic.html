@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Semantic" subtitle="Warmed status colors with soft tinted backgrounds" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-card); font-family: var(--font-sans); }
+  .wrap { display: flex; gap: 14px; padding: 20px; flex-wrap: wrap; }
+  .sw { width: 150px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; margin-top: 8px; }
+  .name { font-size: 12px; font-weight: 600; color: var(--text-strong); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sw"><div class="row"><span class="dot" style="background:var(--ss-success)"></span><span class="name">Success</span></div><span class="pill" style="background:var(--ss-success-bg);color:var(--ss-success)">Ready</span></div>
+    <div class="sw"><div class="row"><span class="dot" style="background:var(--ss-warning)"></span><span class="name">Warning</span></div><span class="pill" style="background:var(--ss-warning-bg);color:var(--ss-warning)">Review</span></div>
+    <div class="sw"><div class="row"><span class="dot" style="background:var(--ss-danger)"></span><span class="name">Danger</span></div><span class="pill" style="background:var(--ss-danger-bg);color:var(--ss-danger)">Blocked</span></div>
+    <div class="sw"><div class="row"><span class="dot" style="background:var(--ss-info)"></span><span class="name">Info</span></div><span class="pill" style="background:var(--ss-info-bg);color:var(--ss-info)">Synced</span></div>
+  </div>
+</body>
+</html>

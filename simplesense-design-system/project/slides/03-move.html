@@ -1,0 +1,48 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="Product-in-action slide" subtitle="Pattern → prescribed moves, the signature layout" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
+<style>
+  html,body { margin: 0; }
+  .slide { width: 1280px; height: 720px; background: var(--surface-page); box-sizing: border-box; padding: 80px 110px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  h2 { font-family: var(--font-display); font-weight: 400; font-size: 46px; line-height: 1.05; letter-spacing: -0.015em; color: var(--text-strong); margin: 0 0 20px; }
+  .lede { font-size: 18px; line-height: 1.6; color: var(--ss-ink-soft); margin: 0; max-width: 40ch; }
+  .card { background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 34px; }
+  .head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .rank { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--ss-blue-500); color: #fff; font-family: var(--font-display); font-size: 26px; box-shadow: var(--shadow-inset-glint); }
+  .cat { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .impact { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: var(--ss-success); background: var(--ss-success-bg); padding: 7px 14px; border-radius: var(--radius-pill); }
+  .pattern { font-family: var(--font-display); font-size: 27px; line-height: 1.18; color: var(--text-strong); margin: 0 0 18px; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+  li { display: flex; gap: 12px; font-size: 17px; line-height: 1.4; color: var(--ss-ink-soft); }
+  li i { color: var(--ss-success); font-size: 19px; margin-top: 1px; }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div>
+      <div class="eyebrow">Product in action</div>
+      <h2>The non-obvious pattern — then the exact move.</h2>
+      <p class="lede">SimpleSense surfaces what tools miss, explains why it matters, and hands you the moves with an impact range.</p>
+    </div>
+    <div class="card">
+      <div class="head">
+        <span class="rank">1</span>
+        <span class="cat">Geographic concentration</span>
+        <span class="impact"><i class="bi bi-graph-up-arrow"></i> +$4–7k/mo</span>
+      </div>
+      <p class="pattern">82% of your customers live within 5 miles of your stores.</p>
+      <ul>
+        <li><i class="bi bi-check2"></i> Geo-fence Meta &amp; Google to a 5-mile radius</li>
+        <li><i class="bi bi-check2"></i> Turn on local pickup (BOPIS) via Shopify Flow</li>
+        <li><i class="bi bi-check2"></i> Shift budget from national spray to local high-intent</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

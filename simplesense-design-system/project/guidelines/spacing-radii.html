@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Radii" subtitle="Soft, not bubbly — pills for nav & marketing CTAs" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-card); font-family: var(--font-sans); }
+  .wrap { display: flex; gap: 18px; padding: 24px 32px; align-items: flex-end; }
+  .b { width: 80px; height: 64px; background: var(--ss-blue-50); border: 1.5px solid var(--ss-blue-300); }
+  .name { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div><div class="b" style="border-radius:var(--radius-sm)"></div><div class="name">sm · .5</div></div>
+    <div><div class="b" style="border-radius:var(--radius-md)"></div><div class="name">md · .75</div></div>
+    <div><div class="b" style="border-radius:var(--radius-lg)"></div><div class="name">lg · 1</div></div>
+    <div><div class="b" style="border-radius:var(--radius-xl)"></div><div class="name">xl · 1.5</div></div>
+    <div><div class="b" style="width:120px;border-radius:var(--radius-pill)"></div><div class="name">pill</div></div>
+  </div>
+</body>
+</html>

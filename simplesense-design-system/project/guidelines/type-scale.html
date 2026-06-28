@@ -1,0 +1,25 @@
+<!-- @dsCard group="Type" viewport="700x280" name="Type Scale" subtitle="Display in serif, the rest in Inter" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; background: var(--surface-card); font-family: var(--font-sans); padding: 20px 32px; }
+  .r { display: flex; align-items: baseline; gap: 16px; border-top: 1px solid var(--border-hairline); padding: 7px 0; }
+  .r:first-child { border-top: none; }
+  .lbl { width: 96px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); flex: none; }
+  .ex { color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .serif { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.02em; }
+</style>
+</head>
+<body>
+  <div class="r"><span class="lbl">4xl · 68</span><span class="ex serif" style="font-size:54px;line-height:1">Hero</span></div>
+  <div class="r"><span class="lbl">2xl · 36</span><span class="ex serif" style="font-size:36px">Page title</span></div>
+  <div class="r"><span class="lbl">xl · 28</span><span class="ex" style="font-size:28px;font-weight:700">Section head</span></div>
+  <div class="r"><span class="lbl">lg · 22</span><span class="ex" style="font-size:22px;font-weight:600">Card title</span></div>
+  <div class="r"><span class="lbl">base · 16</span><span class="ex" style="font-size:16px;font-weight:400">Body copy</span></div>
+  <div class="r"><span class="lbl">sm · 14</span><span class="ex" style="font-size:14px;font-weight:400">UI default</span></div>
+  <div class="r"><span class="lbl">xs · 12</span><span class="ex" style="font-size:12px;color:var(--text-muted)">Caption / meta</span></div>
+</body>
+</html>

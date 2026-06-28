@@ -1,0 +1,44 @@
+/* ============================================================
+   SimpleSense — Typography tokens
+   Instrument Serif for editorial display (hero, big numbers,
+   pull quotes). Inter for everything functional.
+   ============================================================ */
+
+:root {
+  /* Families */
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --font-ui-display: "Manrope", "Inter", system-ui, sans-serif;  /* in-product display & labels (CRM / app UI) — never marketing display */
+  --font-sans:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale (rem) */
+  --text-2xs:  0.6875rem;  /* 11px — micro labels */
+  --text-xs:   0.75rem;    /* 12px — captions, meta */
+  --text-sm:   0.875rem;   /* 14px — UI default */
+  --text-base: 1rem;       /* 16px — body */
+  --text-md:   1.125rem;   /* 18px — lede */
+  --text-lg:   1.375rem;   /* 22px — card titles */
+  --text-xl:   1.75rem;    /* 28px — section heads */
+  --text-2xl:  2.25rem;    /* 36px — page titles */
+  --text-3xl:  3rem;       /* 48px — display */
+  --text-4xl:  4.25rem;    /* 68px — hero */
+  --text-5xl:  6rem;       /* 96px — mega hero */
+
+  /* Weights (Inter) */
+  --fw-regular: 400;  /* @kind font */
+  --fw-medium:  500;  /* @kind font */
+  --fw-semibold:600;  /* @kind font */
+  --fw-bold:    700;  /* @kind font */
+
+  /* Line heights */
+  --lh-tight:   1.02;   /* @kind font */
+  --lh-snug:    1.18;   /* @kind font */
+  --lh-normal:  1.5;    /* @kind font */
+  --lh-relaxed: 1.65;   /* @kind font */
+
+  /* Tracking */
+  --tracking-tight:  -0.02em;  /* @kind font */
+  --tracking-normal: 0;        /* @kind font */
+  --tracking-wide:   0.02em;    /* @kind font */
+  --tracking-eyebrow:0.16em;   /* @kind font */
+}

@@ -1,0 +1,34 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="Title slide" subtitle="Cover — spaced wordmark + serif promise" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html,body { margin: 0; }
+  .slide { width: 1280px; height: 720px; background: var(--surface-page); position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; padding: 0 110px; box-sizing: border-box; }
+  .wm { font-size: 14px; font-weight: 600; letter-spacing: 0.42em; color: var(--accent); text-transform: uppercase; margin-bottom: 38px; }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: 92px; line-height: 0.98; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; max-width: 18ch; }
+  h1 em { font-style: italic; color: var(--ss-clay-500); }
+  .sub { font-size: 21px; color: var(--ss-ink-soft); margin-top: 30px; max-width: 52ch; line-height: 1.55; }
+  .foot { position: absolute; left: 110px; bottom: 54px; font-size: 14px; color: var(--text-muted); letter-spacing: 0.02em; }
+  .glow { position: absolute; right: -160px; top: -160px; width: 540px; height: 540px; border-radius: 50%;
+    background: radial-gradient(circle, var(--ss-blossom-100), transparent 68%); }
+  .chip { position: absolute; right: 110px; bottom: 54px; display: inline-flex; align-items: center; gap: 9px;
+    background: var(--surface-card); border: 1px solid var(--border-hairline); border-radius: var(--radius-pill);
+    padding: 8px 16px; font-size: 13px; color: var(--ss-ink-soft); box-shadow: var(--shadow-xs); }
+  .chip b { color: var(--ss-blue-600); }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="glow"></div>
+    <div class="wm">SimpleSense</div>
+    <h1>The AI operator for your <em>store.</em></h1>
+    <p class="sub">Not another dashboard. SimpleSense reads your whole store and tells you the few moves to make this week — and why.</p>
+    <div class="foot">Investor Overview · June 2026 · SimpleSense.co · Confidential</div>
+    <div class="chip"><b>$0</b> Free audit · the front door</div>
+  </div>
+</body>
+</html>
