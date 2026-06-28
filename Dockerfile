@@ -18,6 +18,9 @@ RUN pnpm install --frozen-lockfile
 # must be present here. Passed via `fly deploy --build-arg`.
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# Keep auth on our own on-brand pages (not Clerk's hosted portal).
+ENV NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+ENV NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
 # Build the Next app (force-dynamic pages → no DB needed at build).
 RUN pnpm --filter @ss/web build
