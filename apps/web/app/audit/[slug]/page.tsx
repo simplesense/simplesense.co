@@ -1,0 +1,151 @@
+import { MoveCard, recommendationToMove } from '@ss/ui'
+import { buildAudit } from '@/lib/demo/audit'
+
+export default async function AuditPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const audit = await buildAudit(slug)
+
+  return (
+    <main style={{ background: 'var(--surface-page)', minHeight: '100dvh' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '64px 24px 96px' }}>
+        {/* header */}
+        <p className="ss-eyebrow" style={{ margin: 0 }}>
+          SIMPLE SENSE AUDIT
+        </p>
+        <h1
+          style={{
+            margin: '10px 0 0',
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
+            lineHeight: 1.02,
+            letterSpacing: '-0.02em',
+            color: 'var(--text-strong)',
+            maxWidth: '18ch',
+          }}
+        >
+          {audit.headline}
+        </h1>
+        <p
+          style={{
+            margin: '14px 0 0',
+            fontSize: '1.0625rem',
+            color: 'var(--text-body)',
+            maxWidth: '60ch',
+          }}
+        >
+          {audit.generatedNote}
+        </p>
+
+        {/* grounded headline stats */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            margin: '36px 0 48px',
+          }}
+        >
+          {audit.stats.map((s) => (
+            <div
+              key={s.label}
+              style={{
+                background: 'var(--surface-card)',
+                border: '1px solid var(--border-hairline)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-sm)',
+                padding: '18px 20px',
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>{s.label}</p>
+              <strong
+                style={{
+                  display: 'block',
+                  marginTop: 6,
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 32,
+                  lineHeight: 1.05,
+                  color: 'var(--text-strong)',
+                }}
+              >
+                {s.value}
+              </strong>
+            </div>
+          ))}
+        </div>
+
+        {/* curated moves (read-only — no apply on the public page) */}
+        <h2
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+            margin: '0 0 16px',
+          }}
+        >
+          Your top {audit.moves.length} moves
+        </h2>
+        <div style={{ display: 'grid', gap: 20 }}>
+          {audit.moves.map((rec, i) => (
+            <MoveCard key={rec.id} {...recommendationToMove(rec, i + 1)} />
+          ))}
+        </div>
+
+        {/* wedge CTA */}
+        <div
+          style={{
+            marginTop: 48,
+            padding: '32px',
+            background: 'var(--surface-card)',
+            border: '1px solid var(--border-hairline)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-md)',
+            textAlign: 'center',
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-display)',
+              fontSize: 26,
+              color: 'var(--text-strong)',
+            }}
+          >
+            This is just the front door.
+          </p>
+          <p style={{ margin: '8px auto 20px', maxWidth: '52ch', color: 'var(--text-body)' }}>
+            Connect your store to get the full ranked list every week — with one-click actions and
+            measured lift on every move you apply.
+          </p>
+          <a
+            href="/app"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--action-primary)',
+              color: 'var(--text-onbrand)',
+              padding: '0 24px',
+              height: 48,
+              borderRadius: 'var(--radius-pill)',
+              fontWeight: 600,
+              boxShadow: 'var(--shadow-inset-glint), var(--shadow-sm)',
+              textDecoration: 'none',
+            }}
+          >
+            See this week&apos;s moves <i className="bi bi-arrow-right" />
+          </a>
+        </div>
+
+        <p
+          style={{ marginTop: 32, fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'center' }}
+        >
+          No customer data is shown on this page · every figure is grounded in {audit.storeName}
+          &apos;s real numbers.
+        </p>
+      </div>
+    </main>
+  )
+}

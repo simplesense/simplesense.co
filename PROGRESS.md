@@ -14,7 +14,7 @@ criterion below it is checked and its tests pass.
 - [x] Slice 5 — Signal detection (+ packages/config)
 - [x] Slice 6 — LLM synthesis + grounding validation + ranking (@ss/engine)
 - [x] Slice 7 — Dashboard ("This week's moves") + design-system port (@ss/ui)
-- [ ] Slice 8 — The free "Simple Sense Audit" (the wedge)
+- [x] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [ ] Slice 9 — Outcome tracking (flywheel)
 - [ ] Slice 10 — Billing (Stripe tiers) + gating
 - [ ] Slice 11 — Integration exports (Klaviyo/Meta/Google)
@@ -90,7 +90,31 @@ AC results:
       unit test + a prod-build/HTTP render smoke check
 - Note: auth gating of /app deferred to Slice 1 (route is currently open for the demo).
 
-Slice 7 done 2026-06-27. Next: Slice 8 — public, shareable Simple Sense Audit (the wedge).
+Slice 7 done 2026-06-27.
+
+## Completed: Slice 8 — public "Simple Sense Audit" (the wedge)
+
+Public `/audit/[slug]` renders unauthenticated: a curated 2–3 highest-conviction
+MoveCards (read-only, no Apply) + grounded headline stats + a wedge CTA, styled per §19.
+`buildAudit()` is the trust boundary — payload carries only aggregate computed metrics
+and prescriptive copy, never raw customer PII.
+
+AC results:
+
+- [x] AC1 — `/audit/:slug` renders read-only, curated MoveCards, no auth — PASS (verified via HTTP)
+- [x] AC2 — contains NO raw customer PII — PASS (audit.test.ts: no emails / customerId / ship-to city)
+- [x] AC3 — shows highest-conviction grounded insights; shareable link works unauthenticated — PASS
+- [~] `publicSlug` persistence — DEFERRED to the DB slice (slug is currently a route param; the
+      Audit model + real slug generation land with Slice 1/persistence).
+
+Slice 8 done 2026-06-27.
+
+## MILESTONE: heart-first runnable demo COMPLETE (Slices 0,4,5,6,7,8)
+
+A grounded, design-accurate, runnable product with zero credentials: seed store →
+analyzers → signals → grounded engine → ranked MoveCards (/app) + public Audit
+(/audit/demo). 63 tests green; prod build green. Remaining = plumbing (1 schema/tenant,
+2 Shopify OAuth, 3 ingestion, 9 outcomes, 10 billing, 11 exports, 12 hardening, 13 onboarding).
 
 ## Completed: Slice 4 — Analyzers (pure, deterministic)
 
