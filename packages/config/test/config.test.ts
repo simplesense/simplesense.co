@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { SIGNAL_THRESHOLDS, TIERS, tierAllows, llmConfig, appEnv } from '../src/index'
+import {
+  SIGNAL_THRESHOLDS,
+  TIERS,
+  tierAllows,
+  llmConfig,
+  appEnv,
+  assertServerEnv,
+} from '../src/index'
 
 describe('SIGNAL_THRESHOLDS', () => {
   it('are all sane ratios in (0, 1)', () => {
@@ -65,5 +72,23 @@ describe('llmConfig / appEnv', () => {
 
   it('appEnv reports PGlite (null DATABASE_URL) by default', () => {
     expect(appEnv({}).databaseUrl).toBeNull()
+  })
+})
+
+describe('assertServerEnv', () => {
+  it('throws in production when required secrets are missing', () => {
+    expect(() => assertServerEnv({ NODE_ENV: 'production' })).toThrow(/APP_ENCRYPTION_KEY/)
+  })
+  it('passes in production when required secrets are present', () => {
+    expect(() =>
+      assertServerEnv({
+        NODE_ENV: 'production',
+        APP_ENCRYPTION_KEY: 'k',
+        DATABASE_URL: 'postgres://x',
+      }),
+    ).not.toThrow()
+  })
+  it('never throws outside production', () => {
+    expect(() => assertServerEnv({ NODE_ENV: 'development' })).not.toThrow()
   })
 })

@@ -3,9 +3,14 @@ import { cookies } from 'next/headers'
 import { randomBytes } from 'node:crypto'
 import { shopifyConfig } from '@ss/config'
 import { buildAuthorizeUrl, isValidShopDomain, normalizeShop } from '@ss/integrations'
+import { rateLimit } from '@/lib/security'
 
 /** Begin Shopify OAuth: validate the shop, set an anti-CSRF state cookie, redirect to authorize. */
 export async function GET(req: Request): Promise<Response> {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!rateLimit(`oauth-start:${ip}`, 10, 60_000).allowed) {
+    return NextResponse.json({ error: 'rate limited' }, { status: 429 })
+  }
   const cfg = shopifyConfig()
   if (!cfg.hasCredentials || !cfg.apiKey) {
     return NextResponse.json(

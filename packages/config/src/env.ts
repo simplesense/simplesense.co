@@ -74,6 +74,19 @@ export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
   }
 }
 
+/**
+ * Fail fast in production if a required secret is missing (§12). Call at server startup.
+ * Mockable integrations (Shopify/Stripe/Clerk/Resend) are intentionally NOT required —
+ * they degrade to mocks until supplied.
+ */
+export function assertServerEnv(src: EnvSource = process.env): void {
+  if ((str(src, 'NODE_ENV') ?? 'development') !== 'production') return
+  const missing: string[] = []
+  if (!str(src, 'APP_ENCRYPTION_KEY')) missing.push('APP_ENCRYPTION_KEY')
+  if (!str(src, 'DATABASE_URL')) missing.push('DATABASE_URL')
+  if (missing.length) throw new Error(`Missing required env in production: ${missing.join(', ')}`)
+}
+
 /** Attribution window for the outcome flywheel (§8.6, OPEN_QUESTIONS §10). */
 export const ATTRIBUTION_WINDOW_DAYS = 30
 
