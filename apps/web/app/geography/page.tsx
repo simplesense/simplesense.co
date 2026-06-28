@@ -2,7 +2,7 @@ import { MetricCard } from '@ss/ui'
 import { Badge } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
-import { DemoBanner, PageHeading, MetricGrid, Panel } from '@/components/detail'
+import { DemoBanner, PageHeading, MetricGrid, Panel, StatBars } from '@/components/detail'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +12,14 @@ export default async function GeographyPage() {
   const m = await loadStoreMetrics()
   const physical = m.num('geo.has_physical_locations') === 1
   const region = m.json<{ region?: string }>('geo.single_region_share')
+  const breakdown = m.json<{ regions?: { region: string; revenueShare: number }[] }>(
+    'geo.region_breakdown',
+  )
+  const regionRows = (breakdown?.regions ?? []).map((r, i) => ({
+    label: r.region,
+    value: Math.round(r.revenueShare * 100),
+    tone: i === 0 ? 'var(--action-primary)' : undefined,
+  }))
   const zips = m.json<{ zips?: string[] }>('geo.top_zip_cluster_share')
 
   return (
@@ -62,6 +70,15 @@ export default async function GeographyPage() {
           icon="question-circle"
         />
       </MetricGrid>
+
+      {regionRows.length >= 2 ? (
+        <Panel title="Regional concentration">
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-muted)' }}>
+            Share of located revenue by region (top {regionRows.length}).
+          </p>
+          <StatBars rows={regionRows} valueSuffix="%" />
+        </Panel>
+      ) : null}
 
       {physical ? (
         <Panel title="Trade area">

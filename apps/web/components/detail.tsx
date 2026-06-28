@@ -146,8 +146,10 @@ export function Panel({ title, children }: { title: string; children: ReactNode 
 /** Horizontal labelled bars (e.g. RFM segments). */
 export function StatBars({
   rows,
+  valueSuffix = '',
 }: {
   rows: { label: string; value: number | null; tone?: string }[]
+  valueSuffix?: string
 }) {
   const max = Math.max(1, ...rows.map((r) => r.value ?? 0))
   return (
@@ -180,7 +182,7 @@ export function StatBars({
             />
           </div>
           <span style={{ fontSize: 13, textAlign: 'right', color: 'var(--text-strong)' }}>
-            {r.value == null ? '—' : r.value.toLocaleString()}
+            {r.value == null ? '—' : `${r.value.toLocaleString()}${valueSuffix}`}
           </span>
         </div>
       ))}

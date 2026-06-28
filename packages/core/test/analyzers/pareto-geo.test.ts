@@ -60,6 +60,15 @@ describe('geographyAnalyzer — omnichannel (physical locations)', () => {
     expect(num(metrics, 'geo.within_5mi_revenue_share')).toBe(0.8)
     const share = findMetric(metrics, 'geo.within_5mi_revenue_share')
     expect((share.valueJson as { action_type: string }).action_type).toBe('bopis')
+
+    // region breakdown persists every region's share of located revenue, ranked
+    const breakdown = findMetric(metrics, 'geo.region_breakdown')
+    const regions = (breakdown.valueJson as { regions: { region: string; revenueShare: number }[] })
+      .regions
+    expect(regions).toEqual([
+      { region: 'CA', revenueShare: 0.9 },
+      { region: 'NY', revenueShare: 0.1 },
+    ])
   })
 
   it('computes trade-area overlap with two stores', () => {

@@ -79,6 +79,21 @@ export const geographyAnalyzer: Analyzer = (ctx) => {
       }),
     )
     out.push(metric('geo.region_count', sortedRegions.length, { unit: 'count', window: win }))
+    // Persist the top regions' shares of located revenue so the UI can chart the real
+    // distribution (not just the #1). Additive evidence; shares sum over located revenue.
+    out.push(
+      metric('geo.region_breakdown', sortedRegions.length, {
+        unit: 'count',
+        window: win,
+        valueJson: {
+          basis: 'located_revenue',
+          regions: sortedRegions.slice(0, 8).map(([region, rev]) => ({
+            region,
+            revenueShare: roundTo(rev / regionRev, 4),
+          })),
+        },
+      }),
+    )
   }
 
   // --- branch ---
