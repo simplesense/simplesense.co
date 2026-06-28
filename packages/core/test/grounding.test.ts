@@ -64,4 +64,19 @@ describe('validateGrounding', () => {
   it('rejects when no evidence metrics are cited', () => {
     expect(validateGrounding({ ...base, evidence_metric_ids: [] }, metrics).ok).toBe(false)
   })
+
+  it('allows legitimate context numbers (window length, thresholds) via extraAllowedNumbers', () => {
+    const withContext = {
+      ...base,
+      rationale: 'Your top 20% of customers drive 86% of revenue over the trailing 24 months.',
+    }
+    // "24" is the window length — rejected without context, allowed with it
+    expect(validateGrounding(withContext, metrics).ok).toBe(false)
+    expect(validateGrounding(withContext, metrics, { extraAllowedNumbers: [24] }).ok).toBe(true)
+  })
+
+  it('still rejects a large fabricated figure even with context allowances', () => {
+    const bad = { ...base, rationale: 'We uncovered $999,999 of hidden revenue.' }
+    expect(validateGrounding(bad, metrics, { extraAllowedNumbers: [24, 40] }).ok).toBe(false)
+  })
 })

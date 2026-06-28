@@ -61,9 +61,19 @@ function extractNumbers(text: string): number[] {
  *     value (within source precision) or is a structural integer.
  * A failing recommendation is rejected/quarantined, never shown.
  */
+export interface GroundingOpts {
+  /**
+   * Extra numbers that are legitimately part of the analysis context and may appear in
+   * copy without citing a metric — e.g. the analysis window length (24) and the signal
+   * thresholds the move references. These are config, not fabricated store data.
+   */
+  extraAllowedNumbers?: readonly number[]
+}
+
 export function validateGrounding(
   rec: RawRecommendation,
   metrics: readonly Metric[],
+  opts: GroundingOpts = {},
 ): GroundingResult {
   const reasons: string[] = []
   const byKey = new Map(metrics.map((m) => [m.key, m]))
@@ -97,6 +107,7 @@ export function validateGrounding(
     rec.impact_low,
     rec.impact_high,
     (rec.impact_low + rec.impact_high) / 2,
+    ...(opts.extraAllowedNumbers ?? []),
   ]
   for (const m of cited) allowed.push(...factsFromMetric(m))
 

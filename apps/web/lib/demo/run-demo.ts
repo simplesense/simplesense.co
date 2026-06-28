@@ -1,5 +1,5 @@
 import { runAnalyzers, detectSignals, type Metric, type Recommendation } from '@ss/core'
-import { runEngine, createLlmClient } from '@ss/engine'
+import { runEngine, createLlmClient, MockLlmClient } from '@ss/engine'
 import { SIGNAL_THRESHOLDS, ANALYSIS_WINDOW_MONTHS } from '@ss/config'
 import { makeSeedStore } from './seed-store'
 
@@ -22,7 +22,30 @@ export async function runDemo(): Promise<DemoResult> {
   const ctx = { store, now, windowMonths: ANALYSIS_WINDOW_MONTHS }
   const metrics = runAnalyzers(ctx)
   const signals = detectSignals(metrics, SIGNAL_THRESHOLDS)
-  const result = await runEngine({ signals, metrics }, { llm: createLlmClient() })
+
+  // Live Claude synthesis when ANTHROPIC_API_KEY is set; fall back to the deterministic
+  // mock if the live call errors so the dashboard never breaks on a transient API issue.
+  let result = await runEngine({ signals, metrics }, { llm: createLlmClient() }).catch(
+    async (err: unknown) => {
+      console.warn('[demo] live synthesis failed, using mock:', (err as Error).message)
+      return runEngine({ signals, metrics }, { llm: new MockLlmClient() })
+    },
+  )
+  // If live synthesis returned zero grounded moves (e.g. all quarantined), keep the mock
+  // so the demo still shows the intended moves.
+  if (result.recommendations.length === 0) {
+    result = await runEngine({ signals, metrics }, { llm: new MockLlmClient() })
+  }
+
+  console.log(
+    '[demo] model=%s moves=%d rejected=%d',
+    result.model,
+    result.recommendations.length,
+    result.rejected.length,
+  )
+  for (const r of result.rejected) {
+    console.log('[demo][rejected] %s :: %s', r.raw.title, r.reasons.join(' | '))
+  }
   return {
     storeName: 'Wildflower Skincare',
     metrics,

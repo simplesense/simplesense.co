@@ -17,11 +17,23 @@ export async function runEngine(input: EngineInput, deps: EngineDeps): Promise<E
   const { recommendations: raws, tokensUsed = 0, model } = await deps.llm.synthesize(input)
   const idGen = deps.idGen ?? ((i: number) => `rec_${i}`)
 
+  // Legitimate context numbers the copy may reference without citing a metric:
+  // the analysis window length (e.g. 24 from "trailing_24m") and the signal thresholds.
+  const extraAllowedNumbers: number[] = []
+  for (const m of input.metrics) {
+    const w = m.window?.match(/trailing_(\d+)m/)
+    if (w?.[1]) extraAllowedNumbers.push(Number(w[1]))
+  }
+  for (const s of input.signals) {
+    const t = s.context.threshold
+    if (typeof t === 'number') extraAllowedNumbers.push(t, t * 100)
+  }
+
   const accepted: Recommendation[] = []
   const rejected: EngineResult['rejected'] = []
   let seq = 0
   for (const raw of raws) {
-    const g = validateGrounding(raw, input.metrics)
+    const g = validateGrounding(raw, input.metrics, { extraAllowedNumbers })
     if (!g.ok) {
       rejected.push({ raw, reasons: g.reasons })
       continue

@@ -46,3 +46,26 @@ Every finding below now has a regression test in `packages/core/test/analyzers/e
 **Lesson:** `safeShare(...) ?? 0` is a grounding trap — a null (undefined ratio) must
 become `insufficient`, never a 0 that reads as a real measurement. Audited all `?? 0`
 sites; the legitimate ones have a guaranteed-positive denominator.
+
+### Live Claude over-rejection (2026-06-27) — grounding tuned against a real LLM
+
+Wired the real Anthropic key and ran `claude-sonnet-4-6` through the pipeline on the seed
+store. First pass: **3 of 5 recs quarantined** by the grounding validator. Diagnosed via
+per-rejection logging — the rejected numbers were NOT hallucinations but benign context:
+`24` ("trailing 24 months"), `40` (the discount threshold the signal carries), and
+`200/225/199` (Claude's *suggested* new free-ship target — a prescriptive action).
+Fix (two-pronged, keeps Prime Directive #1 strict):
+- **Prompt** rules (8)/(9): don't state the window length or external benchmarks; express
+  numeric targets RELATIVE to a provided metric instead of inventing a new number.
+- **Validator** `extraAllowedNumbers`: `runEngine` passes the window length (parsed from
+  `trailing_24m`) + signal thresholds — config context, not fabricated store data.
+Result: **5 moves, 0 rejected** on the next live run, while the `$999,999` hallucination
+and the uncontextualized-`24` tests still reject. Lesson: validate the grounded layer
+against the *real* model early — synthetic mocks won't surface prompt/validator mismatch.
+
+### Supabase connectivity (2026-06-27)
+
+The direct host `db.<ref>.supabase.co` is **IPv6-only** (AAAA only). This machine has IPv6,
+so the direct `:5432` connection works for both `DATABASE_URL` and `DIRECT_URL` — no IPv4
+pooler/region needed. If a future host is IPv4-only, switch to the pooler
+(`aws-0-<region>.pooler.supabase.com`, user `postgres.<ref>`) from the Connect dialog.
