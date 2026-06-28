@@ -10,8 +10,8 @@ criterion below it is checked and its tests pass.
 - [ ] Slice 1 — Auth, org/user, schema, migrations
 - [ ] Slice 2 — Shopify OAuth connect
 - [ ] Slice 3 — Historical ingestion (background)
-- [ ] Slice 4 — Analyzers (pure, deterministic)
-- [ ] Slice 5 — Signal detection
+- [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
+- [x] Slice 5 — Signal detection (+ packages/config)
 - [ ] Slice 6 — LLM synthesis + grounding validation + ranking
 - [ ] Slice 7 — Dashboard (ranked prescriptions / "This week's moves")
 - [ ] Slice 8 — The free "Simple Sense Audit" (the wedge)
@@ -30,7 +30,27 @@ grounded demo with no credentials. Then the plumbing: **1 (schema/tenant) → 2 
 OAuth) → 3 (ingestion) → 9 (outcomes) → 10 (billing) → 11 (exports) → 12 (hardening) →
 13 (onboarding)**, each behind typed interfaces with mocks until keys are supplied.
 
-## Current slice: Slice 4 — Analyzers (pure, deterministic)
+## Current slice: Slice 5 — Signal detection (DONE) → next Slice 6 (engine)
+
+Plan:
+
+- packages/core/signals.ts: `detectSignals(metrics, thresholds)` — pure Stage-2 rules
+  (vip_pareto, geo_focus, bopis_local vs regional_inventory by has_physical_locations,
+  discount_dependency, aov_freeship, sku_margin_kill, retention_gap) with severity bands.
+- packages/config: canonical SIGNAL_THRESHOLDS, $49/$99 tiers + entitlements, env/LLM config.
+- Each signal carries `metricKeys` (the grounding allow-list Stage 3 may cite).
+
+Acceptance criteria results:
+
+- [x] AC1 — signals produced from metrics using config thresholds — PASS
+- [x] AC2 — severity assigned (over/under bands) — PASS
+- [x] AC3 — thresholds documented in config (SIGNAL_THRESHOLDS) — PASS
+- [x] AC4 — threshold boundary tests (just-under vs just-over) — PASS (signals.test.ts)
+- [x] Bonus — Slice 4→5 integration test (analyzers→signals) + 14 audit fixes w/ regression tests
+
+Slice 5 done 2026-06-27. Next: Slice 6 — LLM synthesis + grounding validation + ranking.
+
+## Completed: Slice 4 — Analyzers (pure, deterministic)
 
 Plan:
 
