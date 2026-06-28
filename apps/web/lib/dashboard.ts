@@ -11,6 +11,8 @@ export interface DashboardData {
   storeName: string
   model: string
   isDemo: boolean
+  /** A background sync/analysis is in flight — show a "preparing your moves" state. */
+  syncing: boolean
   recommendations: Recommendation[]
   metrics: {
     revenue: number | null
@@ -47,8 +49,13 @@ const modelLabel = (): string => {
   return cfg.hasApiKey ? cfg.model : 'mock'
 }
 
-/** Ensure a completed analysis run exists; the first load triggers one (live synthesis). */
-async function ensureRun(storeId: string): Promise<void> {
+/**
+ * Ensure a completed analysis run exists; the first load triggers one (live synthesis). Skips
+ * when a background sync is in flight — that path runs its own analysis, so triggering here
+ * would double-run the LLM on a half-ingested store.
+ */
+async function ensureRun(storeId: string, syncing: boolean): Promise<void> {
+  if (syncing) return
   if (!(await latestRunId(prisma, storeId))) {
     await analyzeStore(prisma, storeId, { llm: createLlmClient() })
   }
@@ -58,12 +65,16 @@ async function ensureRun(storeId: string): Promise<void> {
 export async function getDashboard(): Promise<DashboardData> {
   const { orgId } = await getSession()
   const { store, isDemo } = await resolveActiveStore(orgId)
-  await ensureRun(store.id)
+  const syncing = store.syncStatus === 'SYNCING'
+  await ensureRun(store.id, syncing)
+  const hasRun = Boolean(await latestRunId(prisma, store.id))
   const rows = await openRecommendations(prisma, store.id)
   return {
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
     isDemo,
+    // "Preparing your moves" while a sync runs OR before the first run lands on a real store.
+    syncing: !isDemo && (syncing || !hasRun),
     recommendations: rows.map(toCore),
     metrics: {
       revenue: await latestMetricValue(prisma, store.id, 'pareto.revenue_total'),

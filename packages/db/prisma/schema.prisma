@@ -93,6 +93,8 @@ model Store {
   hasPhysicalLocations  Boolean      @default(false)
   freeShippingThreshold Decimal?
   syncStatus            SyncStatus   @default(PENDING)
+  syncStartedAt         DateTime? // when the current background sync began (stuck-job watchdog)
+  syncError             String? // last sync failure message, surfaced on the Connections page
   lastSyncedAt          DateTime?
   createdAt             DateTime     @default(now())
   org                   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)

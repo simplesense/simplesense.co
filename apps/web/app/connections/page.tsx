@@ -66,7 +66,11 @@ export default async function ConnectionsPage() {
               {connected.shopDomain} · {orderCount.toLocaleString()} orders ingested · token stored
               encrypted · status {connected.syncStatus.toLowerCase()}.
             </p>
-            <SyncButton storeId={connected.id} />
+            <SyncButton
+              storeId={connected.id}
+              initialStatus={connected.syncStatus}
+              initialError={connected.syncError}
+            />
             <DisconnectButton storeId={connected.id} />
           </div>
         ) : cfg.hasCredentials ? (

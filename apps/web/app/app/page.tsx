@@ -1,6 +1,7 @@
 import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { MovesList } from '@/components/MovesList'
+import { SyncingBanner } from '@/components/SyncingBanner'
 import { getDashboard } from '@/lib/dashboard'
 
 // Always render fresh from the DB (recommendations change as the user applies/dismisses).
@@ -42,6 +43,7 @@ export default async function MovesPage() {
           You're viewing demo data. Connect your Shopify store to see your own moves →
         </a>
       ) : null}
+      {data.syncing ? <SyncingBanner /> : null}
       <div
         style={{
           display: 'grid',
