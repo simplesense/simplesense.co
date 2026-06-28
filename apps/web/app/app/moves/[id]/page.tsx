@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Badge } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { MoveChecklist, MoveApply } from '@/components/move-detail-parts'
+import { ExportButton } from '@/components/detail'
 import { loadMoveDetail } from '@/lib/move-detail'
 import { shipPlan, moveChecklist } from '@/lib/move-execution'
 import { formatImpact } from '@ss/ui'
@@ -286,6 +287,14 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
                 </div>
               ))}
             </div>
+            {rec.suggestedExecution.type === 'klaviyo_segment' ? (
+              <div style={{ marginTop: 16 }}>
+                <ExportButton href="/api/export/vip" label="Download the segment (CSV)" />
+                <p style={{ margin: '8px 2px 0', fontSize: 12, color: 'var(--text-muted)' }}>
+                  The real customers behind this move — import straight into Klaviyo.
+                </p>
+              </div>
+            ) : null}
           </Panel>
         </div>
       </div>

@@ -30,31 +30,71 @@ export function PageHeading({
   eyebrow,
   title,
   sub,
+  action,
 }: {
   eyebrow: string
   title: string
   sub?: string
+  action?: ReactNode
 }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <p className="ss-eyebrow" style={{ margin: 0 }}>
-        {eyebrow}
-      </p>
-      <h1
-        style={{
-          margin: '4px 0 0',
-          fontFamily: 'var(--font-display)',
-          fontSize: 32,
-          letterSpacing: '-0.02em',
-          color: 'var(--text-strong)',
-        }}
-      >
-        {title}
-      </h1>
-      {sub ? (
-        <p style={{ margin: '8px 0 0', color: 'var(--text-body)', maxWidth: '64ch' }}>{sub}</p>
-      ) : null}
+    <div
+      style={{
+        marginBottom: 24,
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 16,
+        flexWrap: 'wrap',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <p className="ss-eyebrow" style={{ margin: 0 }}>
+          {eyebrow}
+        </p>
+        <h1
+          style={{
+            margin: '4px 0 0',
+            fontFamily: 'var(--font-display)',
+            fontSize: 32,
+            letterSpacing: '-0.02em',
+            color: 'var(--text-strong)',
+          }}
+        >
+          {title}
+        </h1>
+        {sub ? (
+          <p style={{ margin: '8px 0 0', color: 'var(--text-body)', maxWidth: '64ch' }}>{sub}</p>
+        ) : null}
+      </div>
+      {action ? <div style={{ flex: 'none', marginTop: 4 }}>{action}</div> : null}
     </div>
+  )
+}
+
+/** A download link styled as a secondary button — used for grounded CSV exports (§19). */
+export function ExportButton({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      download
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: 'var(--text-strong)',
+        background: 'var(--surface-card)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-pill)',
+        padding: '9px 16px',
+        textDecoration: 'none',
+      }}
+    >
+      <i className="bi bi-download" aria-hidden="true" />
+      {label}
+    </a>
   )
 }
 

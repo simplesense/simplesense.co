@@ -1,7 +1,14 @@
 import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
-import { DemoBanner, PageHeading, MetricGrid, Panel, StatBars } from '@/components/detail'
+import {
+  DemoBanner,
+  PageHeading,
+  MetricGrid,
+  Panel,
+  StatBars,
+  ExportButton,
+} from '@/components/detail'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +32,7 @@ export default async function CustomersPage() {
             ? `Your top ${n(top20Count)} customers drive ${pct(top20)} of revenue — the VIP base to protect.`
             : 'Pareto, VIP and RFM detail from your latest analysis.'
         }
+        action={<ExportButton href="/api/export/vip" label="Export VIP segment" />}
       />
 
       <MetricGrid>

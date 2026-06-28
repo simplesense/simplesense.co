@@ -1,7 +1,7 @@
 import { MetricCard } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
-import { DemoBanner, PageHeading, MetricGrid, Panel } from '@/components/detail'
+import { DemoBanner, PageHeading, MetricGrid, Panel, ExportButton } from '@/components/detail'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +28,7 @@ export default async function ProductsPage() {
         eyebrow="PRODUCTS"
         title="Per-SKU margin & affinity"
         sub="True margin net of discounts (where product cost is known), money-losing SKUs, and what sells together."
+        action={<ExportButton href="/api/export/sku" label="Export SKU economics" />}
       />
 
       <MetricGrid>
