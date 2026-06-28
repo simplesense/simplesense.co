@@ -83,7 +83,25 @@ export function MovesList({ recommendations }: { recommendations: Recommendation
             return (
               <div key={rec.id}>
                 <MoveCard {...props} onApply={() => set(rec.id, 'IMPLEMENTED')} />
-                <div style={{ textAlign: 'right', marginTop: 6 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: 6,
+                  }}
+                >
+                  <a
+                    href={`/app/moves/${rec.id}`}
+                    style={{
+                      fontSize: 12.5,
+                      color: 'var(--text-link)',
+                      textDecoration: 'none',
+                      padding: '4px 6px',
+                    }}
+                  >
+                    See the evidence <i className="bi bi-arrow-right" />
+                  </a>
                   <button
                     onClick={() => set(rec.id, 'DISMISSED')}
                     style={{
