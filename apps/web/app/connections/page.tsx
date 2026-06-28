@@ -1,21 +1,28 @@
-import { prisma, getOrgStore, DEMO } from '@ss/db'
+import { prisma, DEMO } from '@ss/db'
 import { shopifyConfig } from '@ss/config'
 import { Badge } from '@ss/ui'
 import { getSession } from '@/lib/auth'
 import { AppShell } from '@/components/AppShell'
 import { DisconnectButton } from '@/components/DisconnectButton'
+import { SyncButton } from '@/components/SyncButton'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ConnectionsPage() {
   const { orgId } = await getSession()
-  const store = await getOrgStore(prisma, orgId, DEMO.storeId)
+  const connected = await prisma.store.findFirst({
+    where: { orgId, accessTokenEnc: { not: null } },
+    orderBy: { createdAt: 'desc' },
+  })
   const cfg = shopifyConfig()
-  const connected = !!store?.accessTokenEnc
-  const orderCount = store ? await prisma.order.count({ where: { storeId: store.id } }) : 0
+  const orderCount = connected ? await prisma.order.count({ where: { storeId: connected.id } }) : 0
 
   return (
-    <AppShell storeName={DEMO.storeName} openMoves={0} model={cfg.hasCredentials ? 'live' : 'demo'}>
+    <AppShell
+      storeName={connected?.shopDomain ?? DEMO.storeName}
+      openMoves={0}
+      model={cfg.hasCredentials ? 'live' : 'demo'}
+    >
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         CONNECTIONS
       </p>
@@ -38,7 +45,7 @@ export default async function ConnectionsPage() {
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-sm)',
           padding: 24,
-          maxWidth: 640,
+          maxWidth: 660,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -54,13 +61,14 @@ export default async function ConnectionsPage() {
         </div>
 
         {connected ? (
-          <>
-            <p style={{ color: 'var(--text-body)', marginTop: 0 }}>
-              {DEMO.shopDomain} · {orderCount.toLocaleString()} orders ingested · token stored
-              encrypted.
+          <div style={{ display: 'grid', gap: 14 }}>
+            <p style={{ margin: 0, color: 'var(--text-body)' }}>
+              {connected.shopDomain} · {orderCount.toLocaleString()} orders ingested · token stored
+              encrypted · status {connected.syncStatus.toLowerCase()}.
             </p>
-            {store ? <DisconnectButton storeId={store.id} /> : null}
-          </>
+            <SyncButton storeId={connected.id} />
+            <DisconnectButton storeId={connected.id} />
+          </div>
         ) : cfg.hasCredentials ? (
           <form
             action="/api/stores/connect/start"
@@ -108,14 +116,15 @@ export default async function ConnectionsPage() {
               fontSize: 13.5,
             }}
           >
-            <i className="bi bi-info-circle" style={{ marginRight: 8 }} />
-            Live connect is ready — add <code>SHOPIFY_API_KEY</code> and{' '}
-            <code>SHOPIFY_API_SECRET</code> (from a Shopify Partner app) to <code>.env</code> to
-            enable the OAuth flow. The demo store ({orderCount.toLocaleString()} orders) is seeded
-            and analyzed in the meantime.
+            Add <code>SHOPIFY_API_KEY</code> + <code>SHOPIFY_API_SECRET</code> to enable connect.
           </div>
         )}
       </div>
+
+      <p style={{ marginTop: 16, fontSize: 13, color: 'var(--text-muted)', maxWidth: 660 }}>
+        After connecting, click <strong>Sync now</strong> to pull your order history and generate
+        your first grounded moves. (Until then, the dashboard shows the demo store.)
+      </p>
     </AppShell>
   )
 }

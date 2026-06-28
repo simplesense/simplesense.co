@@ -5,6 +5,7 @@ import { createLlmClient } from '@ss/engine'
 import { llmConfig } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
+import { resolveStoreId } from './store-resolve'
 
 export interface DashboardData {
   storeName: string
@@ -55,12 +56,13 @@ async function ensureRun(storeId: string): Promise<void> {
 /** Dashboard data for the current session's org, read from the DB (tenant-scoped). */
 export async function getDashboard(): Promise<DashboardData> {
   const { orgId } = await getSession()
-  const store = await getOrgStore(prisma, orgId, DEMO.storeId)
-  if (!store) throw new Error('demo store not found — run `pnpm --filter @ss/db seed`')
+  const storeId = await resolveStoreId(orgId)
+  const store = await getOrgStore(prisma, orgId, storeId)
+  if (!store) throw new Error('store not found — run `pnpm --filter @ss/db seed`')
   await ensureRun(store.id)
   const rows = await openRecommendations(prisma, store.id)
   return {
-    storeName: DEMO.storeName,
+    storeName: store.shopDomain === DEMO.shopDomain ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
     recommendations: rows.map(toCore),
     metrics: {

@@ -2,6 +2,7 @@ import { prisma, getOrgStore, DEMO } from '@ss/db'
 import { listOutcomes } from '@ss/jobs'
 import { Badge } from '@ss/ui'
 import { getSession } from '@/lib/auth'
+import { resolveStoreId } from '@/lib/store-resolve'
 import { AppShell } from '@/components/AppShell'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,7 @@ const fmt = (v: number | null): string => (v == null ? '—' : v.toLocaleString(
 
 export default async function MonitoringPage() {
   const { orgId } = await getSession()
-  const store = await getOrgStore(prisma, orgId, DEMO.storeId)
+  const store = await getOrgStore(prisma, orgId, await resolveStoreId(orgId))
   const outcomes = store ? await listOutcomes(prisma, store.id) : []
 
   return (
