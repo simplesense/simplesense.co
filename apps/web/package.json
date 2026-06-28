@@ -13,6 +13,7 @@
     "@ss/config": "workspace:*",
     "@ss/db": "workspace:*",
     "@ss/engine": "workspace:*",
+    "@ss/integrations": "workspace:*",
     "@ss/jobs": "workspace:*",
     "@ss/ui": "workspace:*",
     "next": "^15.1.4",

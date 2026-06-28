@@ -38,6 +38,9 @@ importers:
       '@ss/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@ss/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       '@ss/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
@@ -113,6 +116,19 @@ importers:
       '@ss/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
+  packages/integrations:
+    dependencies:
+      '@ss/config':
+        specifier: workspace:*
+        version: link:../config
     devDependencies:
       typescript:
         specifier: ^5.7.3

@@ -8,7 +8,7 @@ criterion below it is checked and its tests pass.
 
 - [x] Slice 0 — Repo, tooling, CI
 - [~] Slice 1 — Schema/migrations/seed/tenant-isolation DONE on Supabase; auth (Clerk) deferred
-- [ ] Slice 2 — Shopify OAuth connect
+- [~] Slice 2 — Shopify OAuth flow + crypto + HMAC + disconnect DONE (mock); live needs Shopify creds
 - [ ] Slice 3 — Historical ingestion (background)
 - [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
 - [x] Slice 5 — Signal detection (+ packages/config)
@@ -57,8 +57,25 @@ DB; dismiss persists across reloads (5→4); 1 run / 5 recs / 47 metrics in Supa
 
 Pricing updated to the RESOLVED $0/$99/$299 tiers (geo+Pareto in Basic, one-click in Pro).
 
-Next: Slice 2 (Shopify OAuth — build flow + HMAC + token encryption with mocks; live
-connect needs Shopify dev-store creds), then GitHub/Vercel hosted preview.
+## Completed: Slice 2 — Shopify OAuth + connection management (2026-06-27)
+
+@ss/integrations (new): AES-256-GCM token encryption; Shopify OAuth (authorize URL, shop
+validation, callback HMAC), webhook HMAC verification, typed ShopifyClient (real fetch +
+mock), createShopifyClient/createLlmClient-style factory. @ss/db: disconnectStore (tenant-
+scoped purge). apps/web routes: /api/stores/connect/start (state cookie + redirect),
+/connect/callback (HMAC + state + token exchange → encrypted store + webhook register),
+/api/webhooks/shopify (raw-body HMAC verify, PII-free). Connections page + disconnect action.
+
+AC results:
+
+- [~] OAuth start→callback — BUILT (routes + flow); structurally works via mock; LIVE needs
+      a Shopify Partner app (SHOPIFY_API_KEY/SECRET) — flagged on the Connections page.
+- [x] token stored ENCRYPTED at rest — PASS (AES-256-GCM, round-trip + tamper tests)
+- [x] webhooks registered on connect; syncStatus PENDING — PASS (mock-recorded)
+- [x] disconnect purges store data (tenant-scoped) — PASS (disconnect.test)
+- [x] callback handler logic w/ mocked Shopify; encryption round-trip; webhook HMAC — PASS (80 tests)
+
+Next: GitHub repo + Vercel hosted preview (needs gh auth + Vercel account/env).
 
 ## Build order (chosen 2026-06-27): HEART-FIRST
 

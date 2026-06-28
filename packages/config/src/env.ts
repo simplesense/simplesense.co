@@ -45,6 +45,35 @@ export function appEnv(src: EnvSource = process.env): AppEnv {
   }
 }
 
+export interface ShopifyConfig {
+  apiKey: string | null
+  apiSecret: string | null
+  scopes: string
+  appUrl: string
+  /** False → the Shopify client runs as a mock (no live OAuth) until creds are supplied. */
+  hasCredentials: boolean
+}
+
+export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
+  const apiKey = str(src, 'SHOPIFY_API_KEY')
+  const apiSecret = str(src, 'SHOPIFY_API_SECRET')
+  return {
+    apiKey,
+    apiSecret,
+    scopes: str(
+      src,
+      'SHOPIFY_SCOPES',
+      'read_orders,read_customers,read_products,read_locations',
+    ) as string,
+    appUrl: str(
+      src,
+      'SHOPIFY_APP_URL',
+      str(src, 'APP_URL', 'http://localhost:3000') as string,
+    ) as string,
+    hasCredentials: apiKey != null && apiSecret != null,
+  }
+}
+
 /** Attribution window for the outcome flywheel (§8.6, OPEN_QUESTIONS §10). */
 export const ATTRIBUTION_WINDOW_DAYS = 30
 
