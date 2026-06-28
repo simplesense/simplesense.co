@@ -11,12 +11,18 @@ export interface DemoResult {
   model?: string
 }
 
+// In-memory cache for the server's lifetime. The seed store is static, so we only pay
+// for one live Claude synthesis per server run; subsequent dashboard/audit loads are
+// instant and free. Pass force=true to recompute.
+let demoCache: DemoResult | null = null
+
 /**
  * Run the full prescription pipeline over the seed store: analyzers → signals → engine
  * (mock LLM unless ANTHROPIC_API_KEY is set). This is what the dashboard renders, so the
- * demo exercises the exact same grounded path a real store would.
+ * demo exercises the exact same grounded path a real store would. Result is cached.
  */
-export async function runDemo(): Promise<DemoResult> {
+export async function runDemo(force = false): Promise<DemoResult> {
+  if (demoCache && !force) return demoCache
   const now = new Date()
   const store = makeSeedStore(now)
   const ctx = { store, now, windowMonths: ANALYSIS_WINDOW_MONTHS }
@@ -46,13 +52,14 @@ export async function runDemo(): Promise<DemoResult> {
   for (const r of result.rejected) {
     console.log('[demo][rejected] %s :: %s', r.raw.title, r.reasons.join(' | '))
   }
-  return {
+  demoCache = {
     storeName: 'Wildflower Skincare',
     metrics,
     recommendations: result.recommendations,
     rejectedCount: result.rejected.length,
     model: result.model,
   }
+  return demoCache
 }
 
 /** Pull a metric numeric value by key (for the dashboard KPI tiles). */
