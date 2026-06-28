@@ -20,10 +20,10 @@ export async function ingestNormalizedStore(
 ): Promise<string> {
   await db.store.update({
     where: { id: storeId },
+    // currency comes from Shopify; hasPhysicalLocations + freeShippingThreshold are USER
+    // settings (Shopify can't reliably tell us), so a sync must NOT overwrite them.
     data: {
       currency: store.currency,
-      hasPhysicalLocations: store.hasPhysicalLocations,
-      freeShippingThreshold: store.freeShippingThreshold ?? null,
       syncStatus: 'READY',
       lastSyncedAt: new Date(),
     },

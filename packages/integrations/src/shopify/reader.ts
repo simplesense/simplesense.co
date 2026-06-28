@@ -228,27 +228,63 @@ export class RealShopifyReader implements ShopifyReader {
   }
 
   products(shop: string, token: string): AsyncGenerator<Product[]> {
+    // First variant's inventoryItem.unitCost = COGS (needs read_inventory scope). Null when
+    // cost isn't set → the margin analyzer emits "insufficient" rather than guessing.
     const query = `query($cursor:String){ products(first:100, after:$cursor){
       pageInfo{ hasNextPage endCursor }
-      nodes{ id title productType } } }`
+      nodes{ id title productType
+        variants(first:1){ nodes{ inventoryItem{ unitCost{ amount } } } } } } }`
     interface ProdNode {
       id: string
       title: string
       productType?: string | null
+      variants?: { nodes: { inventoryItem?: { unitCost?: { amount?: string } | null } | null }[] }
     }
     return this.paginate<ProdNode, Product>(
       shop,
       token,
       query,
       (d) => (d as { products: { nodes: ProdNode[]; pageInfo: PageInfo } }).products,
-      (n) => ({ id: n.id, title: n.title, type: n.productType ?? null, unitCost: null }),
+      (n) => {
+        const cost = n.variants?.nodes?.[0]?.inventoryItem?.unitCost?.amount
+        return {
+          id: n.id,
+          title: n.title,
+          type: n.productType ?? null,
+          unitCost: cost ? num(cost) : null,
+        }
+      },
     )
   }
 
-  // Conservative: no physical locations surfaced (online-only treatment). A future
-  // "I have physical stores" setting enables trade-area / BOPIS.
-  // eslint-disable-next-line require-yield
-  async *locations(): AsyncGenerator<StoreLocation[]> {
-    return
+  // Physical retail locations (with coords where available). Whether the geo branch USES
+  // these is governed by the store's hasPhysicalLocations toggle, not this fetch.
+  locations(shop: string, token: string): AsyncGenerator<StoreLocation[]> {
+    const query = `query($cursor:String){ locations(first:100, after:$cursor){
+      pageInfo{ hasNextPage endCursor }
+      nodes{ id name address{ city provinceCode latitude longitude } } } }`
+    interface LocNode {
+      id: string
+      name: string
+      address?: {
+        city?: string | null
+        provinceCode?: string | null
+        latitude?: number | null
+        longitude?: number | null
+      } | null
+    }
+    return this.paginate<LocNode, StoreLocation>(
+      shop,
+      token,
+      query,
+      (d) => (d as { locations: { nodes: LocNode[]; pageInfo: PageInfo } }).locations,
+      (n) => ({
+        id: n.id,
+        name: n.name,
+        lat: n.address?.latitude ?? null,
+        lng: n.address?.longitude ?? null,
+        address: { city: n.address?.city ?? null, region: n.address?.provinceCode ?? null },
+      }),
+    )
   }
 }

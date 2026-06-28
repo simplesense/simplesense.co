@@ -63,7 +63,7 @@ export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
     scopes: str(
       src,
       'SHOPIFY_SCOPES',
-      'read_orders,read_customers,read_products,read_locations',
+      'read_orders,read_customers,read_products,read_locations,read_inventory',
     ) as string,
     appUrl: str(
       src,

@@ -17,8 +17,18 @@ async function main(): Promise<void> {
   })
   await prisma.store.upsert({
     where: { shopDomain: DEMO.shopDomain },
-    update: {},
-    create: { id: DEMO.storeId, orgId: org.id, shopDomain: DEMO.shopDomain, syncStatus: 'PENDING' },
+    // Store settings (physical retail + free-ship threshold) live on the Store, not derived
+    // from Shopify. The demo store is omnichannel with a $75 threshold.
+    update: { hasPhysicalLocations: true, freeShippingThreshold: 75, currency: 'USD' },
+    create: {
+      id: DEMO.storeId,
+      orgId: org.id,
+      shopDomain: DEMO.shopDomain,
+      syncStatus: 'PENDING',
+      hasPhysicalLocations: true,
+      freeShippingThreshold: 75,
+      currency: 'USD',
+    },
   })
   await prisma.subscription.upsert({
     where: { orgId: org.id },

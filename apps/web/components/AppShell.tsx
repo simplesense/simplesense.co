@@ -19,7 +19,7 @@ function navItems(openMoves: number): NavItem[] {
     { label: 'Products', icon: 'box-seam', href: '#' },
     { label: 'Connections', icon: 'plug', href: '/connections' },
     { label: 'Plans & billing', icon: 'credit-card', href: '/plans' },
-    { label: 'Settings', icon: 'gear', href: '#' },
+    { label: 'Settings', icon: 'gear', href: '/settings' },
   ]
 }
 
