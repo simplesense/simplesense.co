@@ -71,6 +71,22 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.0)
 
+  packages/engine:
+    dependencies:
+      '@ss/config':
+        specifier: workspace:*
+        version: link:../config
+      '@ss/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
 packages:
 
   '@emnapi/runtime@1.11.1':

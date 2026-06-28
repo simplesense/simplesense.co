@@ -12,7 +12,7 @@ criterion below it is checked and its tests pass.
 - [ ] Slice 3 — Historical ingestion (background)
 - [x] Slice 4 — Analyzers (pure, deterministic) — + adversarial audit, 14 fixes
 - [x] Slice 5 — Signal detection (+ packages/config)
-- [ ] Slice 6 — LLM synthesis + grounding validation + ranking
+- [x] Slice 6 — LLM synthesis + grounding validation + ranking (@ss/engine)
 - [ ] Slice 7 — Dashboard (ranked prescriptions / "This week's moves")
 - [ ] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [ ] Slice 9 — Outcome tracking (flywheel)
@@ -48,7 +48,26 @@ Acceptance criteria results:
 - [x] AC4 — threshold boundary tests (just-under vs just-over) — PASS (signals.test.ts)
 - [x] Bonus — Slice 4→5 integration test (analyzers→signals) + 14 audit fixes w/ regression tests
 
-Slice 5 done 2026-06-27. Next: Slice 6 — LLM synthesis + grounding validation + ranking.
+Slice 5 done 2026-06-27.
+
+## Completed: Slice 6 — engine (synthesis + grounding + ranking)
+
+@ss/engine: LlmClient boundary; MockLlmClient (deterministic, grounded — runs with no
+key); AnthropicLlmClient (fetch + tool-use, model from env); runEngine orchestrates
+Stage 3 (LLM) → Stage 4 (grounding, in core) → Stage 5 (ranking, in core). Grounding
+validator + ranking are pure and unit-tested in @ss/core.
+
+AC results:
+
+- [x] AC1 — engine calls LLM with signals only, gets schema-valid JSON — PASS
+- [x] AC2 — grounding validator rejects unknown metrics / numbers not in input — PASS
+      (grounding.test.ts + engine.test.ts grounding-rejection test; injected $999,999 → quarantined)
+- [x] AC3 — ranking formula orders results; Recommendation rows shaped — PASS (ranking.test.ts)
+- [x] AC4 — token usage logged (tokensUsed on EngineResult) — PASS
+- [x] AC5 — fixture store → Pareto VIP + geo-concentration moves, each citing real metric ids — PASS
+
+Slice 6 done 2026-06-27. The deterministic + grounded HEART is complete (60 tests).
+Next: design-system port (packages/ui) → Slice 7 dashboard → Slice 8 public Audit.
 
 ## Completed: Slice 4 — Analyzers (pure, deterministic)
 
