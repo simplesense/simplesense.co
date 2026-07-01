@@ -18,17 +18,6 @@ export async function ingestNormalizedStore(
   storeId: string,
   store: NormalizedStore,
 ): Promise<string> {
-  await db.store.update({
-    where: { id: storeId },
-    // currency comes from Shopify; hasPhysicalLocations + freeShippingThreshold are USER
-    // settings (Shopify can't reliably tell us), so a sync must NOT overwrite them.
-    data: {
-      currency: store.currency,
-      syncStatus: 'READY',
-      lastSyncedAt: new Date(),
-    },
-  })
-
   // locations — replace set (small, demo-scale)
   await db.storeLocation.deleteMany({ where: { storeId } })
   for (const loc of store.locations) {
@@ -115,6 +104,19 @@ export async function ingestNormalizedStore(
       },
     })
   }
+
+  // READY is flipped ONLY after every row is written — flipping it up-front made the sync
+  // report "done" at ~0% progress and let the dashboard analyze a half-ingested store.
+  // currency comes from Shopify; hasPhysicalLocations + freeShippingThreshold are USER
+  // settings (Shopify can't reliably tell us), so a sync must NOT overwrite them.
+  await db.store.update({
+    where: { id: storeId },
+    data: {
+      currency: store.currency,
+      syncStatus: 'READY',
+      lastSyncedAt: new Date(),
+    },
+  })
 
   return storeId
 }

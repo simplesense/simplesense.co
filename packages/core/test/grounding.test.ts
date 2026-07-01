@@ -79,4 +79,57 @@ describe('validateGrounding', () => {
     const bad = { ...base, rationale: 'We uncovered $999,999 of hidden revenue.' }
     expect(validateGrounding(bad, metrics, { extraAllowedNumbers: [24, 40] }).ok).toBe(false)
   })
+
+  it('REJECTS a fabricated k/M magnitude-suffixed figure (no structural escape hatch)', () => {
+    // "$10k" = 10000; mantissa 10 is structural but a suffixed dollar magnitude must not hide
+    // behind that. None are close to a cited metric → rejected.
+    for (const bad of ['$10k', '$5k', '$25k a month', '$2M in upside']) {
+      const r = validateGrounding(
+        {
+          ...base,
+          rationale: `This move is worth ${bad}.`,
+          evidence_metric_ids: ['pareto.revenue_total'],
+        },
+        metrics,
+      )
+      expect(r.ok, bad).toBe(false)
+    }
+  })
+
+  it('ACCEPTS a suffixed figure that matches a cited metric ($100k ≈ revenue_total 100000)', () => {
+    const r = validateGrounding(
+      {
+        ...base,
+        rationale: 'You have about $100k in identified customer revenue.',
+        evidence_metric_ids: ['pareto.revenue_total'],
+      },
+      metrics,
+    )
+    expect(r.ok).toBe(true)
+  })
+
+  it('REJECTS a 100× inflation of a USD metric (v*100 expansion is ratio-only)', () => {
+    // revenue_total = $100,000 (USD). "$10,000,000" = 100000 × 100 must NOT ground.
+    const r = validateGrounding(
+      {
+        ...base,
+        rationale: 'Your store did $10,000,000 in revenue.',
+        evidence_metric_ids: ['pareto.revenue_total'],
+      },
+      metrics,
+    )
+    expect(r.ok).toBe(false)
+  })
+
+  it('still renders a RATIO metric as a percentage (0.857 → "86%")', () => {
+    const r = validateGrounding(
+      {
+        ...base,
+        rationale: 'Your top customers drive 86% of revenue.',
+        evidence_metric_ids: ['pareto.top20_revenue_share'],
+      },
+      metrics,
+    )
+    expect(r.ok).toBe(true)
+  })
 })

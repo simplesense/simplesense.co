@@ -53,10 +53,16 @@ export const discountAnalyzer: Analyzer = (ctx) => {
           unit: 'ratio',
           window: win,
         }),
-    metric('discount.avg_discount_rate', roundTo(safeShare(totalDiscount, preDiscount) ?? 0, 4), {
-      unit: 'ratio',
-      window: win,
-    }),
+    safeShare(totalDiscount, preDiscount) == null
+      ? insufficient('discount.avg_discount_rate', 'no pre-discount volume in window', {
+          unit: 'ratio',
+          window: win,
+        })
+      : metric(
+          'discount.avg_discount_rate',
+          roundTo(safeShare(totalDiscount, preDiscount) as number, 4),
+          { unit: 'ratio', window: win },
+        ),
   ]
 }
 

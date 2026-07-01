@@ -45,6 +45,28 @@ export default async function MovesPage() {
         </a>
       ) : null}
       {data.syncing ? <SyncingBanner /> : null}
+      {data.needsSync ? (
+        <a
+          href="/connections"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--ss-warning-bg)',
+            color: 'var(--ss-warning)',
+            border: '1px solid var(--ss-warning)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: 13.5,
+            marginBottom: 20,
+            textDecoration: 'none',
+          }}
+        >
+          <i className="bi bi-exclamation-triangle" />
+          Your store is connected but hasn&apos;t synced yet — run your first sync to see your moves
+          →
+        </a>
+      ) : null}
       <PartialHistoryNotice show={data.historyLimited} />
       <div
         style={{

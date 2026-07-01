@@ -64,9 +64,9 @@ export default async function ProductsPage() {
       ) : (m.num('sku_margin.negative_margin_sku_count') ?? 0) > 0 ? (
         <Panel title="Worst-margin SKU">
           <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-            <strong style={{ color: 'var(--text-strong)' }}>{worst?.title ?? 'A SKU'}</strong> is
-            losing {usd(Math.abs(m.num('sku_margin.worst_sku_margin') ?? 0))} per unit after
-            discounts — reprice, bundle, or retire it.
+            <strong style={{ color: 'var(--text-strong)' }}>{worst?.title ?? 'A SKU'}</strong> lost{' '}
+            {usd(Math.abs(m.num('sku_margin.worst_sku_margin') ?? 0))} after discounts across the
+            analysis window — reprice, bundle, or retire it.
           </p>
         </Panel>
       ) : null}

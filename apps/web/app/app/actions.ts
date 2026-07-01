@@ -1,5 +1,5 @@
 'use server'
-import { prisma, getOrgStore, type RecStatus } from '@ss/db'
+import { prisma, getOrgStore, DEMO, type RecStatus } from '@ss/db'
 import { scheduleOutcome } from '@ss/jobs'
 import { getSession } from '@/lib/auth'
 
@@ -16,6 +16,9 @@ export async function setMoveStatus(recId: string, status: RecStatus): Promise<{
     select: { storeId: true },
   })
   if (!rec) return { ok: false }
+  // The shared demo store is a read-only showcase: it renders for every prospect and every
+  // not-yet-connected org, so nobody — including the demo-org fallback session — may mutate it.
+  if (rec.storeId === DEMO.storeId) return { ok: false }
   const store = await getOrgStore(prisma, orgId, rec.storeId)
   if (!store) return { ok: false } // not this org's store — refuse
   await prisma.recommendation.update({ where: { id: recId }, data: { status } })

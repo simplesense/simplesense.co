@@ -64,7 +64,9 @@ export async function buildAudit(slug: string): Promise<PublicAudit> {
   const moves = rows.slice(0, 3).map(toCore)
   const stats: AuditStat[] = [
     {
-      label: 'Trailing revenue (24m)',
+      // pareto.revenue_total counts identified (non-guest, positive-spend) customer revenue —
+      // don't overclaim it as total trailing revenue.
+      label: 'Revenue from identified customers',
       value: usd(await latestMetricValue(prisma, storeId, 'pareto.revenue_total')),
     },
     {

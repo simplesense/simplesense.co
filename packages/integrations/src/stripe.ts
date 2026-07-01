@@ -22,21 +22,36 @@ export interface StripeClient {
   parseWebhook(rawBody: string, signature: string | null): StripeEvent | null
 }
 
-/** Verify a Stripe webhook signature (scheme: `t=<ts>,v1=<hmac of "ts.body">`). */
+/** Max age of a signed webhook before it's considered a replay (Stripe's own default). */
+const SIGNATURE_TOLERANCE_SECONDS = 300
+
+/**
+ * Verify a Stripe webhook signature (scheme: `t=<ts>,v1=<hmac of "ts.body">`).
+ * - Accepts if ANY v1 entry matches (Stripe sends multiple v1s during secret rotation).
+ * - Rejects timestamps older than the tolerance window: the t= value is HMAC'd, so without
+ *   this check any captured signed payload would stay valid forever (replay).
+ */
 export function verifyStripeSignature(
   rawBody: string,
   header: string | null,
   secret: string,
+  nowMs = Date.now(),
 ): boolean {
   if (!header) return false
-  const parts = Object.fromEntries(header.split(',').map((kv) => kv.split('=')))
-  const t = parts.t
-  const v1 = parts.v1
-  if (!t || !v1) return false
+  const pairs = header.split(',').map((kv) => kv.split('=') as [string, string])
+  const t = pairs.find(([k]) => k === 't')?.[1]
+  const v1s = pairs.filter(([k]) => k === 'v1').map(([, v]) => v ?? '')
+  if (!t || v1s.length === 0) return false
+  const ts = Number(t)
+  if (!Number.isFinite(ts) || Math.abs(nowMs / 1000 - ts) > SIGNATURE_TOLERANCE_SECONDS) {
+    return false
+  }
   const expected = createHmac('sha256', secret).update(`${t}.${rawBody}`).digest('hex')
   const a = Buffer.from(expected)
-  const b = Buffer.from(v1)
-  return a.length === b.length && timingSafeEqual(a, b)
+  return v1s.some((v1) => {
+    const b = Buffer.from(v1)
+    return a.length === b.length && timingSafeEqual(a, b)
+  })
 }
 
 export class RealStripeClient implements StripeClient {
@@ -52,6 +67,12 @@ export class RealStripeClient implements StripeClient {
       client_reference_id: p.orgId,
       'metadata[orgId]': p.orgId,
       'metadata[tier]': p.tier,
+      // ALSO stamp the Subscription object: lifecycle webhooks (customer.subscription.updated/
+      // deleted — cancellations, payment failures, downgrades) carry the SUBSCRIPTION's
+      // metadata, not the checkout session's. Without this they arrive with no orgId and are
+      // dropped, so a canceled subscription would keep its tier forever.
+      'subscription_data[metadata][orgId]': p.orgId,
+      'subscription_data[metadata][tier]': p.tier,
     })
     const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
@@ -68,12 +89,10 @@ export class RealStripeClient implements StripeClient {
   }
 
   parseWebhook(rawBody: string, signature: string | null): StripeEvent | null {
-    if (
-      this.cfg.webhookSecret &&
-      !verifyStripeSignature(rawBody, signature, this.cfg.webhookSecret)
-    ) {
-      return null
-    }
+    // FAIL CLOSED: with no webhook secret configured we cannot authenticate the payload —
+    // reject rather than trust it (an unauthenticated body could upsert any org's tier).
+    if (!this.cfg.webhookSecret) return null
+    if (!verifyStripeSignature(rawBody, signature, this.cfg.webhookSecret)) return null
     const evt = JSON.parse(rawBody) as {
       type: string
       data?: { object?: { metadata?: { orgId?: string; tier?: string }; status?: string } }

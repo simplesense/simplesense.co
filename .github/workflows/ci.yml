@@ -32,3 +32,10 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Build web (catches Next-build-only failures before deploy)
+        run: pnpm --filter @ss/web build
+        env:
+          # Build only needs to compile; a dummy Clerk key keeps the ClerkProvider build path
+          # exercised without real credentials.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_build_only

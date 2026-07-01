@@ -13,6 +13,8 @@ export interface DashboardData {
   isDemo: boolean
   /** A background sync/analysis is in flight — show a "preparing your moves" state. */
   syncing: boolean
+  /** Connected but never synced (or sync failed) and no analysis exists — prompt to sync. */
+  needsSync: boolean
   /** Real store capped at ~60 days of orders (no read_all_orders) — show the partial-history notice. */
   historyLimited: boolean
   recommendations: Recommendation[]
@@ -52,12 +54,13 @@ const modelLabel = (): string => {
 }
 
 /**
- * Ensure a completed analysis run exists; the first load triggers one (live synthesis). Skips
- * when a background sync is in flight — that path runs its own analysis, so triggering here
- * would double-run the LLM on a half-ingested store.
+ * Ensure a completed analysis run exists; the first load triggers one (live synthesis).
+ * Only runs when the store's data is actually READY (or it's the seeded demo) — analyzing a
+ * PENDING/SYNCING/ERROR store would produce an "empty run" that reads as "all caught up" on a
+ * store that was never synced, and double-run the LLM against half-ingested data.
  */
-async function ensureRun(storeId: string, syncing: boolean): Promise<void> {
-  if (syncing) return
+async function ensureRun(storeId: string, ready: boolean): Promise<void> {
+  if (!ready) return
   if (!(await latestRunId(prisma, storeId))) {
     await analyzeStore(prisma, storeId, { llm: createLlmClient() })
   }
@@ -67,16 +70,18 @@ async function ensureRun(storeId: string, syncing: boolean): Promise<void> {
 export async function getDashboard(): Promise<DashboardData> {
   const { orgId } = await getSession()
   const { store, isDemo } = await resolveActiveStore(orgId)
-  const syncing = store.syncStatus === 'SYNCING'
-  await ensureRun(store.id, syncing)
+  const syncing = !isDemo && store.syncStatus === 'SYNCING'
+  await ensureRun(store.id, isDemo || store.syncStatus === 'READY')
   const hasRun = Boolean(await latestRunId(prisma, store.id))
   const rows = await openRecommendations(prisma, store.id)
   return {
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
     isDemo,
-    // "Preparing your moves" while a sync runs OR before the first run lands on a real store.
-    syncing: !isDemo && (syncing || !hasRun),
+    syncing,
+    // Connected but never successfully synced+analyzed (PENDING/ERROR, no run) — prompt the
+    // user to sync rather than pretending work is in flight or showing "all caught up".
+    needsSync: !isDemo && !syncing && !hasRun,
     historyLimited: !isDemo && !shopifyConfig().hasAllOrdersScope,
     recommendations: rows.map(toCore),
     metrics: {

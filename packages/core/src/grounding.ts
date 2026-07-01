@@ -28,25 +28,38 @@ function factsFromMetric(m: Metric): number[] {
   if (m.valueNumeric != null) {
     const v = m.valueNumeric
     facts.push(v, Math.round(v), Math.round(v * 10) / 10, Math.round(v * 100) / 100)
-    // ratios commonly rendered as percentages
-    facts.push(v * 100, Math.round(v * 100), Math.round(v * 1000) / 10)
+    // Percent rendering (0.717 → "72%") is only legitimate for RATIO metrics. Applying it to
+    // USD/count metrics would let a fabricated 100× inflation of any cited figure pass
+    // ("$87 AOV" → "$8,700"), so the expansion is gated on the unit.
+    if (m.unit === 'ratio') facts.push(v * 100, Math.round(v * 100), Math.round(v * 1000) / 10)
   }
   numericLeaves(m.valueJson, facts)
   return facts
 }
 
+interface ExtractedNumber {
+  value: number
+  /** Written with a k/M/B magnitude suffix — a dollar-style magnitude, never structural. */
+  suffixed: boolean
+}
+
 /**
- * Pull number MAGNITUDES out of free text: handles $, %, and thousands separators.
+ * Pull number MAGNITUDES out of free text: handles $, %, thousands separators, AND k/M/B
+ * magnitude suffixes ("$10k" → 10000, "$2M" → 2000000) — a suffixed figure must ground
+ * against its SCALED value and can never hide behind the structural-integer allowance.
  * Sign is intentionally ignored ("top-20%" must not parse as -20, and "-$20" margin
  * should match a metric value of -20) — callers compare against |fact| too.
  */
-function extractNumbers(text: string): number[] {
-  const matches = text.match(/\d[\d,]*\.?\d*\s*%?/g) ?? []
-  const nums: number[] = []
+function extractNumbers(text: string): ExtractedNumber[] {
+  const matches = text.match(/\d[\d,]*\.?\d*\s*(?:[kKmMbB](?![A-Za-z])|%)?/g) ?? []
+  const nums: ExtractedNumber[] = []
   for (const raw of matches) {
-    const cleaned = raw.replace(/[$,%\s]/g, '')
+    const suffix = /([kKmMbB])$/.exec(raw.trim())?.[1]?.toLowerCase()
+    const cleaned = raw.replace(/[$,%\skKmMbB]/g, '')
     const n = Number(cleaned)
-    if (Number.isFinite(n)) nums.push(n)
+    if (!Number.isFinite(n)) continue
+    const scale = suffix === 'k' ? 1e3 : suffix === 'm' ? 1e6 : suffix === 'b' ? 1e9 : 1
+    nums.push({ value: n * scale, suffixed: scale !== 1 })
   }
   return nums
 }
@@ -112,8 +125,9 @@ export function validateGrounding(
   for (const m of cited) allowed.push(...factsFromMetric(m))
 
   const copyNumbers = [...extractNumbers(rec.rationale), ...extractNumbers(rec.title)]
-  for (const n of copyNumbers) {
-    if (STRUCTURAL.has(n)) continue
+  for (const { value: n, suffixed } of copyNumbers) {
+    // "$10k" is a dollar magnitude, never a structural count — no structural escape hatch.
+    if (!suffixed && STRUCTURAL.has(n)) continue
     if (allowed.some((f) => close(n, f) || close(n, Math.abs(f)))) continue
     reasons.push(`number ${n} in copy is not grounded in any cited metric`)
   }

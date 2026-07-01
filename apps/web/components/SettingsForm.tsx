@@ -15,14 +15,29 @@ export function SettingsForm({ initial }: { initial: Initial }) {
   const [msg, setMsg] = useState('')
 
   async function save(): Promise<void> {
+    // Validate before hitting the server so a non-numeric threshold can't become NaN, which
+    // would reject the server action and leave the button stuck on "Saving…".
+    let parsed: number | null = null
+    if (threshold.trim() !== '') {
+      parsed = Number(threshold)
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setMsg('Enter a valid dollar amount (or leave blank).')
+        return
+      }
+    }
     setPending(true)
     setMsg('')
-    const r = await updateStoreSettings({
-      hasPhysicalLocations: physical,
-      freeShippingThreshold: threshold.trim() === '' ? null : Number(threshold),
-    })
-    setPending(false)
-    setMsg(r.ok ? 'Saved — moves re-analyzed' : 'Save failed')
+    try {
+      const r = await updateStoreSettings({
+        hasPhysicalLocations: physical,
+        freeShippingThreshold: parsed,
+      })
+      setMsg(r.ok ? 'Saved — moves re-analyzed' : 'Save failed')
+    } catch {
+      setMsg('Save failed — please try again.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

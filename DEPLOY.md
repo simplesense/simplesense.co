@@ -1,8 +1,20 @@
-# Deploying Simple Sense to Vercel
+# Deploying Simple Sense
 
 Repo: **https://github.com/simplesense/simplesense.co** (private)
 
 The app is a pnpm-workspace monorepo; the deployable is `apps/web` (Next.js App Router).
+
+> **Production runs on Fly.io** (app `simplesense-co`, region `sjc`), NOT Vercel. Deploy with:
+> ```
+> fly deploy --app simplesense-co --ha=false \
+>   --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<pk_...>
+> ```
+> `NEXT_PUBLIC_*` are inlined at build → passed as `--build-arg`; runtime secrets
+> (`DATABASE_URL`, `CLERK_SECRET_KEY`, `SHOPIFY_*`, `STRIPE_*`, `APP_ENCRYPTION_KEY`,
+> `ANTHROPIC_API_KEY`) are set via `fly secrets set`. `assertServerEnv` (wired in
+> `apps/web/instrumentation.ts`) fails the boot + health check on a missing/half-configured env,
+> so a bad release is gated by `[[http_service.checks]]` in `fly.toml`. The Vercel notes below are
+> retained only as an alternative host and are not the live path.
 
 ## Vercel import (≈3 minutes, dashboard)
 

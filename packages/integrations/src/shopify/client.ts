@@ -42,11 +42,19 @@ export class RealShopifyClient implements ShopifyClient {
     callbackUrl: string,
   ): Promise<void> {
     for (const topic of topics) {
-      await fetch(`https://${normalizeShop(shop)}/admin/api/${API_VERSION}/webhooks.json`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'X-Shopify-Access-Token': accessToken },
-        body: JSON.stringify({ webhook: { topic, address: callbackUrl, format: 'json' } }),
-      })
+      const res = await fetch(
+        `https://${normalizeShop(shop)}/admin/api/${API_VERSION}/webhooks.json`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'X-Shopify-Access-Token': accessToken },
+          body: JSON.stringify({ webhook: { topic, address: callbackUrl, format: 'json' } }),
+        },
+      )
+      // 422 = "already exists" (idempotent re-register), fine. Anything else is logged (topic +
+      // status only, no token/PII) so a silently-unregistered webhook is observable.
+      if (!res.ok && res.status !== 422) {
+        console.error('[shopify] webhook registration failed topic=%s status=%s', topic, res.status)
+      }
     }
   }
 }

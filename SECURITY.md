@@ -54,10 +54,13 @@ outcomes (counts/means across many orgs) — never by joining one org's rows to 
 
 ## Known gaps / roadmap
 
-- Auth is a dev shim today (single demo org); Clerk wiring is behind an interface — replace
-  before multi-tenant production.
+- Auth is **Clerk-backed** (cookie sessions → org, gated on `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`;
+  `assertServerEnv` refuses to boot on a half-configured Clerk env). The unauthenticated fallback
+  resolves to a shared **read-only** demo org; mutating server actions refuse writes to the demo store.
 - Error monitoring (Sentry) and audit logging for sensitive actions are planned (Slice 12+).
-- Rate limiter is per-instance; needs a shared store for horizontal scale.
+- Rate limiter is per-instance (in-memory); needs a shared store for horizontal scale.
+- Ingest is not transactional per-store; a mid-sync failure leaves partial data (surfaced via the
+  SYNCING/ERROR status), recovered by an idempotent re-sync.
 
 ## Reporting
 

@@ -13,6 +13,15 @@ primary_region = "sjc"
   min_machines_running = 1
   processes = ["app"]
 
+  # Gate rollouts on a booting app: a release that crashes on boot (e.g. assertServerEnv
+  # throwing on a bad env) fails its health check and Fly keeps the previous version serving.
+  [[http_service.checks]]
+    method = "get"
+    path = "/api/health"
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "10s"
+
 [[vm]]
   size = "shared-cpu-1x"
   memory = "1024mb"

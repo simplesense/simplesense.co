@@ -10,10 +10,10 @@ out/
 build/
 *.tsbuildinfo
 
-# Env & secrets — NEVER commit real values
+# Env & secrets — NEVER commit real values (all variants; .env.example is the one exception)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Local databases (PGlite embeds its data on disk)
 .pglite/

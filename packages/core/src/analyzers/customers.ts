@@ -179,13 +179,17 @@ export const cohortAnalyzer: Analyzer = (ctx) => {
 export const replenishmentAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
   const orders = ordersInWindow(ctx)
-  // (customerId|productId) -> purchase dates
+  // (customerId|productId) -> purchase dates. Product ids are DEDUPED per order: two line
+  // items of the same product in ONE order (sizes/colors, split lines) is one purchase, not a
+  // reorder — otherwise every multi-variant order fabricates a 0-day "reorder interval".
   const seq = new Map<string, number[]>()
   for (const o of orders) {
     if (!o.customerId) continue
-    for (const li of o.lineItems) {
-      if (!li.productId) continue
-      const k = `${o.customerId}|${li.productId}`
+    const productIds = new Set(
+      o.lineItems.map((li) => li.productId).filter((p): p is string => p != null),
+    )
+    for (const pid of productIds) {
+      const k = `${o.customerId}|${pid}`
       const arr = seq.get(k)
       if (arr) arr.push(o.createdAt.getTime())
       else seq.set(k, [o.createdAt.getTime()])

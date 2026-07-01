@@ -7,6 +7,10 @@ import { prisma } from '@ss/db'
 export async function POST(req: Request): Promise<Response> {
   const cfg = stripeConfig()
   if (!cfg.hasCredentials) return new NextResponse('not configured', { status: 503 })
+  // No webhook secret → we can't authenticate Stripe's calls; refuse rather than fail open.
+  if (!cfg.webhookSecret) {
+    return new NextResponse('webhook secret not configured', { status: 503 })
+  }
 
   const raw = await req.text()
   const evt = createStripeClient().parseWebhook(raw, req.headers.get('stripe-signature'))

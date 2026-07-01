@@ -1,5 +1,5 @@
 'use server'
-import { prisma, disconnectStore, getOrgStore } from '@ss/db'
+import { prisma, disconnectStore, getOrgStore, DEMO } from '@ss/db'
 import { backfillStore, analyzeStore } from '@ss/jobs'
 import { RealShopifyReader, decryptSecret } from '@ss/integrations'
 import { createLlmClient } from '@ss/engine'
@@ -13,6 +13,9 @@ const STUCK_AFTER_MS = 15 * 60 * 1000
 /** Disconnect + purge a store's data, tenant-scoped (§11.1). */
 export async function disconnectStoreAction(storeId: string): Promise<{ ok: boolean }> {
   const { orgId } = await getSession()
+  // The shared demo store is everyone's read-only showcase — never purgeable via an action
+  // (the unauthenticated fallback session resolves to the demo org, which "owns" it).
+  if (storeId === DEMO.storeId || orgId === DEMO.orgId) return { ok: false }
   const ok = await disconnectStore(prisma, orgId, storeId)
   revalidatePath('/connections')
   revalidatePath('/app')
@@ -36,21 +39,30 @@ export interface SyncTrigger {
  */
 export async function syncStoreAction(storeId: string): Promise<SyncTrigger> {
   const { orgId } = await getSession()
+  // Demo store is a shared read-only showcase — never syncable (it has no token anyway).
+  if (storeId === DEMO.storeId || orgId === DEMO.orgId) return { ok: false, error: 'demo store' }
   const store = await getOrgStore(prisma, orgId, storeId)
   if (!store || !store.accessTokenEnc) return { ok: false, error: 'not connected' }
 
-  // Don't stack a second sync on top of a healthy in-flight one; a stale one may be restarted.
-  if (store.syncStatus === 'SYNCING') {
-    const startedAt = store.syncStartedAt?.getTime() ?? 0
-    if (Date.now() - startedAt < STUCK_AFTER_MS) return { ok: true, started: false }
-  }
-
   const token = decryptSecret(store.accessTokenEnc)
   const shop = store.shopDomain
-  await prisma.store.update({
-    where: { id: storeId },
+
+  // Atomic claim (no check-then-write race): flip to SYNCING only if not already running or
+  // the running job is stale (>15min, e.g. killed by a deploy). If another concurrent call
+  // won the claim, count === 0 and we simply report "already running".
+  const stale = new Date(Date.now() - STUCK_AFTER_MS)
+  const claimed = await prisma.store.updateMany({
+    where: {
+      id: storeId,
+      OR: [
+        { syncStatus: { not: 'SYNCING' } },
+        { syncStartedAt: null },
+        { syncStartedAt: { lt: stale } },
+      ],
+    },
     data: { syncStatus: 'SYNCING', syncStartedAt: new Date(), syncError: null },
   })
+  if (claimed.count === 0) return { ok: true, started: false }
 
   after(async () => {
     try {

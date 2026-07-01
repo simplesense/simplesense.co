@@ -140,7 +140,9 @@ export function buildSkuEconomics(store: NormalizedStore): SkuRow[] {
 export function toCsv(headers: string[], rows: readonly object[]): string {
   const esc = (v: unknown): string => {
     let s = v == null ? '' : String(v)
-    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}` // defang formula triggers before quoting
+    // Only STRING values can carry a formula — our own numbers (e.g. a negative grossProfit)
+    // must serialize verbatim, or "-50" would corrupt to "'-50" in spreadsheet numeric cells.
+    if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}` // defang before quoting
     return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const head = headers.map(esc).join(',')

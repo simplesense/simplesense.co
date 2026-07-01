@@ -16,9 +16,14 @@ export function MovesList({ recommendations }: { recommendations: Recommendation
   const [, startTransition] = useTransition()
   const statusOf = (id: string): Status => statuses[id] ?? 'NEW'
   const set = (id: string, s: Status) => {
+    const prevStatus = statusOf(id)
     setStatuses((prev) => ({ ...prev, [id]: s })) // optimistic
     startTransition(() => {
-      void setMoveStatus(id, s)
+      void setMoveStatus(id, s).then((r) => {
+        // Roll back if the server refused (e.g. the read-only demo store) so we never show a
+        // false "Applied — measuring lift" for a write that didn't happen.
+        if (!r?.ok) setStatuses((prev) => ({ ...prev, [id]: prevStatus }))
+      })
     })
   }
 

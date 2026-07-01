@@ -69,4 +69,40 @@ describe('replenishmentAnalyzer', () => {
     expect(num(m, 'replenishment.reordered_pair_count')).toBe(2) // distinct (c1,pX) and (c2,pY)
     expect(num(m, 'replenishment.reorder_interval_count')).toBe(3) // 2 gaps for c1 + 1 for c2
   })
+
+  it('does NOT count two same-product lines in ONE order as a 0-day reorder', () => {
+    // A multi-variant order (two sizes of pX) is a single purchase, not a reorder.
+    const twoLines = [
+      { productId: 'pX', quantity: 1, price: 10 },
+      { productId: 'pX', quantity: 1, price: 12 },
+    ]
+    const m = replenishmentAnalyzer(
+      ctxOf({
+        orders: [
+          order({ id: 'o1', customerId: 'c1', createdAt: day('2025-01-01'), lineItems: twoLines }),
+        ],
+      }),
+    )
+    const rec = m.find((x) => x.key === 'replenishment.median_reorder_interval_days')
+    expect(rec?.insufficientData).toBe(true) // not a fabricated 0-day interval
+  })
+
+  it('a multi-variant order plus one genuine reorder yields the real interval, not a halved one', () => {
+    const twoLines = [
+      { productId: 'pX', quantity: 1, price: 10 },
+      { productId: 'pX', quantity: 1, price: 12 },
+    ]
+    const orders = [
+      order({ id: 'o1', customerId: 'c1', createdAt: day('2025-01-01'), lineItems: twoLines }),
+      order({
+        id: 'o2',
+        customerId: 'c1',
+        createdAt: day('2025-01-31'),
+        lineItems: [{ productId: 'pX', quantity: 1, price: 10 }],
+      }), // genuine +30d reorder
+    ]
+    const m = replenishmentAnalyzer(ctxOf({ orders }))
+    expect(num(m, 'replenishment.median_reorder_interval_days')).toBe(30) // not 15
+    expect(num(m, 'replenishment.reorder_interval_count')).toBe(1)
+  })
 })
