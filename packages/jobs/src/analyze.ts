@@ -94,7 +94,10 @@ export async function latestRecommendations(
 ): Promise<Recommendation[]> {
   const runId = await latestRunId(db, storeId)
   if (!runId) return []
-  return db.recommendation.findMany({ where: { runId }, orderBy: { rankScore: 'desc' } })
+  return db.recommendation.findMany({
+    where: { runId },
+    orderBy: [{ rankScore: 'desc' }, { id: 'asc' }], // stable across queries (ties at boundaries)
+  })
 }
 
 /**
@@ -109,7 +112,7 @@ export async function openRecommendations(
   if (!runId) return []
   return db.recommendation.findMany({
     where: { runId, status: { in: ['NEW', 'VIEWED'] } },
-    orderBy: { rankScore: 'desc' },
+    orderBy: [{ rankScore: 'desc' }, { id: 'asc' }], // stable across queries (ties at boundaries)
   })
 }
 

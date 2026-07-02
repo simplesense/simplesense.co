@@ -74,21 +74,26 @@ export function MovesList({
       </div>
 
       {open.length === 0 ? (
-        <div
-          style={{
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-hairline)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '48px 24px',
-            textAlign: 'center',
-            color: 'var(--text-muted)',
-          }}
-        >
-          <i className="bi bi-check2-all" style={{ fontSize: 28, color: 'var(--ss-success)' }} />
-          <p style={{ marginTop: 12, fontSize: 15 }}>
-            You're all caught up. New moves appear after the next analysis run.
-          </p>
-        </div>
+        // Never claim "all caught up" while locked moves exist — the upsell stays honest.
+        lockedCount > 0 ? (
+          <LockedMovesCard count={lockedCount} />
+        ) : (
+          <div
+            style={{
+              background: 'var(--surface-card)',
+              border: '1px solid var(--border-hairline)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '48px 24px',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <i className="bi bi-check2-all" style={{ fontSize: 28, color: 'var(--ss-success)' }} />
+            <p style={{ marginTop: 12, fontSize: 15 }}>
+              You're all caught up. New moves appear after the next analysis run.
+            </p>
+          </div>
+        )
       ) : (
         <div style={{ display: 'grid', gap: 20 }}>
           {open.map((rec, i) => {

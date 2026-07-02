@@ -84,9 +84,14 @@ export function MoveApply({ moveId, initial }: { moveId: string; initial: Applie
   const [state, setState] = useState<Applied>(initial)
   const [pending, startTransition] = useTransition()
   const act = (status: Applied) => {
+    const prev = state
     setState(status) // optimistic
     startTransition(() => {
-      void setMoveStatus(moveId, status === 'NONE' ? 'VIEWED' : status)
+      void setMoveStatus(moveId, status === 'NONE' ? 'VIEWED' : status).then((r) => {
+        // Roll back if the server refused (read-only demo store / tier-gated move) so the UI
+        // never shows a false "Applied" for a write that didn't happen.
+        if (!r?.ok) setState(prev)
+      })
     })
   }
 

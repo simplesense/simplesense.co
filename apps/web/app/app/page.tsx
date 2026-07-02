@@ -22,7 +22,11 @@ export default async function MovesPage() {
   const data = await getDashboard()
 
   return (
-    <AppShell storeName={data.storeName} openMoves={data.recommendations.length} model={data.model}>
+    <AppShell
+      storeName={data.storeName}
+      openMoves={data.recommendations.length + data.lockedMoveCount}
+      model={data.model}
+    >
       {data.isDemo ? (
         <a
           href="/connections"
@@ -78,13 +82,14 @@ export default async function MovesPage() {
       >
         <MetricCard
           label="Open moves"
-          value={data.recommendations.length}
+          value={data.recommendations.length + data.lockedMoveCount}
           icon="compass"
-          delta="ranked"
+          delta={data.lockedMoveCount > 0 ? `${data.lockedMoveCount} locked` : 'ranked'}
           deltaTone="primary"
         />
+        {/* pareto.revenue_total = identified (non-guest) customer revenue — labeled honestly. */}
         <MetricCard
-          label="Trailing revenue (24m)"
+          label="Identified-customer revenue"
           value={usd(data.metrics.revenue)}
           icon="cash-coin"
         />

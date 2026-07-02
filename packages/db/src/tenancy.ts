@@ -33,5 +33,8 @@ export async function recommendationsForOrgStore(
 ): Promise<Recommendation[]> {
   const store = await getOrgStore(db, orgId, storeId)
   if (!store) return []
-  return db.recommendation.findMany({ where: { storeId }, orderBy: { rankScore: 'desc' } })
+  return db.recommendation.findMany({
+    where: { storeId },
+    orderBy: [{ rankScore: 'desc' }, { id: 'asc' }],
+  })
 }

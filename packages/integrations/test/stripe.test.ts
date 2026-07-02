@@ -70,4 +70,22 @@ describe('RealStripeClient.parseWebhook', () => {
     const client = new RealStripeClient({ secretKey: 'sk', webhookSecret: SECRET })
     expect(client.parseWebhook('{}', 'bad')).toBeNull()
   })
+
+  it('fails closed on revocation-shaped subscription statuses (unpaid/paused/unknown)', () => {
+    const client = new RealStripeClient({ secretKey: 'sk', webhookSecret: SECRET })
+    const now = Date.now()
+    const parse = (status: string) => {
+      const body = JSON.stringify({
+        type: 'customer.subscription.updated',
+        data: { object: { metadata: { orgId: 'org1', tier: 'PRO' }, status } },
+      })
+      const t = String(Math.floor(now / 1000))
+      return client.parseWebhook(body, `t=${t},v1=${sign(t, body)}`)
+    }
+    expect(parse('unpaid')?.status).toBe('CANCELED') // dunning gave up → revoke
+    expect(parse('incomplete_expired')?.status).toBe('CANCELED')
+    expect(parse('paused')?.status).toBe('PAST_DUE')
+    expect(parse('some_future_status')?.status).toBe('CANCELED') // unknown → fail closed
+    expect(parse('active')?.status).toBe('ACTIVE')
+  })
 })

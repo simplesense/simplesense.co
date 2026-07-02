@@ -139,23 +139,19 @@ export async function loadMoveDetail(moveId: string): Promise<MoveDetail | null>
   const row = await prisma.recommendation.findFirst({ where: { id: moveId, runId } })
   if (!row) return null // not in this store's latest run — refuse (no cross-tenant peeking)
 
-  // Tier gating: on the free tier only the top open moves are visible (the dashboard slices
-  // the same set), so a direct URL to a locked move 404s rather than leaking it. Moves the
-  // user already acted on stay accessible (they were visible when acted on).
+  // Tier gating: the free tier's visible set is the run's FIXED top-N by rank across ALL
+  // statuses — the same anchor the dashboard slices — so a direct URL to a locked move 404s,
+  // and no amount of dismissing/applying rotates locked moves into reach. Acted-on moves that
+  // were in the fixed top-N stay accessible (membership, not status, decides).
   const ent = await entitlementsForOrg(orgId)
-  if (
-    !isDemo &&
-    ent.moves === 'top' &&
-    row.status !== 'IMPLEMENTED' &&
-    row.status !== 'DISMISSED'
-  ) {
-    const topOpen = await prisma.recommendation.findMany({
-      where: { runId, status: { in: ['NEW', 'VIEWED'] } },
-      orderBy: { rankScore: 'desc' },
+  if (!isDemo && ent.moves === 'top') {
+    const topOfRun = await prisma.recommendation.findMany({
+      where: { runId },
+      orderBy: [{ rankScore: 'desc' }, { id: 'asc' }],
       take: FREE_TOP_MOVES,
       select: { id: true },
     })
-    if (!topOpen.some((t) => t.id === row.id)) return null
+    if (!topOfRun.some((t) => t.id === row.id)) return null
   }
   const rec = toCore(row)
 

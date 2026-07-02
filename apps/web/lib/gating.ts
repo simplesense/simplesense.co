@@ -14,20 +14,37 @@ import type { TierEntitlements } from '@ss/config'
 /** How many ranked moves the free tier sees ("Top moves only") — matches the free audit's 3. */
 export const FREE_TOP_MOVES = 3
 
-export interface MovesVisibility {
-  visibleCount: number
+/**
+ * The FIXED set of move ids the tier may see, from the run's FULL ranked list (all statuses,
+ * stable order). Returns null = unrestricted (paid tier or the demo showcase).
+ *
+ * The set must be fixed per run — anchored to rank positions, not to whatever is currently
+ * open — or "Not now" becomes a paging cursor: dismissing a visible move would promote the
+ * next locked one into view, letting a free org enumerate the entire list through the UI.
+ * With a fixed set, dismissing a top move yields FEWER visible moves, never new ones.
+ */
+export function entitledMoveIds(
+  ent: TierEntitlements,
+  isDemo: boolean,
+  rankedRunIds: readonly string[],
+): Set<string> | null {
+  if (isDemo || ent.moves === 'full') return null
+  return new Set(rankedRunIds.slice(0, FREE_TOP_MOVES))
+}
+
+export interface MovesVisibility<T> {
+  visible: T[]
   lockedCount: number
 }
 
-/** How many open moves to show vs lock behind the upgrade card. */
-export function movesVisibility(
-  ent: TierEntitlements,
-  isDemo: boolean,
-  total: number,
-): MovesVisibility {
-  if (isDemo || ent.moves === 'full') return { visibleCount: total, lockedCount: 0 }
-  const visibleCount = Math.min(total, FREE_TOP_MOVES)
-  return { visibleCount, lockedCount: total - visibleCount }
+/** Split the OPEN moves into the entitled visible slice + the count locked behind the plan. */
+export function splitOpenMoves<T extends { id: string }>(
+  entitled: Set<string> | null,
+  open: readonly T[],
+): MovesVisibility<T> {
+  if (!entitled) return { visible: [...open], lockedCount: 0 }
+  const visible = open.filter((r) => entitled.has(r.id))
+  return { visible, lockedCount: open.length - visible.length }
 }
 
 /** CSV/segment exports are a deliverable — tier-gated even on the demo store. */

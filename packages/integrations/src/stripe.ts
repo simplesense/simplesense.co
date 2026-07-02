@@ -98,19 +98,28 @@ export class RealStripeClient implements StripeClient {
       data?: { object?: { metadata?: { orgId?: string; tier?: string }; status?: string } }
     }
     const obj = evt.data?.object
+    // FAIL CLOSED on revocation-shaped statuses: an unmapped status must never silently keep
+    // paid entitlements. unpaid/incomplete_expired = dunning gave up → revoke; paused/
+    // incomplete = limbo → PAST_DUE; and any FUTURE status Stripe adds on a subscription
+    // lifecycle event resolves to CANCELED rather than a no-op that leaves ACTIVE forever.
     const statusMap: Record<string, StripeEvent['status']> = {
       active: 'ACTIVE',
       trialing: 'ACTIVE',
       past_due: 'PAST_DUE',
+      paused: 'PAST_DUE',
+      incomplete: 'PAST_DUE',
       canceled: 'CANCELED',
+      unpaid: 'CANCELED',
+      incomplete_expired: 'CANCELED',
     }
+    const isSubscriptionLifecycle = evt.type.startsWith('customer.subscription.')
     const tier = obj?.metadata?.tier
     return {
       type: evt.type,
       orgId: obj?.metadata?.orgId ?? null,
       tier: tier === 'PRO' || tier === 'BASIC' ? tier : null,
       status: obj?.status
-        ? (statusMap[obj.status] ?? null)
+        ? (statusMap[obj.status] ?? (isSubscriptionLifecycle ? 'CANCELED' : null))
         : evt.type === 'checkout.session.completed'
           ? 'ACTIVE'
           : null,

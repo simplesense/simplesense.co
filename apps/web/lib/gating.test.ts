@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { TIERS } from '@ss/config'
 import {
   FREE_TOP_MOVES,
-  movesVisibility,
+  entitledMoveIds,
+  splitOpenMoves,
   canExport,
   detailUnlocked,
   outcomesUnlocked,
@@ -12,25 +13,51 @@ const free = TIERS.free.entitlements
 const basic = TIERS.basic.entitlements
 const pro = TIERS.pro.entitlements
 
-describe('movesVisibility', () => {
-  it('free tier sees only the top moves; the rest are locked', () => {
-    expect(movesVisibility(free, false, 8)).toEqual({
-      visibleCount: FREE_TOP_MOVES,
-      lockedCount: 8 - FREE_TOP_MOVES,
-    })
+const rankedRun = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'] // run's full ranked ids (all statuses)
+const rec = (id: string) => ({ id })
+
+describe('entitledMoveIds', () => {
+  it('free tier is entitled to a FIXED top-N of the run, regardless of status', () => {
+    const set = entitledMoveIds(free, false, rankedRun)
+    expect(set).not.toBeNull()
+    expect([...set!]).toEqual(rankedRun.slice(0, FREE_TOP_MOVES))
   })
 
-  it('free tier with fewer moves than the cap locks nothing', () => {
-    expect(movesVisibility(free, false, 2)).toEqual({ visibleCount: 2, lockedCount: 0 })
+  it('paid tiers and the demo showcase are unrestricted (null)', () => {
+    expect(entitledMoveIds(basic, false, rankedRun)).toBeNull()
+    expect(entitledMoveIds(pro, false, rankedRun)).toBeNull()
+    expect(entitledMoveIds(free, true, rankedRun)).toBeNull()
+  })
+})
+
+describe('splitOpenMoves', () => {
+  it('free tier sees only entitled open moves; the rest are locked', () => {
+    const entitled = entitledMoveIds(free, false, rankedRun)
+    const open = rankedRun.map(rec) // everything open
+    const { visible, lockedCount } = splitOpenMoves(entitled, open)
+    expect(visible.map((r) => r.id)).toEqual(['r1', 'r2', 'r3'])
+    expect(lockedCount).toBe(3)
   })
 
-  it('basic and pro see the full list', () => {
-    expect(movesVisibility(basic, false, 8)).toEqual({ visibleCount: 8, lockedCount: 0 })
-    expect(movesVisibility(pro, false, 8)).toEqual({ visibleCount: 8, lockedCount: 0 })
+  it('dismissing an entitled move NEVER promotes a locked one into view', () => {
+    const entitled = entitledMoveIds(free, false, rankedRun)
+    // r1 was dismissed → it leaves the open set; r4 is next by rank but NOT entitled.
+    const openAfterDismiss = ['r2', 'r3', 'r4', 'r5', 'r6'].map(rec)
+    const { visible, lockedCount } = splitOpenMoves(entitled, openAfterDismiss)
+    expect(visible.map((r) => r.id)).toEqual(['r2', 'r3']) // fewer visible, no promotion
+    expect(lockedCount).toBe(3) // r4, r5, r6 stay locked
   })
 
-  it('the demo store is an ungated showcase even on the free tier', () => {
-    expect(movesVisibility(free, true, 8)).toEqual({ visibleCount: 8, lockedCount: 0 })
+  it('unrestricted (paid/demo) passes everything through', () => {
+    const open = rankedRun.map(rec)
+    expect(splitOpenMoves(null, open)).toEqual({ visible: open, lockedCount: 0 })
+  })
+
+  it('fewer moves than the cap locks nothing', () => {
+    const entitled = entitledMoveIds(free, false, ['r1', 'r2'])
+    const { visible, lockedCount } = splitOpenMoves(entitled, [rec('r1'), rec('r2')])
+    expect(visible).toHaveLength(2)
+    expect(lockedCount).toBe(0)
   })
 })
 

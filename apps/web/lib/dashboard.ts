@@ -1,13 +1,19 @@
 import type { Recommendation as PrismaRecommendation } from '@ss/db'
 import { prisma, DEMO } from '@ss/db'
-import { analyzeStore, openRecommendations, latestRunId, latestMetricValue } from '@ss/jobs'
+import {
+  analyzeStore,
+  openRecommendations,
+  latestRecommendations,
+  latestRunId,
+  latestMetricValue,
+} from '@ss/jobs'
 import { createLlmClient } from '@ss/engine'
 import { llmConfig, shopifyConfig } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
 import { entitlementsForOrg } from './billing'
-import { movesVisibility } from './gating'
+import { entitledMoveIds, splitOpenMoves } from './gating'
 
 export interface DashboardData {
   storeName: string
@@ -78,10 +84,20 @@ export async function getDashboard(): Promise<DashboardData> {
   await ensureRun(store.id, isDemo || store.syncStatus === 'READY')
   const hasRun = Boolean(await latestRunId(prisma, store.id))
   const rows = await openRecommendations(prisma, store.id)
-  // Tier gating: slice server-side so locked moves are never sent to the client at all.
+  // Tier gating, server-side (locked moves are never sent to the client). The entitled set is
+  // anchored to the run's FIXED top-N ranks — not the open set — so dismissing a move never
+  // promotes a locked one into view (see gating.ts).
   const ent = await entitlementsForOrg(orgId)
-  const { visibleCount, lockedCount } = movesVisibility(ent, isDemo, rows.length)
-  const visible = rows.slice(0, visibleCount)
+  const restricted = !isDemo && ent.moves === 'top'
+  const ranked = restricted ? await latestRecommendations(prisma, store.id) : []
+  const entitled = restricted
+    ? entitledMoveIds(
+        ent,
+        isDemo,
+        ranked.map((r) => r.id),
+      )
+    : null
+  const { visible, lockedCount } = splitOpenMoves(entitled, rows)
   return {
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
