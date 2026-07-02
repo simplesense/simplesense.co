@@ -3,6 +3,8 @@ import { latestRunId } from '@ss/jobs'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
+import { entitlementsForOrg } from './billing'
+import { FREE_TOP_MOVES, canExport } from './gating'
 
 /** One grounded evidence row: a metric the recommendation cites, with its real value. */
 export interface EvidenceMetric {
@@ -17,6 +19,8 @@ export interface MoveDetail {
   evidence: EvidenceMetric[]
   isDemo: boolean
   storeName: string
+  /** Tier not entitled to CSV exports — the segment-download CTA renders locked. */
+  exportLocked: boolean
 }
 
 /** Friendly labels for the evidence keys analyzers emit (§6). Falls back to a generic humanizer. */
@@ -134,6 +138,25 @@ export async function loadMoveDetail(moveId: string): Promise<MoveDetail | null>
 
   const row = await prisma.recommendation.findFirst({ where: { id: moveId, runId } })
   if (!row) return null // not in this store's latest run — refuse (no cross-tenant peeking)
+
+  // Tier gating: on the free tier only the top open moves are visible (the dashboard slices
+  // the same set), so a direct URL to a locked move 404s rather than leaking it. Moves the
+  // user already acted on stay accessible (they were visible when acted on).
+  const ent = await entitlementsForOrg(orgId)
+  if (
+    !isDemo &&
+    ent.moves === 'top' &&
+    row.status !== 'IMPLEMENTED' &&
+    row.status !== 'DISMISSED'
+  ) {
+    const topOpen = await prisma.recommendation.findMany({
+      where: { runId, status: { in: ['NEW', 'VIEWED'] } },
+      orderBy: { rankScore: 'desc' },
+      take: FREE_TOP_MOVES,
+      select: { id: true },
+    })
+    if (!topOpen.some((t) => t.id === row.id)) return null
+  }
   const rec = toCore(row)
 
   const metrics = rec.evidenceMetricIds.length
@@ -159,5 +182,6 @@ export async function loadMoveDetail(moveId: string): Promise<MoveDetail | null>
     evidence,
     isDemo,
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
+    exportLocked: !canExport(ent),
   }
 }

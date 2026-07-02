@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react'
 import type { Recommendation } from '@ss/core'
 import { MoveCard, recommendationToMove } from '@ss/ui'
 import { setMoveStatus } from '@/app/app/actions'
+import { LockedMovesCard } from '@/components/locked'
 
 type Status = 'NEW' | 'IMPLEMENTED' | 'DISMISSED'
 
@@ -11,7 +12,14 @@ type Status = 'NEW' | 'IMPLEMENTED' | 'DISMISSED'
  * dismisses it — both persist to the DB via a tenant-scoped server action (optimistic
  * local update). IMPLEMENTED will trigger the §8.6 outcome job once Slice 9 lands.
  */
-export function MovesList({ recommendations }: { recommendations: Recommendation[] }) {
+export function MovesList({
+  recommendations,
+  lockedCount = 0,
+}: {
+  recommendations: Recommendation[]
+  /** Moves the tier can't see (server never sent them) — rendered as an upgrade card. */
+  lockedCount?: number
+}) {
   const [statuses, setStatuses] = useState<Record<string, Status>>({})
   const [, startTransition] = useTransition()
   const statusOf = (id: string): Status => statuses[id] ?? 'NEW'
@@ -124,6 +132,7 @@ export function MovesList({ recommendations }: { recommendations: Recommendation
               </div>
             )
           })}
+          <LockedMovesCard count={lockedCount} />
         </div>
       )}
     </section>

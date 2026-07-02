@@ -72,28 +72,41 @@ export function PageHeading({
   )
 }
 
-/** A download link styled as a secondary button — used for grounded CSV exports (§19). */
-export function ExportButton({ href, label }: { href: string; label: string }) {
+/**
+ * A download link styled as a secondary button — used for grounded CSV exports (§19).
+ * When `locked` (tier not entitled), it links to /plans instead — the route also enforces
+ * the entitlement server-side, this is just honest UI.
+ */
+export function ExportButton({
+  href,
+  label,
+  locked = false,
+}: {
+  href: string
+  label: string
+  locked?: boolean
+}) {
   return (
     <a
-      href={href}
-      download
+      href={locked ? '/plans' : href}
+      download={locked ? undefined : true}
+      title={locked ? 'Segment exports are a Basic feature' : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
         fontSize: 13.5,
         fontWeight: 600,
-        color: 'var(--text-strong)',
+        color: locked ? 'var(--text-muted)' : 'var(--text-strong)',
         background: 'var(--surface-card)',
-        border: '1px solid var(--border-strong)',
+        border: `1px ${locked ? 'dashed' : 'solid'} var(--border-strong)`,
         borderRadius: 'var(--radius-pill)',
         padding: '9px 16px',
         textDecoration: 'none',
       }}
     >
-      <i className="bi bi-download" aria-hidden="true" />
-      {label}
+      <i className={`bi bi-${locked ? 'lock' : 'download'}`} aria-hidden="true" />
+      {locked ? `${label} · Basic` : label}
     </a>
   )
 }

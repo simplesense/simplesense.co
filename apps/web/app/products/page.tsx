@@ -3,6 +3,7 @@ import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import { DemoBanner, PageHeading, MetricGrid, Panel, ExportButton } from '@/components/detail'
 import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
+import { LockedPanel } from '@/components/locked'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,13 @@ export default async function ProductsPage() {
         eyebrow="PRODUCTS"
         title="Per-SKU margin & affinity"
         sub="True margin net of discounts (where product cost is known), money-losing SKUs, and what sells together."
-        action={<ExportButton href="/api/export/sku" label="Export SKU economics" />}
+        action={
+          <ExportButton
+            href="/api/export/sku"
+            label="Export SKU economics"
+            locked={m.exportLocked}
+          />
+        }
       />
 
       <MetricGrid>
@@ -53,31 +60,40 @@ export default async function ProductsPage() {
         <MetricCard label="Avg order value" value={usd(m.num('aov.value'))} icon="cash-coin" />
       </MetricGrid>
 
-      {!hasMargin ? (
-        <Panel title="Unlock margin analysis">
-          <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-            Add product costs in Shopify (Products → variant → Cost per item). Once cost is set,
-            Simple Sense computes true per-SKU margin and flags money-losing products — until then
-            it stays "insufficient" rather than guessing.
-          </p>
-        </Panel>
-      ) : (m.num('sku_margin.negative_margin_sku_count') ?? 0) > 0 ? (
-        <Panel title="Worst-margin SKU">
-          <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-            <strong style={{ color: 'var(--text-strong)' }}>{worst?.title ?? 'A SKU'}</strong> lost{' '}
-            {usd(Math.abs(m.num('sku_margin.worst_sku_margin') ?? 0))} after discounts across the
-            analysis window — reprice, bundle, or retire it.
-          </p>
-        </Panel>
-      ) : null}
+      {m.detailLocked ? (
+        <LockedPanel
+          title="Per-SKU economics"
+          copy="Money-losing SKU detection, true margin net of discounts, and cross-sell affinity are part of Basic. The headline rates above are your free teaser."
+        />
+      ) : (
+        <>
+          {!hasMargin ? (
+            <Panel title="Unlock margin analysis">
+              <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
+                Add product costs in Shopify (Products → variant → Cost per item). Once cost is set,
+                Simple Sense computes true per-SKU margin and flags money-losing products — until
+                then it stays "insufficient" rather than guessing.
+              </p>
+            </Panel>
+          ) : (m.num('sku_margin.negative_margin_sku_count') ?? 0) > 0 ? (
+            <Panel title="Worst-margin SKU">
+              <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
+                <strong style={{ color: 'var(--text-strong)' }}>{worst?.title ?? 'A SKU'}</strong>{' '}
+                lost {usd(Math.abs(m.num('sku_margin.worst_sku_margin') ?? 0))} after discounts
+                across the analysis window — reprice, bundle, or retire it.
+              </p>
+            </Panel>
+          ) : null}
 
-      <Panel title="Frequently bought together">
-        <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-          {pair?.titles?.length === 2
-            ? `${pair.titles[0]} + ${pair.titles[1]} — co-purchased in ${m.num('affinity.top_pair_support')} orders. A natural bundle or cross-sell.`
-            : 'Not enough multi-product orders to surface a cross-sell pair yet.'}
-        </p>
-      </Panel>
+          <Panel title="Frequently bought together">
+            <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
+              {pair?.titles?.length === 2
+                ? `${pair.titles[0]} + ${pair.titles[1]} — co-purchased in ${m.num('affinity.top_pair_support')} orders. A natural bundle or cross-sell.`
+                : 'Not enough multi-product orders to surface a cross-sell pair yet.'}
+            </p>
+          </Panel>
+        </>
+      )}
     </AppShell>
   )
 }

@@ -6,6 +6,8 @@ import { llmConfig, shopifyConfig } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
+import { entitlementsForOrg } from './billing'
+import { movesVisibility } from './gating'
 
 export interface DashboardData {
   storeName: string
@@ -17,6 +19,8 @@ export interface DashboardData {
   needsSync: boolean
   /** Real store capped at ~60 days of orders (no read_all_orders) — show the partial-history notice. */
   historyLimited: boolean
+  /** Moves beyond the tier's visible cap (free = top 3) — rendered as an upgrade card, never sent. */
+  lockedMoveCount: number
   recommendations: Recommendation[]
   metrics: {
     revenue: number | null
@@ -74,6 +78,10 @@ export async function getDashboard(): Promise<DashboardData> {
   await ensureRun(store.id, isDemo || store.syncStatus === 'READY')
   const hasRun = Boolean(await latestRunId(prisma, store.id))
   const rows = await openRecommendations(prisma, store.id)
+  // Tier gating: slice server-side so locked moves are never sent to the client at all.
+  const ent = await entitlementsForOrg(orgId)
+  const { visibleCount, lockedCount } = movesVisibility(ent, isDemo, rows.length)
+  const visible = rows.slice(0, visibleCount)
   return {
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
     model: modelLabel(),
@@ -83,7 +91,8 @@ export async function getDashboard(): Promise<DashboardData> {
     // user to sync rather than pretending work is in flight or showing "all caught up".
     needsSync: !isDemo && !syncing && !hasRun,
     historyLimited: !isDemo && !shopifyConfig().hasAllOrdersScope,
-    recommendations: rows.map(toCore),
+    lockedMoveCount: lockedCount,
+    recommendations: visible.map(toCore),
     metrics: {
       revenue: await latestMetricValue(prisma, store.id, 'pareto.revenue_total'),
       top20: await latestMetricValue(prisma, store.id, 'pareto.top20_revenue_share'),

@@ -1,6 +1,7 @@
 import { MetricCard, ParetoChart, type ParetoPoint } from '@ss/ui'
 import { AppShell } from '@/components/AppShell'
 import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
+import { LockedPanel } from '@/components/locked'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import {
   DemoBanner,
@@ -46,7 +47,9 @@ export default async function CustomersPage() {
             ? `Your top ${n(top20Count)} customers drive ${pct(top20)} of revenue — the VIP base to protect.`
             : 'Pareto, VIP and RFM detail from your latest analysis.'
         }
-        action={<ExportButton href="/api/export/vip" label="Export VIP segment" />}
+        action={
+          <ExportButton href="/api/export/vip" label="Export VIP segment" locked={m.exportLocked} />
+        }
       />
 
       <MetricGrid>
@@ -68,7 +71,14 @@ export default async function CustomersPage() {
         />
       </MetricGrid>
 
-      {concentration.length >= 2 ? (
+      {m.detailLocked ? (
+        <LockedPanel
+          title="Full customer economics"
+          copy="The concentration curve, RFM segments, and retention funnel — computed from your own orders — are part of Basic's geo + Pareto analysis. The headline numbers above are your free teaser."
+        />
+      ) : null}
+
+      {!m.detailLocked && concentration.length >= 2 ? (
         <Panel title="Revenue concentration">
           <div
             style={{
@@ -96,35 +106,43 @@ export default async function CustomersPage() {
         </Panel>
       ) : null}
 
-      <Panel title="RFM segments">
-        <StatBars
-          rows={[
-            { label: 'Champions', value: m.num('rfm.champions_count'), tone: 'var(--ss-success)' },
-            { label: 'Loyal', value: m.num('rfm.loyal_count') },
-            { label: 'Repeat', value: m.num('rfm.repeat_count') },
-            { label: 'One-time', value: m.num('rfm.one_time_count') },
-            { label: 'At risk', value: m.num('rfm.at_risk_count'), tone: 'var(--ss-warning)' },
-            { label: 'Dormant', value: m.num('rfm.dormant_count'), tone: 'var(--ss-muted)' },
-          ]}
-        />
-      </Panel>
+      {!m.detailLocked ? (
+        <>
+          <Panel title="RFM segments">
+            <StatBars
+              rows={[
+                {
+                  label: 'Champions',
+                  value: m.num('rfm.champions_count'),
+                  tone: 'var(--ss-success)',
+                },
+                { label: 'Loyal', value: m.num('rfm.loyal_count') },
+                { label: 'Repeat', value: m.num('rfm.repeat_count') },
+                { label: 'One-time', value: m.num('rfm.one_time_count') },
+                { label: 'At risk', value: m.num('rfm.at_risk_count'), tone: 'var(--ss-warning)' },
+                { label: 'Dormant', value: m.num('rfm.dormant_count'), tone: 'var(--ss-muted)' },
+              ]}
+            />
+          </Panel>
 
-      <Panel title="Retention funnel">
-        <StatBars
-          rows={[
-            { label: 'New customers', value: m.num('cohort.new_customer_count') },
-            { label: 'Active (in window)', value: m.num('rfm.active_count') },
-            {
-              label: '2nd→3rd conversion %',
-              value:
-                m.num('cohort.second_to_third_conversion') != null
-                  ? Math.round((m.num('cohort.second_to_third_conversion') as number) * 100)
-                  : null,
-              tone: 'var(--ss-clay-500)',
-            },
-          ]}
-        />
-      </Panel>
+          <Panel title="Retention funnel">
+            <StatBars
+              rows={[
+                { label: 'New customers', value: m.num('cohort.new_customer_count') },
+                { label: 'Active (in window)', value: m.num('rfm.active_count') },
+                {
+                  label: '2nd→3rd conversion %',
+                  value:
+                    m.num('cohort.second_to_third_conversion') != null
+                      ? Math.round((m.num('cohort.second_to_third_conversion') as number) * 100)
+                      : null,
+                  tone: 'var(--ss-clay-500)',
+                },
+              ]}
+            />
+          </Panel>
+        </>
+      ) : null}
     </AppShell>
   )
 }

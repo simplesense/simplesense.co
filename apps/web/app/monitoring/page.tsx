@@ -3,7 +3,10 @@ import { Badge } from '@ss/ui'
 import { prisma, DEMO } from '@ss/db'
 import { getSession } from '@/lib/auth'
 import { resolveActiveStore } from '@/lib/store-resolve'
+import { entitlementsForOrg } from '@/lib/billing'
+import { outcomesUnlocked } from '@/lib/gating'
 import { AppShell } from '@/components/AppShell'
+import { LockedPanel } from '@/components/locked'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +15,9 @@ const fmt = (v: number | null): string => (v == null ? '—' : v.toLocaleString(
 export default async function MonitoringPage() {
   const { orgId } = await getSession()
   const { store, isDemo } = await resolveActiveStore(orgId)
-  const outcomes = await listOutcomes(prisma, store.id)
+  const unlocked = outcomesUnlocked(await entitlementsForOrg(orgId), isDemo)
+  // Server-enforced: a locked tier never queries the outcomes at all.
+  const outcomes = unlocked ? await listOutcomes(prisma, store.id) : []
   const storeName = isDemo ? DEMO.storeName : store.shopDomain
 
   return (
@@ -36,7 +41,12 @@ export default async function MonitoringPage() {
         the lift after a {30}-day window — so prescriptions get sharper with proof, not opinions.
       </p>
 
-      {outcomes.length === 0 ? (
+      {!unlocked ? (
+        <LockedPanel
+          title="Outcome tracking"
+          copy="Applied-move baselines, measured lift, and the proof flywheel are part of Basic. Apply moves free — upgrade to see what they actually earned."
+        />
+      ) : outcomes.length === 0 ? (
         <div
           style={{
             background: 'var(--surface-card)',

@@ -91,7 +91,7 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
   const detail = await loadMoveDetail(id)
   if (!detail) notFound()
 
-  const { rec, evidence, isDemo, storeName } = detail
+  const { rec, evidence, isDemo, storeName, exportLocked } = detail
   const sentences = rec.rationale.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0)
   const pattern = sentences[0] ?? rec.title
   const why = sentences.slice(1).join(' ') || rec.rationale
@@ -289,7 +289,11 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
             </div>
             {rec.suggestedExecution.type === 'klaviyo_segment' ? (
               <div style={{ marginTop: 16 }}>
-                <ExportButton href="/api/export/vip" label="Download the segment (CSV)" />
+                <ExportButton
+                  href="/api/export/vip"
+                  label="Download the segment (CSV)"
+                  locked={exportLocked}
+                />
                 <p style={{ margin: '8px 2px 0', fontSize: 12, color: 'var(--text-muted)' }}>
                   The real customers behind this move — import straight into Klaviyo.
                 </p>

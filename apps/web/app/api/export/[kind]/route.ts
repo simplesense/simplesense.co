@@ -3,6 +3,8 @@ import { prisma, loadNormalizedStore, DEMO } from '@ss/db'
 import { buildVipSegment, buildSkuEconomics, toCsv } from '@ss/core'
 import { getSession } from '@/lib/auth'
 import { resolveActiveStore } from '@/lib/store-resolve'
+import { entitlementsForOrg } from '@/lib/billing'
+import { canExport } from '@/lib/gating'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +46,14 @@ export async function GET(
   }
 
   const { orgId } = await getSession()
+  // Exports are a deliverable: tier-gated server-side (even on the demo store), so the file
+  // can't be fetched by URL regardless of what the UI shows.
+  if (!canExport(await entitlementsForOrg(orgId))) {
+    return NextResponse.json(
+      { error: 'Segment exports are a Basic feature. Upgrade at /plans to download.' },
+      { status: 403 },
+    )
+  }
   const { store, isDemo } = await resolveActiveStore(orgId)
   const normalized = await loadNormalizedStore(prisma, store.id)
   if (!normalized) {

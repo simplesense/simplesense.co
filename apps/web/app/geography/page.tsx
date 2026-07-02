@@ -4,6 +4,7 @@ import { AppShell } from '@/components/AppShell'
 import { loadStoreMetrics } from '@/lib/store-metrics'
 import { DemoBanner, PageHeading, MetricGrid, Panel, StatBars } from '@/components/detail'
 import { PartialHistoryNotice } from '@/components/PartialHistoryNotice'
+import { LockedPanel } from '@/components/locked'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,36 +74,45 @@ export default async function GeographyPage() {
         />
       </MetricGrid>
 
-      {regionRows.length >= 2 ? (
-        <Panel title="Regional concentration">
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-muted)' }}>
-            Share of located revenue by region (top {regionRows.length}).
-          </p>
-          <StatBars rows={regionRows} valueSuffix="%" />
-        </Panel>
-      ) : null}
-
-      {physical ? (
-        <Panel title="Trade area">
-          <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-            {pct(m.num('geo.within_5mi_revenue_share'))} of geocoded revenue is within 5 miles of a
-            store
-            {m.num('geo.geocoded_revenue_fraction') != null
-              ? ` (on ${pct(m.num('geo.geocoded_revenue_fraction'))} of revenue we could map)`
-              : ''}
-            {m.num('geo.trade_area_overlap_share') != null
-              ? ` · ${pct(m.num('geo.trade_area_overlap_share'))} sits in overlapping store catchments.`
-              : '.'}
-          </p>
-        </Panel>
+      {m.detailLocked ? (
+        <LockedPanel
+          title="Full geographic analysis"
+          copy="Regional concentration, trade-area / zip-cluster detail, and the geo moves behind them are part of Basic's geo + Pareto analysis. The headline shares above are your free teaser."
+        />
       ) : (
-        <Panel title="Top zip clusters">
-          <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
-            {zips?.zips?.length
-              ? `Concentrated in ${zips.zips.join(', ')} — candidates for forward inventory / regional free-ship.`
-              : 'Not enough zip-coded orders to cluster yet.'}
-          </p>
-        </Panel>
+        <>
+          {regionRows.length >= 2 ? (
+            <Panel title="Regional concentration">
+              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-muted)' }}>
+                Share of located revenue by region (top {regionRows.length}).
+              </p>
+              <StatBars rows={regionRows} valueSuffix="%" />
+            </Panel>
+          ) : null}
+
+          {physical ? (
+            <Panel title="Trade area">
+              <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
+                {pct(m.num('geo.within_5mi_revenue_share'))} of geocoded revenue is within 5 miles
+                of a store
+                {m.num('geo.geocoded_revenue_fraction') != null
+                  ? ` (on ${pct(m.num('geo.geocoded_revenue_fraction'))} of revenue we could map)`
+                  : ''}
+                {m.num('geo.trade_area_overlap_share') != null
+                  ? ` · ${pct(m.num('geo.trade_area_overlap_share'))} sits in overlapping store catchments.`
+                  : '.'}
+              </p>
+            </Panel>
+          ) : (
+            <Panel title="Top zip clusters">
+              <p style={{ margin: 0, color: 'var(--text-body)', fontSize: 14 }}>
+                {zips?.zips?.length
+                  ? `Concentrated in ${zips.zips.join(', ')} — candidates for forward inventory / regional free-ship.`
+                  : 'Not enough zip-coded orders to cluster yet.'}
+              </p>
+            </Panel>
+          )}
+        </>
       )}
     </AppShell>
   )

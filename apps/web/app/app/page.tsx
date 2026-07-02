@@ -92,7 +92,7 @@ export default async function MovesPage() {
         <MetricCard label="Revenue within 5 mi" value={pct(data.metrics.within5)} icon="geo-alt" />
       </div>
 
-      <MovesList recommendations={data.recommendations} />
+      <MovesList recommendations={data.recommendations} lockedCount={data.lockedMoveCount} />
     </AppShell>
   )
 }
