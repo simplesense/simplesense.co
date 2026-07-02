@@ -16,10 +16,24 @@ criterion below it is checked and its tests pass.
 - [x] Slice 7 — Dashboard ("This week's moves") + design-system port (@ss/ui)
 - [x] Slice 8 — The free "Simple Sense Audit" (the wedge)
 - [x] Slice 9 — Outcome tracking (flywheel) — schedule/measure + Monitoring view
-- [~] Slice 10 — Stripe billing + gating + Plans page DONE (mock/test-mode); live needs Stripe keys
+- [x] Slice 10 — Billing + TIER GATING: server-enforced entitlements live (free=top-3+teaser,
+      Basic+=full, demo=showcase); Stripe code test-mode complete — live needs Stripe keys only
 - [x] Slice 11 — Integration exports: grounded VIP-segment + SKU-economics CSV downloads
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
+
+## Completed: Tier gating, server-enforced (2026-07-02)
+
+TIERS entitlements were decorative (zero call sites); now enforced at every data path.
+Free = FIXED top-3 moves of the run (by rank, all statuses — a sliding open-set window was
+built first, and the adversarial review of the diff proved it enumerable via "Not now"
+cycling; 13 findings, 5 distinct fixes folded same-day) + teaser KPIs; exports 403 (even on
+demo — deliverables stay gated); detail panels + monitoring locked with /plans CTAs.
+Basic+/demo = full. Enforced in: dashboard slice (locked moves never serialized), move-detail
+404 gate, setMoveStatus write path, export route, monitoring query. Stripe status mapping
+fails closed (unpaid/unknown → CANCELED). Deterministic rank ordering (id tiebreak)
+everywhere. 145 tests green. The moment live Stripe keys land, paying flips entitlements
+with no further code.
 
 ## Adversarial review of the 2026-06-28 diff — 7 defects folded
 
