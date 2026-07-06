@@ -1,7 +1,16 @@
+import { HeroVideo } from '@/components/HeroVideo'
+
+const HERO_VIDEO =
+  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_083109_283f3553-e28f-428b-a723-d639c617eb2b.mp4'
+
 export default function LandingPage() {
   return (
     <>
       <header className="hero">
+        <div className="hero-bg" aria-hidden="true">
+          <HeroVideo src={HERO_VIDEO} />
+          <div className="hero-bg-scrim" />
+        </div>
         <div className="eyebrow-pill">
           <span className="tag">NEW</span> The prescriptive operator brain for e-commerce
         </div>

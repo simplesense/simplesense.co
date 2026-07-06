@@ -87,12 +87,49 @@
 
 /* ---------- Hero ---------- */
 .hero {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   padding: 150px 24px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+/* Ambient looping video backdrop — sits behind all hero content. */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--ss-cream);
+}
+.hero-video-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0; /* driven by the fade-loop; starts hidden so there's no hard cut-in */
+}
+/* Cream scrim: solid at the top (keeps the serif headline crisp), softly revealing the
+   landscape behind the CTAs + product card, fading back to cream at the bottom edge. */
+.hero-bg-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--ss-cream) 0%,
+    var(--ss-cream) 42%,
+    rgba(244, 241, 234, 0.34) 60%,
+    rgba(244, 241, 234, 0.34) 80%,
+    var(--ss-cream) 100%
+  );
+}
+/* Every direct hero child except the backdrop rides above the video. */
+.hero > *:not(.hero-bg) {
+  position: relative;
+  z-index: 1;
 }
 .eyebrow-pill {
   display: inline-flex;
