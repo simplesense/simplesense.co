@@ -1,14 +1,15 @@
 import { HeroVideo } from '@/components/HeroVideo'
 
-const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_083109_283f3553-e28f-428b-a723-d639c617eb2b.mp4'
+// Self-hosted (compressed to 720p, ~1.5MB, no audio) — no external dependency.
+const HERO_VIDEO = '/video/hero.mp4'
+const HERO_POSTER = '/video/hero-poster.jpg'
 
 export default function LandingPage() {
   return (
     <>
       <header className="hero">
         <div className="hero-bg" aria-hidden="true">
-          <HeroVideo src={HERO_VIDEO} />
+          <HeroVideo src={HERO_VIDEO} poster={HERO_POSTER} />
           <div className="hero-bg-scrim" />
         </div>
         <div className="eyebrow-pill">
