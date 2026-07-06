@@ -45,8 +45,8 @@ export function MarketingFooter() {
           <h4>Company</h4>
           <a href="/sign-in">Sign in</a>
           <a href="/sign-up">Sign up</a>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
         </div>
       </div>
       <div className="footer-base">

@@ -579,6 +579,63 @@ h1.hero-h em {
   color: var(--ss-success);
 }
 
+/* ---------- Legal (privacy / terms) ---------- */
+.legal .legal-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.legal-h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(38px, 6vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  margin: 8px 0 4px;
+}
+.legal-updated {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 28px;
+}
+.legal p {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--text-body);
+  margin: 0 0 18px;
+}
+.legal h2 {
+  font-family: var(--font-ui-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+  margin: 34px 0 10px;
+}
+.legal ul {
+  margin: 0 0 18px;
+  padding-left: 20px;
+  display: grid;
+  gap: 9px;
+}
+.legal li {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+.legal a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+.legal a:hover {
+  text-decoration: underline;
+}
+.legal .legal-note {
+  margin-top: 32px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
 /* ---------- Footer (blossom) ---------- */
 footer.mkt {
   position: relative;
