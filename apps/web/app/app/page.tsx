@@ -22,11 +22,7 @@ export default async function MovesPage() {
   const data = await getDashboard()
 
   return (
-    <AppShell
-      storeName={data.storeName}
-      openMoves={data.recommendations.length + data.lockedMoveCount}
-      model={data.model}
-    >
+    <AppShell>
       {data.isDemo ? (
         <a
           href="/connections"

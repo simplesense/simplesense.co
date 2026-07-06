@@ -1,6 +1,6 @@
 import { listOutcomes } from '@ss/jobs'
 import { Badge } from '@ss/ui'
-import { prisma, DEMO } from '@ss/db'
+import { prisma } from '@ss/db'
 import { getSession } from '@/lib/auth'
 import { resolveActiveStore } from '@/lib/store-resolve'
 import { entitlementsForOrg } from '@/lib/billing'
@@ -18,10 +18,9 @@ export default async function MonitoringPage() {
   const unlocked = outcomesUnlocked(await entitlementsForOrg(orgId), isDemo)
   // Server-enforced: a locked tier never queries the outcomes at all.
   const outcomes = unlocked ? await listOutcomes(prisma, store.id) : []
-  const storeName = isDemo ? DEMO.storeName : store.shopDomain
 
   return (
-    <AppShell storeName={storeName} openMoves={0} model="">
+    <AppShell>
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         MONITORING
       </p>

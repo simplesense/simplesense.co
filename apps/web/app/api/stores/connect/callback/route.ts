@@ -18,38 +18,41 @@ import { getSession } from '@/lib/auth'
  */
 export async function GET(req: Request): Promise<Response> {
   const cfg = shopifyConfig()
-  if (!cfg.apiSecret) return NextResponse.json({ error: 'Shopify not configured' }, { status: 503 })
+  // This callback is navigated by the merchant's BROWSER, so every failure redirects to a
+  // friendly banner on /connections rather than dumping raw JSON at them mid-funnel.
+  const fail = (code: string): Response =>
+    NextResponse.redirect(`${cfg.appUrl}/connections?error=${code}`)
+
+  if (!cfg.apiSecret) return fail('config')
 
   const query = Object.fromEntries(new URL(req.url).searchParams.entries())
-  if (!validateCallbackHmac(query, cfg.apiSecret)) {
-    return NextResponse.json({ error: 'invalid HMAC' }, { status: 401 })
-  }
+  if (!validateCallbackHmac(query, cfg.apiSecret)) return fail('hmac')
+
   const jar = await cookies()
   if (!jar.get('ss_oauth_state')?.value || jar.get('ss_oauth_state')?.value !== query.state) {
-    return NextResponse.json({ error: 'invalid state' }, { status: 401 })
+    return fail('state')
   }
   const shop = normalizeShop(query.shop ?? '')
   const code = query.code
-  if (!shop || !code) return NextResponse.json({ error: 'missing shop/code' }, { status: 400 })
+  if (!shop || !code) return fail('shop')
   // Even though the HMAC authenticates the callback, only persist a well-formed *.myshopify.com
   // domain — matches the start route and keeps anything odd out of the stored shopDomain.
-  if (!isValidShopDomain(shop)) {
-    return NextResponse.json({ error: 'invalid shop domain' }, { status: 400 })
-  }
+  if (!isValidShopDomain(shop)) return fail('shop')
 
   // Fail closed: never attach a live store + access token to the shared DEMO org. The merchant
   // must be signed into SimpleSense so getSession() resolves to THEIR org. (getSession falls back
   // to DEMO when there's no Clerk session — that must not silently capture a real connection.)
   const { orgId, userId } = await getSession()
-  if (!userId || orgId === DEMO.orgId) {
-    return NextResponse.json(
-      { error: 'Sign in to SimpleSense before connecting a store.' },
-      { status: 401 },
-    )
-  }
+  if (!userId || orgId === DEMO.orgId) return fail('auth')
 
   const client = createShopifyClient()
-  const token = await client.exchangeCodeForToken(shop, code)
+  let token: string
+  try {
+    token = await client.exchangeCodeForToken(shop, code)
+  } catch (err) {
+    console.error('[connect] token exchange failed:', (err as Error).message)
+    return fail('exchange')
+  }
 
   // Re-home on update too: whoever can complete this HMAC-verified OAuth controls the Shopify
   // store, so the store belongs to the connecting org even if a prior org (or DEMO) held it.

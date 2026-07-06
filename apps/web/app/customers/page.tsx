@@ -36,7 +36,7 @@ export default async function CustomersPage() {
     .map(([customerFraction, share]) => ({ customerFraction, revenueShare: share as number }))
 
   return (
-    <AppShell storeName={m.storeName} openMoves={0} model="">
+    <AppShell>
       <DemoBanner show={m.isDemo} />
       <PartialHistoryNotice show={m.historyLimited} />
       <PageHeading

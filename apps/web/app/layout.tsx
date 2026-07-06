@@ -4,9 +4,27 @@ import { ClerkProvider } from '@clerk/nextjs'
 import '@ss/ui/styles.css'
 import './globals.css'
 
+const DESCRIPTION =
+  'Simple Sense reads your whole Shopify store and tells you the few moves to make this week — what to do, why, and the dollar impact. Every number earned from your own data.'
+
 export const metadata: Metadata = {
-  title: 'Simple Sense',
-  description: 'The co-pilot that tells your store where to turn next.',
+  metadataBase: new URL(process.env.APP_URL ?? 'https://simplesense.co'),
+  title: {
+    default: 'Simple Sense — the prescriptive operator brain for e-commerce',
+    template: '%s · Simple Sense',
+  },
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: 'Simple Sense',
+    title: 'Simple Sense — stop drowning in data, start executing',
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Simple Sense — stop drowning in data, start executing',
+    description: DESCRIPTION,
+  },
 }
 
 const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY

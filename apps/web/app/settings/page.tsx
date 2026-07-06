@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   const store = storeId ? await getOrgStore(prisma, orgId, storeId) : null
 
   return (
-    <AppShell storeName={store?.shopDomain ?? 'Settings'} openMoves={0} model="">
+    <AppShell>
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         SETTINGS
       </p>

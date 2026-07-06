@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { auth } from '@clerk/nextjs/server'
 import { prisma, DEMO } from '@ss/db'
 
@@ -17,7 +18,7 @@ const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
  * Without Clerk keys, falls back to the single demo org (dev shim) so local/tests still run.
  * Every query in the app is scoped by the returned orgId.
  */
-export async function getSession(): Promise<Session> {
+export const getSession = cache(async (): Promise<Session> => {
   if (!hasClerk) return { orgId: DEMO.orgId, userId: DEMO.userId }
 
   const { userId, orgId } = await auth()
@@ -31,4 +32,4 @@ export async function getSession(): Promise<Session> {
     create: { id: externalOrg, name: orgId ? 'Workspace' : 'My store' },
   })
   return { orgId: externalOrg, userId }
-}
+})

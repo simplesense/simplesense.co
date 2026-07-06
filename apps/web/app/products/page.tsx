@@ -24,7 +24,7 @@ export default async function ProductsPage() {
   const pair = m.json<{ titles?: string[] }>('affinity.top_pair_support')
 
   return (
-    <AppShell storeName={m.storeName} openMoves={0} model="">
+    <AppShell>
       <DemoBanner show={m.isDemo} />
       <PartialHistoryNotice show={m.historyLimited} />
       <PageHeading

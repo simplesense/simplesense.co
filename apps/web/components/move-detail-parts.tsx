@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import { Button } from '@ss/ui'
 import { setMoveStatus } from '@/app/app/actions'
+import { REASON_COPY } from '@/lib/action-result'
 
 /** Left-column "The move" checklist — each step togglable, tracks doneCount (§19 Move Detail). */
 export function MoveChecklist({ steps }: { steps: string[] }) {
@@ -82,15 +83,19 @@ type Applied = 'NONE' | 'IMPLEMENTED' | 'DISMISSED'
 /** Right-rail apply / schedule controls — persists status via the tenant-scoped action. */
 export function MoveApply({ moveId, initial }: { moveId: string; initial: Applied }) {
   const [state, setState] = useState<Applied>(initial)
+  const [notice, setNotice] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const act = (status: Applied) => {
     const prev = state
+    setNotice(null)
     setState(status) // optimistic
     startTransition(() => {
       void setMoveStatus(moveId, status === 'NONE' ? 'VIEWED' : status).then((r) => {
-        // Roll back if the server refused (read-only demo store / tier-gated move) so the UI
-        // never shows a false "Applied" for a write that didn't happen.
-        if (!r?.ok) setState(prev)
+        // On refusal, roll back and explain (read-only demo / tier-gated) rather than flicker.
+        if (!r?.ok) {
+          setState(prev)
+          setNotice(REASON_COPY[r.reason])
+        }
       })
     })
   }
@@ -144,6 +149,14 @@ export function MoveApply({ moveId, initial }: { moveId: string; initial: Applie
       <Button variant="ghost" onClick={() => act('DISMISSED')} disabled={pending}>
         {state === 'DISMISSED' ? 'Dismissed' : 'Schedule for later'}
       </Button>
+      {notice ? (
+        <p role="status" style={{ margin: 0, fontSize: 12.5, color: 'var(--text-muted)' }}>
+          {notice}{' '}
+          <a href="/connections" style={{ color: 'var(--text-link)' }}>
+            Connect →
+          </a>
+        </p>
+      ) : null}
     </div>
   )
 }

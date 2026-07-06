@@ -31,7 +31,7 @@ export default async function PlansPage() {
   const cfg = stripeConfig()
 
   return (
-    <AppShell storeName="Wildflower Skincare" openMoves={0} model="">
+    <AppShell>
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         PLANS & BILLING
       </p>

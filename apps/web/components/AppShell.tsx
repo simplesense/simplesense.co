@@ -1,112 +1,29 @@
 import type { ReactNode } from 'react'
 import { UserButton } from '@clerk/nextjs'
+import { Sidebar } from './Sidebar'
+import { getShellContext, type ShellSyncStatus } from '@/lib/shell'
 
 const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
-interface NavItem {
-  label: string
-  icon: string
-  href: string
-  badge?: number
-  active?: boolean
+/** Honest sync pill — reflects the store's real state instead of always claiming "Synced". */
+const PILL: Record<ShellSyncStatus, { label: string; fg: string; bg: string }> = {
+  READY: { label: 'Synced', fg: 'var(--ss-success)', bg: 'var(--ss-success-bg)' },
+  SYNCING: { label: 'Syncing…', fg: 'var(--text-link)', bg: 'var(--ss-info-bg)' },
+  PENDING: { label: 'Not synced', fg: 'var(--text-muted)', bg: 'var(--surface-soft)' },
+  ERROR: { label: 'Sync failed', fg: 'var(--ss-warning)', bg: 'var(--ss-warning-bg)' },
+  DEMO: { label: 'Demo data', fg: 'var(--text-muted)', bg: 'var(--surface-soft)' },
 }
 
-/** Canonical app nav (§19.5). Only implemented routes link out; others are placeholders. */
-function navItems(openMoves: number): NavItem[] {
-  return [
-    { label: "This week's moves", icon: 'compass', href: '/app', badge: openMoves, active: true },
-    { label: 'Store audit', icon: 'clipboard-data', href: '/audit/demo' },
-    { label: 'Monitoring', icon: 'activity', href: '/monitoring' },
-    { label: 'Customers', icon: 'people', href: '/customers' },
-    { label: 'Geography', icon: 'geo-alt', href: '/geography' },
-    { label: 'Products', icon: 'box-seam', href: '/products' },
-    { label: 'Connections', icon: 'plug', href: '/connections' },
-    { label: 'Plans & billing', icon: 'credit-card', href: '/plans' },
-    { label: 'Settings', icon: 'gear', href: '/settings' },
-  ]
-}
-
-function Sidebar({ openMoves }: { openMoves: number }) {
-  return (
-    <aside
-      style={{
-        width: '16.5rem',
-        flex: 'none',
-        borderRight: '1px solid var(--border-hairline)',
-        background: 'var(--surface-card)',
-        height: '100dvh',
-        position: 'sticky',
-        top: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '20px 14px',
-        gap: 6,
-      }}
-    >
-      <div style={{ padding: '6px 10px 18px' }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 24,
-            letterSpacing: '-0.01em',
-            color: 'var(--text-strong)',
-          }}
-        >
-          Simple Sense
-        </span>
-      </div>
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {navItems(openMoves).map((it) => (
-          <a
-            key={it.label}
-            href={it.href}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 11,
-              padding: '9px 11px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 14,
-              fontWeight: it.active ? 600 : 500,
-              color: it.active ? 'var(--text-strong)' : 'var(--text-body)',
-              background: it.active ? 'var(--surface-soft)' : 'transparent',
-              textDecoration: 'none',
-            }}
-          >
-            <i
-              className={`bi bi-${it.icon}`}
-              aria-hidden="true"
-              style={{
-                fontSize: 17,
-                color: it.active ? 'var(--action-primary)' : 'var(--text-muted)',
-              }}
-            />
-            <span style={{ flex: 1 }}>{it.label}</span>
-            {it.badge ? (
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-onbrand)',
-                  background: 'var(--action-primary)',
-                  borderRadius: 'var(--radius-pill)',
-                  padding: '1px 8px',
-                }}
-              >
-                {it.badge}
-              </span>
-            ) : null}
-          </a>
-        ))}
-      </nav>
-      <div style={{ marginTop: 'auto', padding: '10px', fontSize: 12, color: 'var(--text-muted)' }}>
-        Operator co-pilot
-      </div>
-    </aside>
-  )
-}
-
-function Topbar({ storeName, model }: { storeName: string; model?: string }) {
+function Topbar({
+  storeName,
+  syncStatus,
+  model,
+}: {
+  storeName: string
+  syncStatus: ShellSyncStatus
+  model: string
+}) {
+  const pill = PILL[syncStatus]
   return (
     <header
       style={{
@@ -124,9 +41,18 @@ function Topbar({ storeName, model }: { storeName: string; model?: string }) {
         backdropFilter: 'blur(10px)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <i className="bi bi-shop" aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-strong)' }}>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--text-strong)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {storeName}
         </span>
         <span
@@ -135,16 +61,15 @@ function Topbar({ storeName, model }: { storeName: string; model?: string }) {
             alignItems: 'center',
             gap: 6,
             fontSize: 12,
-            color: 'var(--ss-success)',
-            background: 'var(--ss-success-bg)',
+            color: pill.fg,
+            background: pill.bg,
             borderRadius: 'var(--radius-pill)',
             padding: '2px 10px',
+            flex: 'none',
           }}
         >
-          <span
-            style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--ss-success)' }}
-          />
-          Synced
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: pill.fg }} />
+          {pill.label}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -157,22 +82,18 @@ function Topbar({ storeName, model }: { storeName: string; model?: string }) {
   )
 }
 
-export function AppShell({
-  children,
-  storeName,
-  openMoves,
-  model,
-}: {
-  children: ReactNode
-  storeName: string
-  openMoves: number
-  model?: string
-}) {
+/**
+ * The app chrome. Self-resolves the store name, sync pill, nav badge, and model label ONCE per
+ * request (getShellContext) so every screen shows correct, consistent chrome — pages just supply
+ * their own body.
+ */
+export async function AppShell({ children }: { children: ReactNode }) {
+  const ctx = await getShellContext()
   return (
     <div style={{ display: 'flex', minHeight: '100dvh', background: 'var(--surface-page)' }}>
-      <Sidebar openMoves={openMoves} />
+      <Sidebar openMoves={ctx.openMoves} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <Topbar storeName={storeName} model={model} />
+        <Topbar storeName={ctx.storeName} syncStatus={ctx.syncStatus} model={ctx.model} />
         <main
           style={{
             flex: 1,

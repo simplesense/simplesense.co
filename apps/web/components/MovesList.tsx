@@ -4,6 +4,7 @@ import type { Recommendation } from '@ss/core'
 import { MoveCard, recommendationToMove } from '@ss/ui'
 import { setMoveStatus } from '@/app/app/actions'
 import { LockedMovesCard } from '@/components/locked'
+import { REASON_COPY } from '@/lib/action-result'
 
 type Status = 'NEW' | 'IMPLEMENTED' | 'DISMISSED'
 
@@ -21,16 +22,21 @@ export function MovesList({
   lockedCount?: number
 }) {
   const [statuses, setStatuses] = useState<Record<string, Status>>({})
+  const [notice, setNotice] = useState<string | null>(null)
   const [, startTransition] = useTransition()
   const statusOf = (id: string): Status => statuses[id] ?? 'NEW'
   const set = (id: string, s: Status) => {
     const prevStatus = statusOf(id)
+    setNotice(null)
     setStatuses((prev) => ({ ...prev, [id]: s })) // optimistic
     startTransition(() => {
       void setMoveStatus(id, s).then((r) => {
-        // Roll back if the server refused (e.g. the read-only demo store) so we never show a
-        // false "Applied — measuring lift" for a write that didn't happen.
-        if (!r?.ok) setStatuses((prev) => ({ ...prev, [id]: prevStatus }))
+        // On refusal, roll back the optimistic update AND explain why (demo read-only, tier-
+        // locked, …) instead of a silent flicker that reads as a broken button.
+        if (!r?.ok) {
+          setStatuses((prev) => ({ ...prev, [id]: prevStatus }))
+          setNotice(REASON_COPY[r.reason])
+        }
       })
     })
   }
@@ -72,6 +78,30 @@ export function MovesList({
           </span>
         ) : null}
       </div>
+
+      {notice ? (
+        <div
+          role="status"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--ss-info-bg)',
+            color: 'var(--text-link)',
+            border: '1px solid var(--ss-blue-300)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: 13.5,
+            marginBottom: 18,
+          }}
+        >
+          <i className="bi bi-info-circle" aria-hidden="true" />
+          {notice}
+          <a href="/connections" style={{ marginLeft: 'auto', color: 'var(--text-link)' }}>
+            Connect your store →
+          </a>
+        </div>
+      ) : null}
 
       {open.length === 0 ? (
         // Never claim "all caught up" while locked moves exist — the upsell stays honest.

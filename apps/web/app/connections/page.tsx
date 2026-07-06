@@ -1,15 +1,21 @@
-import { prisma, DEMO } from '@ss/db'
+import { prisma } from '@ss/db'
 import { shopifyConfig } from '@ss/config'
 import { Badge } from '@ss/ui'
 import { getSession } from '@/lib/auth'
 import { AppShell } from '@/components/AppShell'
 import { DisconnectButton } from '@/components/DisconnectButton'
 import { SyncButton } from '@/components/SyncButton'
+import { ConnectNotice } from '@/components/ConnectNotice'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ConnectionsPage() {
+export default async function ConnectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ connected?: string; error?: string }>
+}) {
   const { orgId } = await getSession()
+  const { connected: connectedShop, error } = await searchParams
   const connected = await prisma.store.findFirst({
     where: { orgId, accessTokenEnc: { not: null } },
     orderBy: { createdAt: 'desc' },
@@ -18,11 +24,8 @@ export default async function ConnectionsPage() {
   const orderCount = connected ? await prisma.order.count({ where: { storeId: connected.id } }) : 0
 
   return (
-    <AppShell
-      storeName={connected?.shopDomain ?? DEMO.storeName}
-      openMoves={0}
-      model={cfg.hasCredentials ? 'live' : 'demo'}
-    >
+    <AppShell>
+      <ConnectNotice connectedShop={connectedShop} error={error} />
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         CONNECTIONS
       </p>

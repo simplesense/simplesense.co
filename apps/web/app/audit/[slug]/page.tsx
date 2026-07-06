@@ -1,7 +1,25 @@
+import type { Metadata } from 'next'
 import { MoveCard, recommendationToMove } from '@ss/ui'
 import { buildAudit } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const audit = await buildAudit(slug)
+  const title = audit.headline
+  const description = `${audit.moves.length} prescriptive moves grounded in real store data — the front door to Simple Sense.`
+  return {
+    title,
+    description,
+    openGraph: { title: `${title} · Simple Sense Audit`, description },
+    twitter: { title: `${title} · Simple Sense Audit`, description },
+  }
+}
 
 export default async function AuditPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -9,7 +27,44 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
 
   return (
     <main style={{ background: 'var(--surface-page)', minHeight: '100dvh' }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '64px 24px 96px' }}>
+      {/* Brand bar so a cold visitor from a shared link has chrome + a path forward. */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: 1080,
+          margin: '0 auto',
+          padding: '20px 24px 0',
+        }}
+      >
+        <a
+          href="/"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 22,
+            color: 'var(--text-strong)',
+            textDecoration: 'none',
+          }}
+        >
+          Simple Sense
+        </a>
+        <a
+          href="/sign-up"
+          style={{
+            fontSize: 13.5,
+            fontWeight: 600,
+            color: 'var(--text-onbrand)',
+            background: 'var(--action-primary)',
+            padding: '8px 16px',
+            borderRadius: 'var(--radius-pill)',
+            textDecoration: 'none',
+          }}
+        >
+          Get your free audit
+        </a>
+      </header>
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '40px 24px 96px' }}>
         {/* header */}
         <p className="ss-eyebrow" style={{ margin: 0 }}>
           SIMPLE SENSE AUDIT
@@ -118,11 +173,11 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
             This is just the front door.
           </p>
           <p style={{ margin: '8px auto 20px', maxWidth: '52ch', color: 'var(--text-body)' }}>
-            Connect your store to get the full ranked list every week — with one-click actions and
-            measured lift on every move you apply.
+            Sign up free and connect your store to get the full ranked list every week — with
+            one-click actions and measured lift on every move you apply.
           </p>
           <a
-            href="/app"
+            href="/sign-up"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -137,7 +192,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
               textDecoration: 'none',
             }}
           >
-            See this week&apos;s moves <i className="bi bi-arrow-right" />
+            Get your own audit — free <i className="bi bi-arrow-right" />
           </a>
         </div>
 

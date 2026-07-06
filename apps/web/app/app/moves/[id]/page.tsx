@@ -102,7 +102,7 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
     rec.status === 'IMPLEMENTED' ? 'IMPLEMENTED' : rec.status === 'DISMISSED' ? 'DISMISSED' : 'NONE'
 
   return (
-    <AppShell storeName={storeName} openMoves={0} model={undefined}>
+    <AppShell>
       <a
         href="/app"
         style={{
