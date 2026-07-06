@@ -1,15 +1,19 @@
 import { HeroVideo } from '@/components/HeroVideo'
 
-// Self-hosted (compressed to 720p, ~1.5MB, no audio) — no external dependency.
-const HERO_VIDEO = '/video/hero.mp4'
-const HERO_POSTER = '/video/hero-poster.jpg'
+// Self-hosted, compressed (720p, no audio, +faststart). One is chosen at random per visitor
+// session — different visitors see a different ambient clip.
+const HERO_VIDEOS = [
+  { src: '/video/hero-1.mp4', poster: '/video/hero-1-poster.jpg' },
+  { src: '/video/hero-2.mp4', poster: '/video/hero-2-poster.jpg' },
+  { src: '/video/hero-3.mp4', poster: '/video/hero-3-poster.jpg' },
+]
 
 export default function LandingPage() {
   return (
     <>
       <header className="hero">
         <div className="hero-bg" aria-hidden="true">
-          <HeroVideo src={HERO_VIDEO} poster={HERO_POSTER} />
+          <HeroVideo sources={HERO_VIDEOS} />
           <div className="hero-bg-scrim" />
         </div>
         <div className="eyebrow-pill">
