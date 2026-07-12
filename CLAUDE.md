@@ -1,0 +1,45 @@
+# CLAUDE.md — SimpleSense.co
+
+IMPORTANT: You MUST follow @EXECUTION_PROTOCOL.md on every task. The protocol beats speed.
+
+## What this is
+
+Prescriptive Shopify-analytics SaaS, LIVE at https://simplesense.co (Fly app `simplesense-co`).
+pnpm monorepo: `@ss/core` (pure analyzers/grounding/ranking), `@ss/config`, `@ss/engine` (LLM),
+`@ss/db` (Prisma + Supabase), `@ss/jobs`, `@ss/integrations` (Shopify/Stripe/crypto), `@ss/ui`,
+`apps/web` (Next.js 15 App Router, Clerk auth).
+
+## Non-negotiable product invariants
+
+1. **Grounding** — never show a number that isn't computed from the store's own data.
+   Missing data → "insufficient"/blank, NEVER a fabricated 0 or estimate.
+2. **Tenant isolation** — every read/write is org-scoped through `getSession()`
+   (`apps/web/lib/auth.ts`). The shared demo store is a read-only showcase.
+3. **Server-enforced tier gating** — free = FIXED top-3 moves of the run; gate at the data
+   path (loaders/routes), never CSS-hide data already sent (`apps/web/lib/gating.ts`).
+4. **Secrets** live only in gitignored `.env` / `.env.local` — never committed, never logged.
+
+## Commands
+
+- Full gate (run before any commit):
+  `pnpm format && pnpm typecheck && pnpm test && pnpm lint && pnpm --filter @ss/web build`
+- Deploy (only when asked; a deploy leaves the machine — D5):
+  `fly deploy --app simplesense-co --ha=false --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<pk_...>`
+- Prisma against the live DB: source env from `apps/web/.env.local` (packages/db/.env is empty);
+  schema changes are `prisma db push` (managed role can't create a shadow DB — additive only).
+
+## Repo conventions
+
+- Commit per slice, message explains WHY; docs-only commits get `[skip ci]`.
+- Ledgers are the memory: `PROGRESS.md` (slice log), `DECISIONS.md` (ADRs), `LEARNINGS.md`,
+  `OPEN_QUESTIONS.md`, `SECURITY.md`. Ranked execution plans live in `PLAN-*.md` at the root.
+- Keep `STATUS.md` current (Life OS reads it from GitHub): update the checklist + `updated:`
+  whenever work lands or is planned.
+- Design system: tokens in `packages/ui/src/tokens` — no hardcoded hex/px in components.
+  Fonts: Instrument Serif (display) / Inter / Manrope. Icons: Bootstrap Icons.
+- New behavior ships with a Vitest test; pure logic belongs in packages, not page files.
+
+## Known human-blocked items (don't attempt; surface instead)
+
+Live Stripe keys, Shopify Partner allowlist/approvals (`read_all_orders`, protected customer
+data), Clerk production instance. Details in `STATUS.md`.

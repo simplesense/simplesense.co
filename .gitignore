@@ -15,6 +15,9 @@ build/
 .env.*
 !.env.example
 
+# Per-task scratch memory (EXECUTION_PROTOCOL.md §1) — durable memory lives in the ledgers
+TASK.md
+
 # Local databases (PGlite embeds its data on disk)
 .pglite/
 *.db
