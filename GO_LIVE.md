@@ -104,7 +104,7 @@ step order, edge cases, and acceptance criteria. Do not improvise beyond the pla
 log tempting extras under "Follow-ups" in TASK.md.
 
 ### WAVE 1 — First-merchant critical path (G1)
-- [ ] **W1.1 First-run funnel** — `PLAN-first-run-funnel.md`
+- [x] **W1.1 First-run funnel** — `PLAN-first-run-funnel.md`
       Auto-sync on OAuth callback, onboarding step-3 completion, connect-form
       validation. The first real merchant hits this within days.
 - [ ] **W1.2 Sync scale** — `PLAN-sync-scale.md`
@@ -212,3 +212,4 @@ Do not modify any other file. Do not deploy.
 
 | date | item | commit | notes |
 |------|------|--------|-------|
+| 2026-07-13 | W1.1 First-run funnel | 3b337c5 | Auto-sync on OAuth callback (`lib/sync-runner.ts` shared by action+route), onboarding step-3 completion (any rec status != NEW), labeled+validated ConnectForm with bare-name normalization, SyncButton READY state is a real /app link. Gate green: typecheck 8/8, test 154/154 (+9 new), lint 0/0, build 16/16 routes. Screen checks deferred — no dev-server launch tool available this session (see TASK.md). |

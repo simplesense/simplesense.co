@@ -1,10 +1,10 @@
 ---
 status: building
 focus: Live in prod, polishing UX — unblock the first real merchant (needs live Stripe keys + Shopify redirect-URL allowlist)
-updated: 2026-07-12
+updated: 2026-07-13
 ---
 
-- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; start with PLAN-first-run-funnel)
+- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; W1.1 first-run-funnel done, next: W1.2 sync-scale)
 - [ ] Live Stripe keys + the 3 price IDs → turn tier gating into revenue
 - [ ] Shopify redirect-URL allowlist entry → first real dev-store connect end-to-end
 - [ ] Shopify approvals: read_all_orders + protected-customer-data (full history + PII on real stores)

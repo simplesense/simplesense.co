@@ -22,6 +22,19 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: First-run funnel — auto-sync, onboarding, connect form (2026-07-13)
+
+GO_LIVE.md W1.1 (`PLAN-first-run-funnel.md`). The OAuth callback now auto-starts the first
+sync (shared `lib/sync-runner.ts`, used by both the server action and the route handler —
+server actions can't be invoked from route handlers) so a merchant lands on `/connections`
+already syncing instead of needing to notice and click "Sync now". Onboarding step 3 now
+completes for real (any recommendation with status != NEW, tenant-scoped by construction).
+The connect form is a labeled, client-validated component that normalizes bare store names
+("mystore" → "mystore.myshopify.com"); the post-sync message is a real link into `/app`.
+9 new tests (154 total, up from 145); full gate green. Screen checks deferred — no
+dev-server launch tool available in this session (build + typecheck + unit tests are the
+compensating evidence; see TASK.md/commit 3b337c5 for the honest limitation note).
+
 ## Completed: Tier gating, server-enforced (2026-07-02)
 
 TIERS entitlements were decorative (zero call sites); now enforced at every data path.
