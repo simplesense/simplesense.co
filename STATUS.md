@@ -4,7 +4,8 @@ focus: WAVE 1 shipped and live (v27) — unblock the first real merchant (needs 
 updated: 2026-07-13
 ---
 
-- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 done — W1.1 funnel, W1.2 sync-scale, W1.3 scope-grants, W1.4 acquisition-source, W1.5 deploy+verify all shipped and live; next: WAVE 2 — W2.1 outcome scheduler)
+- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 done — W1.1 funnel, W1.2 sync-scale, W1.3 scope-grants, W1.4 acquisition-source, W1.5 deploy+verify all shipped and live; W2.1 outcome scheduler shipped in code, awaiting CRON_SECRET below to actually run; next: W2.2 billing go-live hardening)
+- [ ] Set CRON_SECRET (openssl rand -hex 32) on Fly (fly secrets set CRON_SECRET=… -a simplesense-co) and as a GitHub repo secret (gh secret set CRON_SECRET) — enables the outcome-measurement / weekly re-analysis tick (.github/workflows/cron.yml). For local testing put it in apps/web/.env.local.
 - [ ] Live Stripe keys + the 3 price IDs → turn tier gating into revenue
 - [ ] Shopify redirect-URL allowlist entry → first real dev-store connect end-to-end
 - [ ] Shopify approvals: read_all_orders + protected-customer-data (full history + PII on real stores)

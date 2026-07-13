@@ -1,6 +1,7 @@
 import { listOutcomes } from '@ss/jobs'
 import { Badge } from '@ss/ui'
 import { prisma } from '@ss/db'
+import { ATTRIBUTION_WINDOW_DAYS } from '@ss/config'
 import { getSession } from '@/lib/auth'
 import { resolveActiveStore } from '@/lib/store-resolve'
 import { entitlementsForOrg } from '@/lib/billing'
@@ -37,7 +38,8 @@ export default async function MonitoringPage() {
       </h1>
       <p style={{ marginTop: 0, color: 'var(--text-body)', maxWidth: '60ch' }}>
         When you apply a move, Simple Sense captures the baseline of its tracked metric and measures
-        the lift after a {30}-day window — so prescriptions get sharper with proof, not opinions.
+        the lift after a {ATTRIBUTION_WINDOW_DAYS}-day window — so prescriptions get sharper with
+        proof, not opinions.
       </p>
 
       {!unlocked ? (

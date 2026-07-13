@@ -20,6 +20,7 @@ const isPublic = createRouteMatcher([
   '/api/health',
   '/api/webhooks(.*)',
   '/api/stores/connect(.*)',
+  '/api/cron(.*)',
 ])
 
 // Gate on the SAME signal the ClerkProvider uses (the build-inlined publishable key) so the

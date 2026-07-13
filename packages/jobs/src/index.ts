@@ -14,3 +14,14 @@ export {
 } from './analyze'
 export { collectStore, backfillStore, type BackfillResult } from './backfill'
 export { scheduleOutcome, measureOutcome, listOutcomes } from './outcome'
+export {
+  runTick,
+  findDueOutcomes,
+  measureDueOutcomes,
+  selectStoresToRefresh,
+  MAX_STORES_PER_TICK,
+  REANALYZE_AFTER_DAYS,
+  type TickResult,
+  type TickOpts,
+  type DueOutcomeRow,
+} from './tick'
