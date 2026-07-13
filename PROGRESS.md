@@ -35,6 +35,20 @@ The connect form is a labeled, client-validated component that normalizes bare s
 dev-server launch tool available in this session (build + typecheck + unit tests are the
 compensating evidence; see TASK.md/commit 3b337c5 for the honest limitation note).
 
+## Completed: Streaming backfill, nested line-item pagination, derived firstOrderAt (2026-07-13)
+
+GO_LIVE.md W1.2 (`PLAN-sync-scale.md`). `backfillStore` previously drained an ENTIRE store
+into RAM before writing a single row — a deterministic OOM on the 1GB Fly machine for any
+real store with meaningful history, and because the sync retries, a permanent onboarding
+block. Now it streams orders page-by-page (`ingestCatalog` + per-page `ingestOrdersPage`,
+split out of `ingest.ts`), with a `syncStartedAt` heartbeat per page so the 15-min
+stale-job watchdog doesn't steal a long-running sync. Two silent data-quality bugs rode
+the same path: orders with >20 line items were truncated (now fully fetched via per-order
+nested GraphQL pagination) and `Customer.firstOrderAt` was hard-coded `null` (now derived
+from `min(order.createdAt)` after orders land, populating the VIP CSV export column for
+real stores). No schema changes, no external approvals needed. 4 new tests (158 total, up
+from 154); full gate green.
+
 ## Completed: Tier gating, server-enforced (2026-07-02)
 
 TIERS entitlements were decorative (zero call sites); now enforced at every data path.

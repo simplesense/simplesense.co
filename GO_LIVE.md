@@ -107,7 +107,7 @@ log tempting extras under "Follow-ups" in TASK.md.
 - [x] **W1.1 First-run funnel** — `PLAN-first-run-funnel.md`
       Auto-sync on OAuth callback, onboarding step-3 completion, connect-form
       validation. The first real merchant hits this within days.
-- [ ] **W1.2 Sync scale** — `PLAN-sync-scale.md`
+- [x] **W1.2 Sync scale** — `PLAN-sync-scale.md`
       Streaming ingest (no full-store RAM materialization → no OOM on 1GB machine),
       nested line-item pagination (>20 items), real `firstOrderAt`.
 - [ ] **W1.3 Scope-grant tracking** — `PLAN-scope-grant-tracking.md`
@@ -213,3 +213,4 @@ Do not modify any other file. Do not deploy.
 | date | item | commit | notes |
 |------|------|--------|-------|
 | 2026-07-13 | W1.1 First-run funnel | 3b337c5 | Auto-sync on OAuth callback (`lib/sync-runner.ts` shared by action+route), onboarding step-3 completion (any rec status != NEW), labeled+validated ConnectForm with bare-name normalization, SyncButton READY state is a real /app link. Gate green: typecheck 8/8, test 154/154 (+9 new), lint 0/0, build 16/16 routes. Screen checks deferred — no dev-server launch tool available this session (see TASK.md). |
+| 2026-07-13 | W1.2 Sync scale | 41dc812 | backfillStore streams orders page-by-page (no more whole-store RAM materialization → no OOM on the 1GB Fly machine); ingest.ts split into ingestCatalog/ingestOrdersPage; orders with >20 line items fetched via per-order nested pagination instead of truncated; Customer.firstOrderAt derived from real order rows (VIP CSV export column now populates for real stores); syncStartedAt heartbeats per orders page. No schema changes. Gate green: typecheck 8/8, test 158/158 (+4 new), lint 0/0, build 16/16 routes. |
