@@ -7,6 +7,8 @@ import {
   appEnv,
   assertServerEnv,
   shopifyConfig,
+  storeHasAllOrdersScope,
+  missingScopes,
 } from '../src/index'
 
 describe('shopifyConfig.hasAllOrdersScope', () => {
@@ -21,6 +23,42 @@ describe('shopifyConfig.hasAllOrdersScope', () => {
     expect(shopifyConfig({ SHOPIFY_SCOPES: 'read_orders,read_customers' }).hasAllOrdersScope).toBe(
       false,
     )
+  })
+})
+
+describe('storeHasAllOrdersScope (per-store granted scopes)', () => {
+  it('trusts the recorded grant when present', () => {
+    expect(storeHasAllOrdersScope('read_orders, read_all_orders', {})).toBe(true)
+    // env says yes but the STORE never granted it — must stay limited
+    expect(
+      storeHasAllOrdersScope('read_orders,read_customers', {
+        SHOPIFY_SCOPES: 'read_orders,read_all_orders',
+      }),
+    ).toBe(false)
+  })
+  it('falls back to env for legacy stores (null grant)', () => {
+    expect(storeHasAllOrdersScope(null, {})).toBe(false)
+    expect(storeHasAllOrdersScope(null, { SHOPIFY_SCOPES: 'read_all_orders' })).toBe(true)
+  })
+})
+
+describe('missingScopes (re-grant detection)', () => {
+  it('is empty for legacy stores (null) — never nag on unknown grants', () => {
+    expect(missingScopes(null, { SHOPIFY_SCOPES: 'read_orders,read_all_orders' })).toEqual([])
+  })
+  it('is empty when the grant covers everything requested', () => {
+    expect(
+      missingScopes('read_orders,read_customers', {
+        SHOPIFY_SCOPES: 'read_orders,read_customers',
+      }),
+    ).toEqual([])
+  })
+  it('lists newly requested scopes the store has not granted', () => {
+    expect(
+      missingScopes('read_orders,read_customers', {
+        SHOPIFY_SCOPES: 'read_orders,read_customers,read_all_orders',
+      }),
+    ).toEqual(['read_all_orders'])
   })
 })
 

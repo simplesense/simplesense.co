@@ -7,7 +7,7 @@ import {
   normalizeShop,
 } from '../src/shopify/oauth'
 import { verifyWebhookHmac } from '../src/shopify/webhooks'
-import { MockShopifyClient } from '../src/shopify/client'
+import { MockShopifyClient, RealShopifyClient } from '../src/shopify/client'
 import { RealShopifyReader } from '../src/shopify/reader'
 
 const SECRET = 'test_api_secret'
@@ -69,7 +69,7 @@ describe('shopify webhook verification', () => {
 describe('mock shopify client', () => {
   it('exchanges a token and records webhook registrations', async () => {
     const c = new MockShopifyClient()
-    expect(await c.exchangeCodeForToken('wildflower.myshopify.com', 'code')).toMatch(/mock/)
+    expect((await c.exchangeCodeForToken('wildflower.myshopify.com', 'code')).token).toMatch(/mock/)
     await c.registerWebhooks(
       'wildflower.myshopify.com',
       'tok',
@@ -77,6 +77,36 @@ describe('mock shopify client', () => {
       'https://cb',
     )
     expect(c.registered.map((r) => r.topic)).toEqual(['orders/create', 'app/uninstalled'])
+  })
+})
+
+describe('RealShopifyClient token exchange', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  it('returns the token AND the granted scope list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ access_token: 'shpat_x', scope: 'read_orders,read_all_orders' }),
+      }),
+    )
+    const c = new RealShopifyClient({ apiKey: 'k', apiSecret: 's' })
+    expect(await c.exchangeCodeForToken('wildflower.myshopify.com', 'code')).toEqual({
+      token: 'shpat_x',
+      scope: 'read_orders,read_all_orders',
+    })
+  })
+  it('defaults scope to empty string when the response omits it', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ access_token: 'shpat_x' }),
+      }),
+    )
+    const c = new RealShopifyClient({ apiKey: 'k', apiSecret: 's' })
+    expect((await c.exchangeCodeForToken('s.myshopify.com', 'code')).scope).toBe('')
   })
 })
 

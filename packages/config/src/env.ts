@@ -53,9 +53,11 @@ export interface ShopifyConfig {
   /** False → the Shopify client runs as a mock (no live OAuth) until creds are supplied. */
   hasCredentials: boolean
   /**
-   * Whether `read_all_orders` is among the granted scopes. Without it Shopify hard-caps order
-   * reads to the last ~60 days, so the analysis window is truncated — the UI must say so rather
-   * than present a partial window as the full trailing-24-months. Requires Shopify approval.
+   * Whether `read_all_orders` is among the scopes this deployment REQUESTS (SHOPIFY_SCOPES).
+   * Per-store granted truth lives in `Store.grantedScopes` — see `storeHasAllOrdersScope`.
+   * Without the grant Shopify hard-caps order reads to the last ~60 days, so the analysis
+   * window is truncated — the UI must say so rather than present a partial window as the
+   * full trailing-24-months. Requires Shopify approval.
    */
   hasAllOrdersScope: boolean
 }
@@ -83,6 +85,39 @@ export function shopifyConfig(src: EnvSource = process.env): ShopifyConfig {
       .map((s) => s.trim())
       .includes('read_all_orders'),
   }
+}
+
+const splitScopes = (s: string): string[] =>
+  s
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
+
+/**
+ * Per-store history check. When the store's OAuth-recorded grant is known, it is the truth;
+ * legacy stores (null — connected before scope tracking) fall back to the env-requested
+ * scopes, matching the pre-existing behavior.
+ */
+export function storeHasAllOrdersScope(
+  grantedScopes: string | null | undefined,
+  src: EnvSource = process.env,
+): boolean {
+  if (grantedScopes != null) return splitScopes(grantedScopes).includes('read_all_orders')
+  return shopifyConfig(src).hasAllOrdersScope
+}
+
+/**
+ * Scopes this deployment now requests that the store's recorded grant lacks — a re-consent
+ * (OAuth re-connect) would pick them up. Empty for legacy stores (null): we can't tell what
+ * they granted, so we don't nag.
+ */
+export function missingScopes(
+  grantedScopes: string | null | undefined,
+  src: EnvSource = process.env,
+): string[] {
+  if (grantedScopes == null) return []
+  const granted = new Set(splitScopes(grantedScopes))
+  return splitScopes(shopifyConfig(src).scopes).filter((s) => !granted.has(s))
 }
 
 export interface StripeConfig {

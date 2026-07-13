@@ -49,8 +49,11 @@ export async function GET(req: Request): Promise<Response> {
 
   const client = createShopifyClient()
   let token: string
+  let grantedScope: string
   try {
-    token = await client.exchangeCodeForToken(shop, code)
+    const exchanged = await client.exchangeCodeForToken(shop, code)
+    token = exchanged.token
+    grantedScope = exchanged.scope
   } catch (err) {
     console.error('[connect] token exchange failed:', (err as Error).message)
     return fail('exchange')
@@ -58,13 +61,21 @@ export async function GET(req: Request): Promise<Response> {
 
   // Re-home on update too: whoever can complete this HMAC-verified OAuth controls the Shopify
   // store, so the store belongs to the connecting org even if a prior org (or DEMO) held it.
+  // grantedScopes lands in BOTH branches — `update` IS the re-grant path (re-consent for an
+  // existing shopDomain). Empty scope → null so the legacy env fallback applies.
   const store = await prisma.store.upsert({
     where: { shopDomain: shop },
-    update: { orgId, accessTokenEnc: encryptSecret(token), syncStatus: 'PENDING' },
+    update: {
+      orgId,
+      accessTokenEnc: encryptSecret(token),
+      grantedScopes: grantedScope || null,
+      syncStatus: 'PENDING',
+    },
     create: {
       orgId,
       shopDomain: shop,
       accessTokenEnc: encryptSecret(token),
+      grantedScopes: grantedScope || null,
       syncStatus: 'PENDING',
     },
   })

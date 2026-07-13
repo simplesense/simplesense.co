@@ -89,6 +89,7 @@ model Store {
   orgId                 String
   shopDomain            String       @unique
   accessTokenEnc        String? // ENCRYPTED at rest, never logged
+  grantedScopes         String? // comma-separated scopes Shopify granted at OAuth; null = pre-tracking legacy connect
   currency              String       @default("USD")
   hasPhysicalLocations  Boolean      @default(false)
   freeShippingThreshold Decimal?

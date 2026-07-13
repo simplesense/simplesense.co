@@ -24,9 +24,10 @@ export function PartialHistoryNotice({ show }: { show: boolean }) {
       <i className="bi bi-clock-history" style={{ marginTop: 2, flex: 'none' }} />
       <span>
         Showing roughly the <strong>last 60 days</strong> of orders. Shopify limits order history
-        until <code>read_all_orders</code> is approved — request it in your Partner dashboard to
-        unlock the full <strong>24-month</strong> analysis. Until then, trend and cohort figures
-        reflect a partial window.
+        until <code>read_all_orders</code> is granted for this store. Once the permission is
+        available, <a href="/connections">re-connect your store</a> to unlock the full{' '}
+        <strong>24-month</strong> analysis. Until then, trend and cohort figures reflect a partial
+        window.
       </span>
     </div>
   )

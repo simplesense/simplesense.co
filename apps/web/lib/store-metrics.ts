@@ -1,6 +1,6 @@
 import { prisma, DEMO } from '@ss/db'
 import { latestMetrics } from '@ss/jobs'
-import { shopifyConfig } from '@ss/config'
+import { storeHasAllOrdersScope } from '@ss/config'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
 import { entitlementsForOrg } from './billing'
@@ -32,7 +32,7 @@ export async function loadStoreMetrics(): Promise<MetricView> {
   return {
     storeName: isDemo ? DEMO.storeName : store.shopDomain,
     isDemo,
-    historyLimited: !isDemo && !shopifyConfig().hasAllOrdersScope,
+    historyLimited: !isDemo && !storeHasAllOrdersScope(store.grantedScopes),
     detailLocked: !detailUnlocked(ent, isDemo),
     exportLocked: !canExport(ent),
     num: (key) => byKey.get(key)?.valueNumeric ?? null,

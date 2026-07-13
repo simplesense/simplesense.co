@@ -4,8 +4,12 @@ const API_VERSION = '2024-10'
 
 /** Typed Shopify client — real (fetch) + mock for tests. */
 export interface ShopifyClient {
-  /** Exchange an OAuth `code` for a permanent access token. */
-  exchangeCodeForToken(shop: string, code: string): Promise<string>
+  /**
+   * Exchange an OAuth `code` for a permanent access token. `scope` is the comma-separated
+   * list Shopify reports as actually GRANTED — persisted per store so honesty labeling
+   * (historyLimited) reflects reality, not what the deployment requested.
+   */
+  exchangeCodeForToken(shop: string, code: string): Promise<{ token: string; scope: string }>
   /** Register webhook subscriptions for the given topics. */
   registerWebhooks(
     shop: string,
@@ -23,16 +27,19 @@ export interface ShopifyClientConfig {
 export class RealShopifyClient implements ShopifyClient {
   constructor(private readonly cfg: ShopifyClientConfig) {}
 
-  async exchangeCodeForToken(shop: string, code: string): Promise<string> {
+  async exchangeCodeForToken(
+    shop: string,
+    code: string,
+  ): Promise<{ token: string; scope: string }> {
     const res = await fetch(`https://${normalizeShop(shop)}/admin/oauth/access_token`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ client_id: this.cfg.apiKey, client_secret: this.cfg.apiSecret, code }),
     })
     if (!res.ok) throw new Error(`Shopify token exchange failed: ${res.status}`)
-    const data = (await res.json()) as { access_token?: string }
+    const data = (await res.json()) as { access_token?: string; scope?: string }
     if (!data.access_token) throw new Error('Shopify token exchange returned no access_token')
-    return data.access_token
+    return { token: data.access_token, scope: data.scope ?? '' }
   }
 
   async registerWebhooks(
@@ -62,8 +69,14 @@ export class RealShopifyClient implements ShopifyClient {
 /** Deterministic mock used in tests and until live Shopify creds are supplied. */
 export class MockShopifyClient implements ShopifyClient {
   public readonly registered: { shop: string; topic: string }[] = []
-  exchangeCodeForToken(_shop: string, _code: string): Promise<string> {
-    return Promise.resolve('mock_shpat_access_token')
+  exchangeCodeForToken(_shop: string, _code: string): Promise<{ token: string; scope: string }> {
+    // Mock scope MUST NOT include read_all_orders: the mock serves all local dev, and claiming
+    // that grant would silently drop the partial-history notice (the exact grounding bug this
+    // tracking exists to prevent). Mirrors the default requested scopes in env.ts.
+    return Promise.resolve({
+      token: 'mock_shpat_access_token',
+      scope: 'read_orders,read_customers,read_products,read_locations,read_inventory',
+    })
   }
   registerWebhooks(
     shop: string,

@@ -1,5 +1,5 @@
 import { prisma } from '@ss/db'
-import { shopifyConfig } from '@ss/config'
+import { shopifyConfig, missingScopes } from '@ss/config'
 import { Badge } from '@ss/ui'
 import { getSession } from '@/lib/auth'
 import { AppShell } from '@/components/AppShell'
@@ -23,6 +23,9 @@ export default async function ConnectionsPage({
   })
   const cfg = shopifyConfig()
   const orderCount = connected ? await prisma.order.count({ where: { storeId: connected.id } }) : 0
+  // Scopes the deployment now requests that this store's recorded grant lacks — re-consent
+  // picks them up. Empty for legacy stores (null grant): we can't tell, so we don't nag.
+  const missing = connected ? missingScopes(connected.grantedScopes) : []
 
   return (
     <AppShell>
@@ -70,6 +73,30 @@ export default async function ConnectionsPage({
               {connected.shopDomain} · {orderCount.toLocaleString()} orders ingested · token stored
               encrypted · status {connected.syncStatus.toLowerCase()}.
             </p>
+            {missing.length > 0 && (
+              <div
+                style={{
+                  background: 'var(--ss-warning-bg)',
+                  color: 'var(--ss-warning)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '12px 14px',
+                  fontSize: 13.5,
+                  lineHeight: 1.5,
+                }}
+              >
+                New permissions are available for this store (<code>{missing.join(', ')}</code>).{' '}
+                <a
+                  href={`/api/stores/connect/start?shop=${encodeURIComponent(connected.shopDomain)}`}
+                >
+                  Re-connect Shopify
+                </a>{' '}
+                to grant them
+                {missing.includes('read_all_orders')
+                  ? ' and unlock your full 24-month order history'
+                  : ''}
+                . After re-connecting, click <strong>Re-sync</strong> to pull the new data.
+              </div>
+            )}
             <SyncButton
               storeId={connected.id}
               initialStatus={connected.syncStatus}

@@ -8,7 +8,7 @@ import {
   latestMetricValue,
 } from '@ss/jobs'
 import { createLlmClient } from '@ss/engine'
-import { llmConfig, shopifyConfig } from '@ss/config'
+import { llmConfig, storeHasAllOrdersScope } from '@ss/config'
 import type { Recommendation } from '@ss/core'
 import { getSession } from './auth'
 import { resolveActiveStore } from './store-resolve'
@@ -106,7 +106,7 @@ export async function getDashboard(): Promise<DashboardData> {
     // Connected but never successfully synced+analyzed (PENDING/ERROR, no run) — prompt the
     // user to sync rather than pretending work is in flight or showing "all caught up".
     needsSync: !isDemo && !syncing && !hasRun,
-    historyLimited: !isDemo && !shopifyConfig().hasAllOrdersScope,
+    historyLimited: !isDemo && !storeHasAllOrdersScope(store.grantedScopes),
     lockedMoveCount: lockedCount,
     recommendations: visible.map(toCore),
     metrics: {
