@@ -22,6 +22,18 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: Acquisition source — real Order.sourceName (2026-07-13)
+
+GO_LIVE.md W1.4 (`PLAN-acquisition-source.md`). `RealShopifyReader.orders()` was
+hard-coding `sourceName: null` forever, so `acquisitionAnalyzer` always returned
+"insufficient" for every real store (only the demo fixture had source data). Added
+`sourceName` to the orders GraphQL query (a plain scalar, 0 added query-cost points),
+a `normalizeSource()` helper (trim+lowercase, empty→null), and wired it into the
+mapper. Doc-commented `acquisitionAnalyzer` to make explicit that Shopify channel is
+point-of-sale, not marketing/ad attribution. No schema migration (column already
+existed), no ingest/demo-fixture changes. Gate green: typecheck 8/8, test 166/166
+(+2 new), lint 0/0, build 16/16 routes. Commit f182588.
+
 ## Completed: First-run funnel — auto-sync, onboarding, connect form (2026-07-13)
 
 GO_LIVE.md W1.1 (`PLAN-first-run-funnel.md`). The OAuth callback now auto-starts the first
