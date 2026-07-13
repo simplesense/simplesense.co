@@ -37,3 +37,37 @@ PLAN's screen-check steps manually, or ask the loop to re-run them in a session 
 browser access to an authenticated tab.
 
 ---
+
+## W2.1 — CRON_SECRET not set in production
+
+**Blocked on:** Setting a Fly secret and a GitHub repo secret — both require credentials
+(`fly` / `gh` auth) and dashboard/CLI access the loop does not have and should not
+attempt (D5 — anything leaving the machine / credential handling is human-only).
+
+**What's blocked:** `.github/workflows/cron.yml` runs every 6h (`17 */6 * * *`) and will
+`exit 1` immediately (its own guard: "CRON_SECRET repo secret is not set") until the GH
+repo secret exists. Even if the GH side were set, `POST /api/cron/tick` 503s
+("not configured") until the Fly secret is also set — the route deliberately fails closed
+per `apps/web/app/api/cron/tick/route.ts` (mirrors the Shopify webhook route's pattern).
+So the outcome-measurement/weekly-re-analysis flywheel is fully coded, tested, and
+deployed-ready but inert in production until both secrets exist.
+
+**What WAS verified instead (2026-07-13):** Full local runtime verification via a
+`pnpm --filter @ss/web dev` instance with `CRON_SECRET=testsecret` passed as an inline
+shell env var (`.env.local` was never read or written, per the HARD RAIL): unset → 503,
+wrong secret → 401, correct secret → 200 with the full result shape, repeated call within
+the 5-min rate-limit window → 429. Against the live Supabase DB (no real non-demo stores
+or SCHEDULED outcomes exist yet), `runTick` correctly did nothing (all counts 0) —
+confirmed inert, not merely assumed. `gh workflow list` confirms "Cron tick" is
+registered on the default branch and will fire on schedule once the secret exists.
+
+**What Satya needs to do:**
+```
+openssl rand -hex 32   # generate the secret once, use the same value for both
+fly secrets set CRON_SECRET=<value> -a simplesense-co
+gh secret set CRON_SECRET --body <value>
+```
+Also matches the STATUS.md open-action item. No code change needed afterward — the next
+scheduled run (or a manual `gh workflow run "Cron tick"`) will pick it up.
+
+---

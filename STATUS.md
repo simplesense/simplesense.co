@@ -1,6 +1,6 @@
 ---
 status: building
-focus: WAVE 1 shipped and live (v27) — unblock the first real merchant (needs live Stripe keys + Shopify redirect-URL allowlist)
+focus: WAVE 1 live (v27); W2.1 outcome scheduler shipped in code (needs CRON_SECRET to actually run) — next up W2.2 billing go-live hardening
 updated: 2026-07-13
 ---
 

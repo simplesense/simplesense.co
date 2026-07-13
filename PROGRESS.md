@@ -22,6 +22,49 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: Outcome scheduler — flywheel measurement leg (2026-07-13)
+
+GO_LIVE.md W2.1 (`PLAN-outcome-scheduler.md`). `measureOutcome` had zero production call
+sites — every applied move sat in `SCHEDULED` forever and `/monitoring` rendered
+"measuring" indefinitely; there was also no recurring re-analysis anywhere (first-load,
+settings-save, and click-Sync were the only triggers). Added `runTick` (`@ss/jobs`):
+measures due `RecommendationOutcome` rows against a genuinely post-window `AnalysisRun`
+(never the same run the baseline came from — the grounding trap), via an idempotent
+conditional `updateMany` claim (`where: {id, status:'SCHEDULED'}`), and does a capped
+(`MAX_STORES_PER_TICK=5`) weekly backfill+re-analysis of stale READY stores using the
+same atomic SYNCING claim as `syncStoreAction`/`startStoreSync` so it can't collide with
+a user-clicked sync. Exposed via `POST /api/cron/tick`, guarded by an optional
+`CRON_SECRET` (constant-time HMAC-then-compare; 503 unset, 401 wrong secret) and rate-
+limited to 1/5min. Triggered by `.github/workflows/cron.yml` (`17 */6 * * *`,
+`workflow_dispatch`). `/monitoring`'s hardcoded `{30}`-day copy now reads
+`ATTRIBUTION_WINDOW_DAYS` from `@ss/config`.
+
+Before committing, ran a 3-dimension adversarial multi-agent review (correctness/
+idempotency, security/auth, grounding/tenancy) with every finding independently
+re-verified. 4 confirmed findings, all addressed: (should-fix) the production
+`defaultRefresh` closure — the exact atomic-claim pipeline the plan calls out as safety-
+critical — was never exercised by any test (all `runTick` tests injected `opts.refresh`);
+added 4 tests mirroring `apps/web/lib/sync-runner.test.ts`'s `vi.mock` pattern to cover
+the claim-wins pipeline, claim-loses skip, ERROR-on-throw truncation, and the no-reader
+branch. (should-fix) `/api/cron/tick` had no rate limiting unlike the webhook route, so a
+slow tick's client-side curl retry or a leaked secret could stack overlapping refresh
+batches; added `rateLimit('cron-tick', 1, 5*60_000)`. (minor) two stale code comments
+pointed at `connections/actions.ts` lines that no longer contain the logic they described
+(it moved to `apps/web/lib/sync-runner.ts` in an earlier slice); corrected both. (minor,
+no action) the `isPublic` matcher's prefix-match quirk is pre-existing convention, not a
+new gap.
+
+Full gate green: format:check, typecheck 8/8, test 185/185 (+19 new: 12 tick.test.ts + 7
+cron-auth.test.ts), lint 0/0, build (`/api/cron/tick` present as dynamic). Local runtime
+verification against a `pnpm --filter @ss/web dev` instance (CRON_SECRET passed as an
+inline shell env var, never touched `.env.local`): unset secret → 503; wrong secret → 401;
+correct secret → 200 with the full result shape; repeat call within the rate-limit window
+→ 429 (stronger than the plan's literal idempotency AC — it doesn't even re-execute).
+Zero real stores/outcomes exist yet in production (§4.2 still open), so `runTick`'s
+mutating paths were confirmed inert (all counts 0), not merely assumed safe. `gh workflow
+list` confirms "Cron tick" registered on the default branch. Commit 4857e6c. STATUS.md
+updated with the human follow-up: set `CRON_SECRET` on Fly + as a GitHub repo secret.
+
 ## Completed: WAVE 1 deploy + live verification (2026-07-13)
 
 GO_LIVE.md W1.5 — the WAVE 1 boundary deploy. Applied the W1.3 migration
