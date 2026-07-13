@@ -49,6 +49,22 @@ from `min(order.createdAt)` after orders land, populating the VIP CSV export col
 real stores). No schema changes, no external approvals needed. 4 new tests (158 total, up
 from 154); full gate green.
 
+## Completed: Per-store granted-scope tracking (2026-07-13)
+
+GO_LIVE.md W1.3 (`PLAN-scope-grant-tracking.md`). `historyLimited` was derived from the
+`SHOPIFY_SCOPES` env var — what the deployment REQUESTS — so flipping that env when Shopify
+approves `read_all_orders` would instantly un-label every existing store's still-partial
+data (grounding violation). Now the token exchange's `scope` response (previously thrown
+away) is persisted as `Store.grantedScopes` (nullable; migration
+`20260706000001_store_granted_scopes`), `historyLimited` computes per store via
+`storeHasAllOrdersScope()` with an env fallback for legacy null grants, and /connections
+shows a re-connect banner (`missingScopes()`) when the deployment requests scopes the
+store hasn't granted — silent for legacy stores. Mock client deliberately reports no
+`read_all_orders`. 7 new tests, red→green TDD (165 total, up from 158); full gate green.
+⚠️ Deploy prerequisite for W1.5: `pnpm --filter @ss/db exec prisma migrate deploy` against
+the Supabase pooler (additive column). Screen checks BLOCKED(human: migrate deploy) — the
+live DB lacks the column until then; unit tests + build are the compensating evidence.
+
 ## Completed: Tier gating, server-enforced (2026-07-02)
 
 TIERS entitlements were decorative (zero call sites); now enforced at every data path.
