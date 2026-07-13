@@ -11,9 +11,11 @@ const ERRORS: Record<string, string> = {
 export function ConnectNotice({
   connectedShop,
   error,
+  syncing,
 }: {
   connectedShop?: string
   error?: string
+  syncing?: boolean
 }) {
   if (connectedShop) {
     return (
@@ -33,8 +35,17 @@ export function ConnectNotice({
       >
         <i className="bi bi-check2-circle" aria-hidden="true" />
         <span>
-          <strong>{connectedShop}</strong> connected. Click <strong>Sync now</strong> below to pull
-          your history and see your first moves.
+          {syncing ? (
+            <>
+              <strong>{connectedShop}</strong> connected — pulling your history and analyzing it
+              now. Your first moves will appear shortly; this page tracks progress below.
+            </>
+          ) : (
+            <>
+              <strong>{connectedShop}</strong> connected. Click <strong>Sync now</strong> below to
+              pull your history and see your first moves.
+            </>
+          )}
         </span>
       </div>
     )

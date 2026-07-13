@@ -6,16 +6,17 @@ import { AppShell } from '@/components/AppShell'
 import { DisconnectButton } from '@/components/DisconnectButton'
 import { SyncButton } from '@/components/SyncButton'
 import { ConnectNotice } from '@/components/ConnectNotice'
+import { ConnectForm } from '@/components/ConnectForm'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ConnectionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ connected?: string; error?: string }>
+  searchParams: Promise<{ connected?: string; error?: string; syncing?: string }>
 }) {
   const { orgId } = await getSession()
-  const { connected: connectedShop, error } = await searchParams
+  const { connected: connectedShop, error, syncing } = await searchParams
   const connected = await prisma.store.findFirst({
     where: { orgId, accessTokenEnc: { not: null } },
     orderBy: { createdAt: 'desc' },
@@ -25,7 +26,7 @@ export default async function ConnectionsPage({
 
   return (
     <AppShell>
-      <ConnectNotice connectedShop={connectedShop} error={error} />
+      <ConnectNotice connectedShop={connectedShop} error={error} syncing={syncing === '1'} />
       <p className="ss-eyebrow" style={{ margin: 0 }}>
         CONNECTIONS
       </p>
@@ -77,42 +78,7 @@ export default async function ConnectionsPage({
             <DisconnectButton storeId={connected.id} />
           </div>
         ) : cfg.hasCredentials ? (
-          <form
-            action="/api/stores/connect/start"
-            method="get"
-            style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}
-          >
-            <input
-              name="shop"
-              placeholder="your-store.myshopify.com"
-              style={{
-                flex: 1,
-                minWidth: 260,
-                height: 42,
-                padding: '0 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-strong)',
-                background: 'var(--surface-card)',
-                fontSize: 14,
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                height: 42,
-                padding: '0 18px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                background: 'var(--action-primary)',
-                color: 'var(--text-onbrand)',
-                fontWeight: 600,
-                boxShadow: 'var(--shadow-inset-glint), var(--shadow-sm)',
-                cursor: 'pointer',
-              }}
-            >
-              Connect Shopify
-            </button>
-          </form>
+          <ConnectForm />
         ) : (
           <div
             style={{
@@ -129,8 +95,9 @@ export default async function ConnectionsPage({
       </div>
 
       <p style={{ marginTop: 16, fontSize: 13, color: 'var(--text-muted)', maxWidth: 660 }}>
-        After connecting, click <strong>Sync now</strong> to pull your order history and generate
-        your first grounded moves. (Until then, the dashboard shows the demo store.)
+        Connecting starts your first sync automatically — we pull your order history and generate
+        your first grounded moves. You can re-sync anytime from here. (Until then, the dashboard
+        shows the demo store.)
       </p>
     </AppShell>
   )

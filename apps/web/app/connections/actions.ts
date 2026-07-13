@@ -1,14 +1,9 @@
 'use server'
 import { prisma, disconnectStore, getOrgStore, DEMO } from '@ss/db'
-import { backfillStore, analyzeStore } from '@ss/jobs'
-import { RealShopifyReader, decryptSecret } from '@ss/integrations'
-import { createLlmClient } from '@ss/engine'
+import { decryptSecret } from '@ss/integrations'
 import { revalidatePath } from 'next/cache'
-import { after } from 'next/server'
 import { getSession } from '@/lib/auth'
-
-/** A SYNCING store with no heartbeat past this is treated as stale and may be restarted. */
-const STUCK_AFTER_MS = 15 * 60 * 1000
+import { startStoreSync } from '@/lib/sync-runner'
 
 /** Disconnect + purge a store's data, tenant-scoped (§11.1). */
 export async function disconnectStoreAction(storeId: string): Promise<{ ok: boolean }> {
@@ -31,11 +26,11 @@ export interface SyncTrigger {
 
 /**
  * Kick off a background sync of a connected store (tenant-scoped). The heavy work — backfill
- * from Shopify + grounded analysis — runs OFF the request path via `after()`, so a store with
- * tens of thousands of orders can't time out the HTTP request. Status is persisted to
- * Store.syncStatus and polled by the UI (getSyncStatus). The backfill is idempotent, so a job
- * killed by a deploy/restart simply completes on the next Sync. A Fly machine is kept warm
- * (min_machines_running=1) so in-flight work isn't stopped.
+ * from Shopify + grounded analysis — runs OFF the request path inside `startStoreSync`
+ * (lib/sync-runner), so a store with tens of thousands of orders can't time out the HTTP
+ * request. Status is persisted to Store.syncStatus and polled by the UI (getSyncStatus). The
+ * backfill is idempotent, so a job killed by a deploy/restart simply completes on the next
+ * Sync. A Fly machine is kept warm (min_machines_running=1) so in-flight work isn't stopped.
  */
 export async function syncStoreAction(storeId: string): Promise<SyncTrigger> {
   const { orgId } = await getSession()
@@ -44,48 +39,12 @@ export async function syncStoreAction(storeId: string): Promise<SyncTrigger> {
   const store = await getOrgStore(prisma, orgId, storeId)
   if (!store || !store.accessTokenEnc) return { ok: false, error: 'not connected' }
 
-  const token = decryptSecret(store.accessTokenEnc)
-  const shop = store.shopDomain
-
-  // Atomic claim (no check-then-write race): flip to SYNCING only if not already running or
-  // the running job is stale (>15min, e.g. killed by a deploy). If another concurrent call
-  // won the claim, count === 0 and we simply report "already running".
-  const stale = new Date(Date.now() - STUCK_AFTER_MS)
-  const claimed = await prisma.store.updateMany({
-    where: {
-      id: storeId,
-      OR: [
-        { syncStatus: { not: 'SYNCING' } },
-        { syncStartedAt: null },
-        { syncStartedAt: { lt: stale } },
-      ],
-    },
-    data: { syncStatus: 'SYNCING', syncStartedAt: new Date(), syncError: null },
-  })
-  if (claimed.count === 0) return { ok: true, started: false }
-
-  after(async () => {
-    try {
-      await backfillStore(prisma, storeId, new RealShopifyReader(), { shop, token })
-      // backfillStore flips status to READY internally — re-assert SYNCING for the analysis leg
-      // so the UI stays "syncing" until the moves actually exist.
-      await prisma.store.update({ where: { id: storeId }, data: { syncStatus: 'SYNCING' } })
-      await analyzeStore(prisma, storeId, { llm: createLlmClient() })
-      await prisma.store.update({
-        where: { id: storeId },
-        data: { syncStatus: 'READY', lastSyncedAt: new Date(), syncError: null },
-      })
-      revalidatePath('/connections')
-      revalidatePath('/app')
-    } catch (err) {
-      await prisma.store.update({
-        where: { id: storeId },
-        data: { syncStatus: 'ERROR', syncError: String((err as Error).message).slice(0, 500) },
-      })
-    }
-  })
-
-  return { ok: true, started: true }
+  const { started } = await startStoreSync(
+    storeId,
+    store.shopDomain,
+    decryptSecret(store.accessTokenEnc),
+  )
+  return { ok: true, started }
 }
 
 export interface SyncState {

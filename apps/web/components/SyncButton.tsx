@@ -65,9 +65,9 @@ export function SyncButton({
           Pulling your history &amp; analyzing — this can take a few minutes for large stores.
         </span>
       ) : status === 'READY' && !error ? (
-        <span style={{ fontSize: 13, color: 'var(--ss-success)' }}>
-          Synced — open This week&apos;s moves.
-        </span>
+        <a href="/app" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-link)' }}>
+          Synced — open This week&apos;s moves →
+        </a>
       ) : error ? (
         <span style={{ fontSize: 13, color: 'var(--ss-danger, #c0392b)' }}>
           Sync failed: {error} — try again.

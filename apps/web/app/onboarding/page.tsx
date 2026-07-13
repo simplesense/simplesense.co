@@ -20,6 +20,11 @@ export default async function OnboardingPage() {
     orderBy: { createdAt: 'desc' },
   })
   const hasRun = connected ? Boolean(await latestRunId(prisma, connected.id)) : false
+  const acted = connected
+    ? (await prisma.recommendation.count({
+        where: { storeId: connected.id, status: { not: 'NEW' } },
+      })) > 0
+    : false
 
   const steps: Step[] = [
     {
@@ -42,8 +47,8 @@ export default async function OnboardingPage() {
       n: 3,
       title: "See this week's moves",
       body: 'Open your ranked, grounded list. Apply one and we measure the lift.',
-      done: false,
-      active: hasRun,
+      done: acted,
+      active: hasRun && !acted,
       cta: { label: hasRun ? 'Open your moves' : 'Preview with demo data', href: '/app' },
     },
   ]

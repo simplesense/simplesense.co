@@ -11,10 +11,12 @@ import {
 } from '@ss/integrations'
 import { prisma, DEMO } from '@ss/db'
 import { getSession } from '@/lib/auth'
+import { startStoreSync } from '@/lib/sync-runner'
 
 /**
  * Shopify OAuth callback: verify HMAC + state, exchange the code for a token, store it
- * ENCRYPTED, register webhooks, set syncStatus PENDING. (Backfill is enqueued in Slice 3.)
+ * ENCRYPTED, register webhooks, set syncStatus PENDING, then auto-start the first sync via the
+ * shared runner (lib/sync-runner) so the merchant lands on /connections already syncing.
  */
 export async function GET(req: Request): Promise<Response> {
   const cfg = shopifyConfig()
@@ -56,7 +58,7 @@ export async function GET(req: Request): Promise<Response> {
 
   // Re-home on update too: whoever can complete this HMAC-verified OAuth controls the Shopify
   // store, so the store belongs to the connecting org even if a prior org (or DEMO) held it.
-  await prisma.store.upsert({
+  const store = await prisma.store.upsert({
     where: { shopDomain: shop },
     update: { orgId, accessTokenEnc: encryptSecret(token), syncStatus: 'PENDING' },
     create: {
@@ -81,8 +83,19 @@ export async function GET(req: Request): Promise<Response> {
   }
   jar.delete('ss_oauth_state')
 
-  // The merchant lands on /connections and clicks "Sync now", which runs the backfill
-  // (RealShopifyReader) + grounded analysis via syncStoreAction. Kept off this request so the
-  // OAuth redirect returns immediately.
-  return NextResponse.redirect(`${cfg.appUrl}/connections?connected=${encodeURIComponent(shop)}`)
+  // Auto-start the first sync so the merchant lands on /connections already syncing.
+  // Best-effort: a kickoff failure must not break an otherwise-successful connect — the
+  // store stays PENDING and the merchant can click "Sync now". started:false means a sync
+  // is ALREADY in flight, so the syncing banner is correct either way.
+  let syncing = false
+  try {
+    await startStoreSync(store.id, shop, token)
+    syncing = true
+  } catch (err) {
+    console.error('[connect] auto-sync kickoff failed (continuing):', (err as Error).message)
+  }
+
+  return NextResponse.redirect(
+    `${cfg.appUrl}/connections?connected=${encodeURIComponent(shop)}${syncing ? '&syncing=1' : ''}`,
+  )
 }
