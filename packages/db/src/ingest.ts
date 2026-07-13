@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
-import type { NormalizedStore } from '@ss/core'
+import type { NormalizedStore, Order } from '@ss/core'
 
 /** Numeric Shopify id from a fixture string id like "c12"/"o3" (demo only). */
 function shopifyIdOf(id: string): bigint {
@@ -7,17 +7,18 @@ function shopifyIdOf(id: string): bigint {
   return BigInt(n.length ? n : '0')
 }
 
-/**
- * Idempotent ingestion of a normalized store into the DB (upserts keyed on shopify ids,
- * Prime Directive #9). Used by the seed today; the Shopify backfill job (Slice 3) will
- * feed the same shape. Returns the storeId.
- */
-export async function ingestNormalizedStore(
+export interface IngestIdMaps {
+  /** reader/fixture id (e.g. "gid://shopify/Customer/123" or "c12") → internal db cuid */
+  customerDbId: Map<string, string>
+  productDbId: Map<string, string>
+}
+
+/** Ingest locations (replace set) + customers + products; returns id maps for order ingestion. */
+export async function ingestCatalog(
   db: PrismaClient,
-  orgId: string,
   storeId: string,
-  store: NormalizedStore,
-): Promise<string> {
+  store: Pick<NormalizedStore, 'locations' | 'customers' | 'products'>,
+): Promise<IngestIdMaps> {
   // locations — replace set (small, demo-scale)
   await db.storeLocation.deleteMany({ where: { storeId } })
   for (const loc of store.locations) {
@@ -66,8 +67,18 @@ export async function ingestNormalizedStore(
     productDbId.set(p.id, row.id)
   }
 
-  // orders + line items
-  for (const o of store.orders) {
+  return { customerDbId, productDbId }
+}
+
+/** Ingest one page of orders + line items, keyed against the id maps from ingestCatalog. */
+export async function ingestOrdersPage(
+  db: PrismaClient,
+  storeId: string,
+  orders: readonly Order[],
+  maps: IngestIdMaps,
+): Promise<void> {
+  const { customerDbId, productDbId } = maps
+  for (const o of orders) {
     const addr = o.shippingAddress
     const scalars = {
       customerId: o.customerId ? (customerDbId.get(o.customerId) ?? null) : null,
@@ -104,6 +115,41 @@ export async function ingestNormalizedStore(
       },
     })
   }
+}
+
+/** Derive Customer.firstOrderAt = min(order.createdAt) per customer, from ingested rows. */
+export async function applyFirstOrderAt(db: PrismaClient, storeId: string): Promise<number> {
+  const groups = await db.order.groupBy({
+    by: ['customerId'],
+    where: { storeId, customerId: { not: null } },
+    _min: { createdAt: true },
+  })
+  let updated = 0
+  for (const g of groups) {
+    if (!g.customerId || !g._min.createdAt) continue
+    await db.customer.update({
+      where: { id: g.customerId },
+      data: { firstOrderAt: g._min.createdAt },
+    })
+    updated++
+  }
+  return updated
+}
+
+/**
+ * Idempotent ingestion of a normalized store into the DB (upserts keyed on shopify ids,
+ * Prime Directive #9). Used by the seed today; the Shopify backfill job streams orders via
+ * ingestCatalog/ingestOrdersPage directly instead (see @ss/jobs backfillStore) for bounded
+ * memory on large stores. Returns the storeId.
+ */
+export async function ingestNormalizedStore(
+  db: PrismaClient,
+  orgId: string,
+  storeId: string,
+  store: NormalizedStore,
+): Promise<string> {
+  const maps = await ingestCatalog(db, storeId, store)
+  await ingestOrdersPage(db, storeId, store.orders, maps)
 
   // READY is flipped ONLY after every row is written — flipping it up-front made the sync
   // report "done" at ~0% progress and let the dashboard analyze a half-ingested store.

@@ -25,6 +25,7 @@ function fakeDb() {
   const customers = new Map<string, unknown>()
   const products = new Map<string, unknown>()
   const orders = new Map<string, unknown>()
+  const heartbeats = { count: 0 }
   const keyOf = (w: { storeId_shopifyId: { shopifyId: bigint } }) =>
     String(w.storeId_shopifyId.shopifyId)
   const upsertInto =
@@ -43,8 +44,9 @@ function fakeDb() {
   const db = {
     store: {
       findUnique: () => Promise.resolve({ orgId: 'org1' }),
-      update: ({ data }: { data: { syncStatus?: string } }) => {
+      update: ({ data }: { data: { syncStatus?: string; syncStartedAt?: Date } }) => {
         if (data.syncStatus) status.push(data.syncStatus)
+        else if (data.syncStartedAt) heartbeats.count++
         return Promise.resolve({})
       },
     },
@@ -52,14 +54,39 @@ function fakeDb() {
       deleteMany: () => Promise.resolve({ count: 0 }),
       create: ({ data }: { data: unknown }) => Promise.resolve(data),
     },
-    customer: { upsert: upsertInto(customers, 'c') },
+    customer: {
+      upsert: upsertInto(customers, 'c'),
+      update: ({ where, data }: { where: { id: string }; data: { firstOrderAt?: Date } }) => {
+        for (const row of customers.values()) {
+          const r = row as { id: string; firstOrderAt?: Date | null }
+          if (r.id === where.id) Object.assign(r, data)
+        }
+        return Promise.resolve({})
+      },
+    },
     product: { upsert: upsertInto(products, 'p') },
-    order: { upsert: upsertInto(orders, 'o') },
+    order: {
+      upsert: upsertInto(orders, 'o'),
+      groupBy: () => {
+        const mins = new Map<string, Date>()
+        for (const row of orders.values()) {
+          const o = row as { customerId?: string | null; createdAt: Date }
+          if (!o.customerId) continue
+          const cur = mins.get(o.customerId)
+          if (!cur || o.createdAt < cur) mins.set(o.customerId, o.createdAt)
+        }
+        return Promise.resolve(
+          [...mins].map(([customerId, min]) => ({ customerId, _min: { createdAt: min } })),
+        )
+      },
+    },
   } as unknown as PrismaClient
   return {
     db,
     status,
+    heartbeats,
     sizes: () => ({ customers: customers.size, products: products.size, orders: orders.size }),
+    customerRows: () => [...customers.values()] as { id: string; firstOrderAt?: Date | null }[],
   }
 }
 
@@ -103,5 +130,34 @@ describe('backfillStore — status + idempotency', () => {
       }),
     ).rejects.toThrow(/500/)
     expect(status).toContain('ERROR')
+  })
+
+  it('heartbeats syncStartedAt once per orders page (stale-watchdog safety)', async () => {
+    const { db, heartbeats } = fakeDb()
+    await backfillStore(db, 'store1', new MockShopifyReader(seed, 10), {
+      shop: 'wildflower.myshopify.com',
+      token: 'tok',
+    })
+    expect(heartbeats.count).toBe(Math.ceil(seed.orders.length / 10))
+  })
+
+  it('derives firstOrderAt = min order createdAt per customer', async () => {
+    const { db, customerRows } = fakeDb()
+    await backfillStore(db, 'store1', new MockShopifyReader(seed, 10), {
+      shop: 'wildflower.myshopify.com',
+      token: 'tok',
+    })
+    // pick any seed customer that has orders; expected min from the seed itself
+    const withOrders = seed.orders.filter((o) => o.customerId)
+    const target = withOrders[0]!.customerId!
+    const expected = new Date(
+      Math.min(
+        ...seed.orders.filter((o) => o.customerId === target).map((o) => o.createdAt.getTime()),
+      ),
+    )
+    // internal fake id is `c_${digits of target}` (shopifyIdOf strips non-digits)
+    const internalId = `c_${target.replace(/\D/g, '')}`
+    const row = customerRows().find((c) => c.id === internalId)
+    expect(row?.firstOrderAt).toEqual(expected)
   })
 })

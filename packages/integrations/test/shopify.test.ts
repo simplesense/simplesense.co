@@ -174,4 +174,110 @@ describe('RealShopifyReader live mapping', () => {
     expect(out).toEqual([])
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
+
+  it('paginates line items past 20 via per-order nested fetch', async () => {
+    const twentyItems = Array.from({ length: 20 }, () => ({
+      quantity: 1,
+      product: { id: 'gid://shopify/Product/1' },
+      originalUnitPriceSet: { shopMoney: { amount: '10' } },
+      discountedUnitPriceSet: { shopMoney: { amount: '10' } },
+    }))
+    const fiveMoreItems = Array.from({ length: 5 }, () => ({
+      quantity: 1,
+      product: { id: 'gid://shopify/Product/2' },
+      originalUnitPriceSet: { shopMoney: { amount: '8' } },
+      discountedUnitPriceSet: { shopMoney: { amount: '8' } },
+    }))
+    const ordersPage = gqlOk({
+      orders: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          {
+            id: 'gid://shopify/Order/1',
+            createdAt: '2026-01-01T00:00:00Z',
+            totalPriceSet: { shopMoney: { amount: '250.00', currencyCode: 'USD' } },
+            totalDiscountsSet: { shopMoney: { amount: '0' } },
+            totalRefundedSet: { shopMoney: { amount: '0' } },
+            customer: { id: 'gid://shopify/Customer/9' },
+            shippingAddress: null,
+            lineItems: {
+              pageInfo: { hasNextPage: true, endCursor: 'li20' },
+              nodes: twentyItems,
+            },
+          },
+        ],
+      },
+    })
+    const lineItemsPage = {
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          data: {
+            order: {
+              lineItems: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: fiveMoreItems,
+              },
+            },
+          },
+        }),
+      text: () => Promise.resolve(''),
+    }
+    const fetchMock = vi.fn().mockResolvedValueOnce(ordersPage).mockResolvedValueOnce(lineItemsPage)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const reader = new RealShopifyReader()
+    const orders = []
+    for await (const p of reader.orders('shop.myshopify.com', 'tok')) orders.push(...p)
+
+    expect(orders).toHaveLength(1)
+    expect(orders[0]!.lineItems).toHaveLength(25)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const secondCallBody = JSON.parse(fetchMock.mock.calls[1]![1].body as string) as {
+      variables: { id: string; cursor: string }
+    }
+    expect(secondCallBody.variables).toEqual({ id: 'gid://shopify/Order/1', cursor: 'li20' })
+  })
+
+  it('does not fetch extra pages for an order with <=20 line items', async () => {
+    const page = gqlOk({
+      orders: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          {
+            id: 'gid://shopify/Order/2',
+            createdAt: '2026-01-01T00:00:00Z',
+            totalPriceSet: { shopMoney: { amount: '30.00', currencyCode: 'USD' } },
+            totalDiscountsSet: { shopMoney: { amount: '0' } },
+            totalRefundedSet: { shopMoney: { amount: '0' } },
+            customer: null,
+            shippingAddress: null,
+            lineItems: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  quantity: 3,
+                  product: { id: 'gid://shopify/Product/1' },
+                  originalUnitPriceSet: { shopMoney: { amount: '10' } },
+                  discountedUnitPriceSet: { shopMoney: { amount: '10' } },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    })
+    const fetchMock = vi.fn().mockResolvedValueOnce(page)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const reader = new RealShopifyReader()
+    const orders = []
+    for await (const p of reader.orders('shop.myshopify.com', 'tok')) orders.push(...p)
+
+    expect(orders).toHaveLength(1)
+    expect(orders[0]!.lineItems).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
 })

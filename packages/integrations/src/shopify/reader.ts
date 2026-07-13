@@ -87,6 +87,54 @@ interface GqlAddress {
   longitude?: number | null
 }
 
+interface LineItemNode {
+  quantity: number
+  product?: { id: string } | null
+  originalUnitPriceSet?: MoneyBag
+  discountedUnitPriceSet?: MoneyBag
+}
+
+interface OrderNode {
+  id: string
+  createdAt: string
+  totalPriceSet?: MoneyBag
+  totalDiscountsSet?: MoneyBag
+  totalRefundedSet?: MoneyBag
+  customer?: { id: string } | null
+  shippingAddress?: GqlAddress | null
+  lineItems?: { pageInfo?: PageInfo; nodes: LineItemNode[] }
+}
+
+function mapOrderNode(n: OrderNode, items: LineItemNode[]): Order {
+  return {
+    id: n.id,
+    customerId: n.customer?.id ?? null,
+    createdAt: new Date(n.createdAt),
+    totalPrice: num(n.totalPriceSet?.shopMoney?.amount),
+    discountTotal: num(n.totalDiscountsSet?.shopMoney?.amount),
+    refundedAmount: num(n.totalRefundedSet?.shopMoney?.amount),
+    currency: n.totalPriceSet?.shopMoney?.currencyCode ?? 'USD',
+    sourceName: null,
+    shippingAddress: mapAddress(n.shippingAddress),
+    lineItems: items.map((li) => {
+      const unit = num(li.originalUnitPriceSet?.shopMoney?.amount)
+      const disc = unit - num(li.discountedUnitPriceSet?.shopMoney?.amount)
+      return {
+        productId: li.product?.id ?? null,
+        quantity: li.quantity,
+        price: unit,
+        discount: Math.max(0, disc) * li.quantity,
+      }
+    }),
+  }
+}
+
+const LINE_ITEMS_QUERY = `query($id:ID!,$cursor:String){ order(id:$id){
+  lineItems(first:250, after:$cursor){ pageInfo{ hasNextPage endCursor }
+    nodes{ quantity product{ id }
+      originalUnitPriceSet{ shopMoney{ amount } }
+      discountedUnitPriceSet{ shopMoney{ amount } } } } } }`
+
 function mapAddress(a?: GqlAddress | null): Address {
   return {
     city: a?.city ?? null,
@@ -103,10 +151,10 @@ export class RealShopifyReader implements ShopifyReader {
     shop: string,
     token: string,
     query: string,
-    cursor: string | null,
+    variables: Record<string, unknown> = {},
   ): Promise<T> {
     const url = `https://${normalizeShop(shop)}/admin/api/${API_VERSION}/graphql.json`
-    const body = JSON.stringify({ query, variables: { cursor } })
+    const body = JSON.stringify({ query, variables })
     const maxAttempts = 5
     for (let attempt = 1; ; attempt++) {
       const res = await fetch(url, {
@@ -143,7 +191,7 @@ export class RealShopifyReader implements ShopifyReader {
   ): AsyncGenerator<T[]> {
     let cursor: string | null = null
     do {
-      const data = await this.gql<unknown>(shop, token, query, cursor)
+      const data = await this.gql<unknown>(shop, token, query, { cursor })
       const conn = pick(data)
       yield conn.nodes.map(map)
       cursor = conn.pageInfo.hasNextPage ? conn.pageInfo.endCursor : null
@@ -155,7 +203,6 @@ export class RealShopifyReader implements ShopifyReader {
       shop,
       token,
       `query { shop { currencyCode } }`,
-      null,
     )
     // Conservative: treat as online-only unless physical locations are explicitly flagged.
     return {
@@ -165,9 +212,10 @@ export class RealShopifyReader implements ShopifyReader {
     }
   }
 
-  orders(shop: string, token: string): AsyncGenerator<Order[]> {
+  async *orders(shop: string, token: string): AsyncGenerator<Order[]> {
     // Page sizes kept small so the calculated query cost stays under Shopify's 1000-point
     // single-query cap: orders(40) x lineItems(20) ≈ 922. (100 x 100 ≈ 10,000 → rejected.)
+    // Cost is verifiable live via the `Shopify-GraphQL-Cost-Debug: 1` header.
     // totalPriceSet is the GROSS order total (before returns); refunds are subtracted ONCE
     // downstream via netRevenue. Using currentTotalPriceSet (net of returns) would
     // double-count refunds and inflate the return rate past 100%.
@@ -179,54 +227,36 @@ export class RealShopifyReader implements ShopifyReader {
         totalRefundedSet{ shopMoney{ amount } }
         customer{ id }
         shippingAddress{ city provinceCode countryCodeV2 zip latitude longitude }
-        lineItems(first:20){ nodes{ quantity product{ id }
+        lineItems(first:20){ pageInfo{ hasNextPage endCursor } nodes{ quantity product{ id }
           originalUnitPriceSet{ shopMoney{ amount } }
           discountedUnitPriceSet{ shopMoney{ amount } } } }
       } } }`
-    interface OrderNode {
-      id: string
-      createdAt: string
-      totalPriceSet?: MoneyBag
-      totalDiscountsSet?: MoneyBag
-      totalRefundedSet?: MoneyBag
-      customer?: { id: string } | null
-      shippingAddress?: GqlAddress | null
-      lineItems?: {
-        nodes: {
-          quantity: number
-          product?: { id: string } | null
-          originalUnitPriceSet?: MoneyBag
-          discountedUnitPriceSet?: MoneyBag
-        }[]
+    let cursor: string | null = null
+    do {
+      const data: { orders: { nodes: OrderNode[]; pageInfo: PageInfo } } = await this.gql(
+        shop,
+        token,
+        query,
+        { cursor },
+      )
+      const page: Order[] = []
+      for (const n of data.orders.nodes) {
+        const items: LineItemNode[] = [...(n.lineItems?.nodes ?? [])]
+        let li = n.lineItems?.pageInfo
+        while (li?.hasNextPage && li.endCursor) {
+          // Rare path: >20 line items on one order — follow up with per-order pagination.
+          const more = await this.gql<{
+            order: { lineItems: { nodes: LineItemNode[]; pageInfo: PageInfo } } | null
+          }>(shop, token, LINE_ITEMS_QUERY, { id: n.id, cursor: li.endCursor })
+          if (!more.order) break // order deleted mid-sync — keep what we have
+          items.push(...more.order.lineItems.nodes)
+          li = more.order.lineItems.pageInfo
+        }
+        page.push(mapOrderNode(n, items))
       }
-    }
-    return this.paginate<OrderNode, Order>(
-      shop,
-      token,
-      query,
-      (d) => (d as { orders: { nodes: OrderNode[]; pageInfo: PageInfo } }).orders,
-      (n) => ({
-        id: n.id,
-        customerId: n.customer?.id ?? null,
-        createdAt: new Date(n.createdAt),
-        totalPrice: num(n.totalPriceSet?.shopMoney?.amount),
-        discountTotal: num(n.totalDiscountsSet?.shopMoney?.amount),
-        refundedAmount: num(n.totalRefundedSet?.shopMoney?.amount),
-        currency: n.totalPriceSet?.shopMoney?.currencyCode ?? 'USD',
-        sourceName: null,
-        shippingAddress: mapAddress(n.shippingAddress),
-        lineItems: (n.lineItems?.nodes ?? []).map((li) => {
-          const unit = num(li.originalUnitPriceSet?.shopMoney?.amount)
-          const disc = unit - num(li.discountedUnitPriceSet?.shopMoney?.amount)
-          return {
-            productId: li.product?.id ?? null,
-            quantity: li.quantity,
-            price: unit,
-            discount: Math.max(0, disc) * li.quantity,
-          }
-        }),
-      }),
-    )
+      yield page
+      cursor = data.orders.pageInfo.hasNextPage ? data.orders.pageInfo.endCursor : null
+    } while (cursor)
   }
 
   customers(shop: string, token: string): AsyncGenerator<Customer[]> {
