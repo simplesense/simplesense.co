@@ -22,6 +22,24 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: WAVE 1 deploy + live verification (2026-07-13)
+
+GO_LIVE.md W1.5 — the WAVE 1 boundary deploy. Applied the W1.3 migration
+(`20260706000001_store_granted_scopes`, additive `Store.grantedScopes TEXT` column) to
+the live Supabase DB via `prisma migrate deploy`; confirmed clean before and after with
+`prisma migrate status`. Deployed to Fly (`fly deploy --app simplesense-co --ha=false`),
+machine v26→v27, rolling update, health checks passing. Full §5 LIVE VERIFICATION green:
+`/api/health` ok, all 5 key pages 200, machine `started` with 1/1 checks, no application
+stack traces in logs (only an expected momentary health-check blip during the restart
+window and one unrelated proxy-blocked bot probe against `/`). Confirmed the migrated
+column round-trips correctly against the live schema with an isolated
+create/update/null-out/cleanup check (throwaway org+store, cascade-deleted after). The
+PLAN's full visual screen checks (re-grant banner rendering on `/connections`, partial-
+history notice on `/app`) remain BLOCKED(human) — no real merchant has connected a store
+yet (§4.2), so there is nothing non-demo to toggle, and this loop has no authenticated
+Clerk browser session to view the pages with. Logged in BLOCKERS.md for Satya. No code
+changes this slice — deploy + verification only.
+
 ## Completed: Acquisition source — real Order.sourceName (2026-07-13)
 
 GO_LIVE.md W1.4 (`PLAN-acquisition-source.md`). `RealShopifyReader.orders()` was

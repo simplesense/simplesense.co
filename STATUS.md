@@ -1,10 +1,10 @@
 ---
 status: building
-focus: Live in prod, polishing UX — unblock the first real merchant (needs live Stripe keys + Shopify redirect-URL allowlist)
+focus: WAVE 1 shipped and live (v27) — unblock the first real merchant (needs live Stripe keys + Shopify redirect-URL allowlist)
 updated: 2026-07-13
 ---
 
-- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; W1.1 funnel + W1.2 sync-scale + W1.3 scope-grants + W1.4 acquisition-source done, next: W1.5 deploy + verification — needs W1.3 migration applied first)
+- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 done — W1.1 funnel, W1.2 sync-scale, W1.3 scope-grants, W1.4 acquisition-source, W1.5 deploy+verify all shipped and live; next: WAVE 2 — W2.1 outcome scheduler)
 - [ ] Live Stripe keys + the 3 price IDs → turn tier gating into revenue
 - [ ] Shopify redirect-URL allowlist entry → first real dev-store connect end-to-end
 - [ ] Shopify approvals: read_all_orders + protected-customer-data (full history + PII on real stores)

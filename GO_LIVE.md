@@ -116,11 +116,14 @@ log tempting extras under "Follow-ups" in TASK.md.
 - [x] **W1.4 Acquisition source** — `PLAN-acquisition-source.md`
       Request `Order.sourceName` in the reader (one field, zero cost) so the
       acquisition metric works on real stores.
-- [ ] 🚀 **W1.5 Deploy + §5 verification** — wave boundary deploy per §1.7.
-      ⚠️ PREREQUISITE: apply the W1.3 migration first —
-      `source apps/web/.env.local && pnpm --filter @ss/db exec prisma migrate deploy`
-      (additive `Store.grantedScopes` column; DEPLOY.md). Then run the W1.3 screen
-      checks (PLAN-scope-grant-tracking.md acceptance list) as part of §5.
+- [x] 🚀 **W1.5 Deploy + §5 verification** — wave boundary deploy per §1.7.
+      Migration `20260706000001_store_granted_scopes` applied to Supabase (additive,
+      confirmed via `prisma migrate status`: "Database schema is up to date!"). Deployed
+      version 26→27; §5 LIVE VERIFICATION all pass (health ok, 5/5 pages 200, machine
+      started 1/1 checks, no app stack traces in logs). Visual screen checks of the
+      re-grant banner are BLOCKED(human: §4.2 — no connected non-demo store exists yet
+      to toggle); substituted an isolated DB round-trip check proving the new column
+      persists correctly against the live schema. See BLOCKERS.md.
 
 ### WAVE 2 — Flywheel + revenue hardening (G2, G3)
 - [ ] **W2.1 Outcome scheduler** — `PLAN-outcome-scheduler.md`
@@ -220,3 +223,4 @@ Do not modify any other file. Do not deploy.
 | 2026-07-13 | W1.1 First-run funnel | 3b337c5 | Auto-sync on OAuth callback (`lib/sync-runner.ts` shared by action+route), onboarding step-3 completion (any rec status != NEW), labeled+validated ConnectForm with bare-name normalization, SyncButton READY state is a real /app link. Gate green: typecheck 8/8, test 154/154 (+9 new), lint 0/0, build 16/16 routes. Screen checks deferred — no dev-server launch tool available this session (see TASK.md). |
 | 2026-07-13 | W1.2 Sync scale | 41dc812 | backfillStore streams orders page-by-page (no more whole-store RAM materialization → no OOM on the 1GB Fly machine); ingest.ts split into ingestCatalog/ingestOrdersPage; orders with >20 line items fetched via per-order nested pagination instead of truncated; Customer.firstOrderAt derived from real order rows (VIP CSV export column now populates for real stores); syncStartedAt heartbeats per orders page. No schema changes. Gate green: typecheck 8/8, test 158/158 (+4 new), lint 0/0, build 16/16 routes. |
 | 2026-07-13 | W1.4 Acquisition source | f182588 | `RealShopifyReader.orders()` now requests `sourceName` scalar (0 added query cost), normalizes (trim+lowercase, empty→null) via new `normalizeSource()` helper, maps it onto `Order.sourceName` instead of hard-coded null. `acquisitionAnalyzer` doc comment clarified (Shopify channel ≠ marketing attribution). No schema/ingest/demo-fixture changes — column and plumbing already existed. Gate green: typecheck 8/8, test 166/166 (+2 new), lint 0/0, build 16/16 routes. |
+| 2026-07-13 | W1.5 Deploy + §5 verification | (docs-only, no code commit) | Gate re-confirmed green on 3e53abe (typecheck 8/8, test 166/166, lint 0/0, build 16/16) before touching anything. Applied migration `20260706000001_store_granted_scopes` to Supabase (`prisma migrate deploy`; `migrate status` before/after confirmed clean). Deployed v26→v27 via `fly deploy --app simplesense-co --ha=false`. §5 LIVE VERIFICATION: health ok, / /pricing /how-it-works /audit/demo /sign-up all 200, machine started 1/1 checks passing, logs show only expected transient restart health-check blip + one unrelated proxy-blocked bot probe (no app stack traces). W1.3 visual screen checks BLOCKED(human: §4.2 — no connected non-demo store exists to toggle; also no authenticated browser session in this session) — substituted an isolated create/update/null/cleanup round-trip of `grantedScopes` against the live DB, which passed, proving the migration integrates correctly. Doc fix: GO_LIVE.md's literal `source apps/web/.env.local && ...` prerequisite command needed `set -a`/`set +a` around it — bare `source` doesn't export vars to the pnpm child process, so `DIRECT_URL` wasn't seen. See BLOCKERS.md for the human follow-up. |
