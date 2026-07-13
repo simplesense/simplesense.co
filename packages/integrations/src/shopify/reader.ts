@@ -66,6 +66,10 @@ export class MockShopifyReader implements ShopifyReader {
 const API_VERSION = '2024-10'
 const num = (s?: string | null): number => (s ? Number.parseFloat(s) : 0)
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+/** Shopify sourceName, normalized: trimmed + lowercased; empty/missing → null. */
+function normalizeSource(s: string | null | undefined): string | null {
+  return s?.trim().toLowerCase() || null
+}
 
 interface GqlError {
   message?: string
@@ -103,6 +107,7 @@ interface OrderNode {
   customer?: { id: string } | null
   shippingAddress?: GqlAddress | null
   lineItems?: { pageInfo?: PageInfo; nodes: LineItemNode[] }
+  sourceName?: string | null
 }
 
 function mapOrderNode(n: OrderNode, items: LineItemNode[]): Order {
@@ -114,7 +119,7 @@ function mapOrderNode(n: OrderNode, items: LineItemNode[]): Order {
     discountTotal: num(n.totalDiscountsSet?.shopMoney?.amount),
     refundedAmount: num(n.totalRefundedSet?.shopMoney?.amount),
     currency: n.totalPriceSet?.shopMoney?.currencyCode ?? 'USD',
-    sourceName: null,
+    sourceName: normalizeSource(n.sourceName),
     shippingAddress: mapAddress(n.shippingAddress),
     lineItems: items.map((li) => {
       const unit = num(li.originalUnitPriceSet?.shopMoney?.amount)
@@ -219,9 +224,10 @@ export class RealShopifyReader implements ShopifyReader {
     // totalPriceSet is the GROSS order total (before returns); refunds are subtracted ONCE
     // downstream via netRevenue. Using currentTotalPriceSet (net of returns) would
     // double-count refunds and inflate the return rate past 100%.
+    // sourceName is a scalar → 0 additional query-cost points under Shopify's static model.
     const query = `query($cursor:String){ orders(first:40, after:$cursor, sortKey:CREATED_AT){
       pageInfo{ hasNextPage endCursor }
-      nodes{ id createdAt
+      nodes{ id createdAt sourceName
         totalPriceSet{ shopMoney{ amount currencyCode } }
         totalDiscountsSet{ shopMoney{ amount } }
         totalRefundedSet{ shopMoney{ amount } }

@@ -132,6 +132,7 @@ describe('RealShopifyReader live mapping', () => {
           {
             id: 'gid://shopify/Order/1',
             createdAt: '2026-01-01T00:00:00Z',
+            sourceName: 'web',
             totalPriceSet: { shopMoney: { amount: '100.00', currencyCode: 'USD' } },
             totalDiscountsSet: { shopMoney: { amount: '0' } },
             totalRefundedSet: { shopMoney: { amount: '30.00' } },
@@ -173,6 +174,41 @@ describe('RealShopifyReader live mapping', () => {
     expect(o.customerId).toBe('gid://shopify/Customer/9')
     expect(o.shippingAddress?.region).toBe('TX')
     expect(o.lineItems[0]).toMatchObject({ quantity: 2, price: 50, discount: 10 }) // (50−45)*2
+    expect(o.sourceName).toBe('web')
+  })
+
+  it('maps sourceName: requests the field, normalizes case/whitespace, nulls empty', async () => {
+    const node = (id: string, sourceName: string | null) => ({
+      id,
+      createdAt: '2026-01-01T00:00:00Z',
+      totalPriceSet: { shopMoney: { amount: '10.00', currencyCode: 'USD' } },
+      totalDiscountsSet: { shopMoney: { amount: '0' } },
+      totalRefundedSet: { shopMoney: { amount: '0' } },
+      customer: null,
+      shippingAddress: null,
+      lineItems: { nodes: [] },
+      sourceName,
+    })
+    const page = gqlOk({
+      orders: {
+        pageInfo: { hasNextPage: false, endCursor: null },
+        nodes: [
+          node('gid://shopify/Order/1', ' POS '),
+          node('gid://shopify/Order/2', ''),
+          node('gid://shopify/Order/3', null),
+        ],
+      },
+    })
+    const fetchMock = vi.fn().mockResolvedValue(page)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const reader = new RealShopifyReader()
+    const orders = []
+    for await (const p of reader.orders('shop.myshopify.com', 'tok')) orders.push(...p)
+
+    // the query itself must request the scalar
+    expect(String(fetchMock.mock.calls[0]?.[1]?.body)).toContain('sourceName')
+    expect(orders.map((o) => o.sourceName)).toEqual(['pos', null, null])
   })
 
   it('retries on a THROTTLED GraphQL error then succeeds', async () => {

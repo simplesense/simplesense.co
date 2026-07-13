@@ -85,6 +85,8 @@ export const newVsReturningAnalyzer: Analyzer = (ctx) => {
  * Acquisition mix (Shopify-native): revenue attributed to the source of each
  * customer's FIRST order (first-order attribution only). Insufficient when Shopify
  * carries no source data.
+ * Shopify sourceName is WHERE the order was placed (web, pos, mobile app, a sales
+ * channel app) — it is NOT marketing/ad attribution. Never present it as such.
  */
 export const acquisitionAnalyzer: Analyzer = (ctx) => {
   const win = windowLabel(ctx)
