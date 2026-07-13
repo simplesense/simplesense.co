@@ -1,0 +1,214 @@
+# GO_LIVE.md — SimpleSense.co go-live runbook (hands-free execution)
+
+> **Executor model: Claude Sonnet 5** (`/model claude-sonnet-5`). The 10 PLAN files were
+> written by Opus specifically so a mid-tier model can execute them without questions.
+> Do NOT use Haiku for the WAVE work — it under-reads multi-file slices. Haiku 4.5 is fine
+> for the VERIFY-ONLY loop at the bottom.
+>
+> **Kickoff prompt (paste into a fresh `claude` session in this repo):**
+> ```
+> Read GO_LIVE.md and execute THE LOOP starting at the first unchecked [ ] item.
+> Work hands-free: do not ask me questions unless a HARD RAIL forces escalation.
+> ```
+
+---
+
+## 0 · Mission and definition of "live"
+
+SimpleSense is already deployed at https://simplesense.co (Fly app `simplesense-co`).
+"Go live" here means **ready for the first REAL paying merchant**, which decomposes into:
+
+- **G1** — A merchant can connect a real Shopify store and the funnel carries them to
+  moves with zero manual intervention (auto-sync, onboarding completes, no OOM on
+  large stores).
+- **G2** — The flywheel is real: applied moves get measured, stores get re-analyzed on
+  a schedule (not only on click).
+- **G3** — Money paths are hardened BEFORE live Stripe keys are pasted (portal, grace
+  period, checkout confirmation, customer-id capture).
+- **G4** — Honesty invariants hold on real stores (scope-derived history labeling, real
+  acquisition source, no truncated line items).
+- **G5** — Quality floor: usable on a phone, hover/focus states, error boundaries, fast
+  dashboard.
+- **G6 (human-only)** — Satya completes the HUMAN GATE checklist (§4). The loop can
+  never do these; it must never attempt them.
+
+---
+
+## 1 · THE LOOP (read this before touching anything)
+
+Each iteration = **one slice**. Repeat until every checkbox in §3 is `[x]` or blocked.
+
+1. **Re-orient.** Read `CLAUDE.md` (auto-loads `EXECUTION_PROTOCOL.md`), this file, and
+   `git log --oneline -5`. If a `TASK.md` exists from an interrupted run, resume it
+   instead of starting fresh.
+2. **Pick** the FIRST unchecked `[ ]` item in §3 that is not marked `BLOCKED(...)`.
+3. **Execute** its PLAN file end-to-end under `EXECUTION_PROTOCOL.md` (TASK.md, gates,
+   test-first, minimal diff). The plan's own acceptance criteria are the contract.
+4. **Gate** (must be 100% green, paste real output into TASK.md):
+   `pnpm format && pnpm typecheck && pnpm test && pnpm lint && pnpm --filter @ss/web build`
+5. **Commit** on `main`, one commit per slice, message explains WHY, then `git push`.
+   (Docs-only commits append `[skip ci]`.)
+6. **Record**: flip the §3 checkbox to `[x]` (edit THIS file), add one line to
+   `PROGRESS.md`, update `STATUS.md` checklist + `updated:` date. Commit those doc
+   edits with the slice or as a `[skip ci]` follow-up. Delete `TASK.md`.
+7. **Deploy policy** — deploy ONLY at wave boundaries (marked 🚀 in §3), not per slice:
+   ```
+   fly deploy --app simplesense-co --ha=false \
+     --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$(curl -s https://simplesense.co | grep -oE 'pk_(test|live)_[A-Za-z0-9]+' | head -1)
+   ```
+   Standing authorization: this command is PRE-APPROVED by Satya for wave-boundary
+   deploys **only when** the full gate passed on the exact commit being deployed.
+   After every deploy run §5 LIVE VERIFICATION and paste the output into PROGRESS.md.
+   If verification fails: `fly releases --app simplesense-co` → note the failure in
+   BLOCKERS.md → STOP the loop (do not retry-deploy, do not keep working on top of a
+   broken prod).
+8. **Continue** to the next unchecked item WITHOUT asking. If the context window is
+   getting long (you've done ≥1 full slice), finish the record step, then instruct the
+   human-visible transcript: start the next slice in a fresh session with the same
+   kickoff prompt. Never start a new slice with a half-spent context.
+
+### HARD RAILS (violating any of these = stop immediately)
+- **Never** fabricate a number, testimonial, or capability in any user-visible surface
+  (grounding invariant). Missing data renders as "insufficient"/blank.
+- **Never** read, print, or commit `.env*` contents; never log secrets. (guard.sh +
+  settings deny-rules enforce this — do not try to work around a denial.)
+- **Never** run destructive DB commands. Schema changes are `prisma db push`
+  (additive only), sourcing env from `apps/web/.env.local`.
+- **Never** delete/skip a failing test or loosen an assertion to get green.
+- **Two failed fixes for the same error** → write a diagnosis block in TASK.md, mark
+  the §3 item `BLOCKED(reason, date)` in this file, append details to `BLOCKERS.md`
+  (create if missing), commit `[skip ci]`, and move to the NEXT item. Never burn a
+  session grinding one bug.
+- **Anything in §4 (HUMAN GATE)** is Satya-only. If a slice truly cannot proceed
+  without one (e.g. billing E2E needs live keys), do every part that IS possible
+  (code + unit tests), mark the remainder `BLOCKED(human: <item>)`, and continue.
+- The gate command, not memory, decides "done". No output pasted = not done.
+
+---
+
+## 2 · Session setup (once per fresh session)
+
+- Repo: `/Users/satya/simplesense.co`, branch `main`, work directly on `main`
+  (repo convention — no PR flow here).
+- `pnpm install` only if `node_modules` is missing. No new dependencies without a
+  written justification in TASK.md (D5 still applies to deps).
+- The dev server (only when a slice needs visual verification):
+  launch config `web` (port 3000) via the preview tools — never `pnpm dev` in Bash.
+
+---
+
+## 3 · WORK QUEUE (the loop's state — edit checkboxes in place)
+
+Execute top-to-bottom. Each item names its PLAN file — the plan contains exact files,
+step order, edge cases, and acceptance criteria. Do not improvise beyond the plan;
+log tempting extras under "Follow-ups" in TASK.md.
+
+### WAVE 1 — First-merchant critical path (G1)
+- [ ] **W1.1 First-run funnel** — `PLAN-first-run-funnel.md`
+      Auto-sync on OAuth callback, onboarding step-3 completion, connect-form
+      validation. The first real merchant hits this within days.
+- [ ] **W1.2 Sync scale** — `PLAN-sync-scale.md`
+      Streaming ingest (no full-store RAM materialization → no OOM on 1GB machine),
+      nested line-item pagination (>20 items), real `firstOrderAt`.
+- [ ] **W1.3 Scope-grant tracking** — `PLAN-scope-grant-tracking.md`
+      Persist granted scopes from the token exchange; derive `historyLimited` from
+      reality; one-click re-consent path.
+- [ ] **W1.4 Acquisition source** — `PLAN-acquisition-source.md`
+      Request `Order.sourceName` in the reader (one field, zero cost) so the
+      acquisition metric works on real stores.
+- [ ] 🚀 **W1.5 Deploy + §5 verification** — wave boundary deploy per §1.7.
+
+### WAVE 2 — Flywheel + revenue hardening (G2, G3)
+- [ ] **W2.1 Outcome scheduler** — `PLAN-outcome-scheduler.md`
+      Secret-guarded `/api/cron/tick` + GitHub Actions schedule: stale-store refresh
+      and due-outcome measurement against a genuinely post-window run.
+      NOTE: creating the workflow file + `CRON_SECRET` in Fly secrets is code-side and
+      allowed; if a repo setting is needed that only Satya can click, BLOCK that part.
+- [ ] **W2.2 Billing go-live hardening** — `PLAN-billing-go-live.md`
+      Stripe customer-id capture, `current_period_end` grace logic, checkout
+      confirmation page, billing portal route. All buildable + unit-testable in test
+      mode TODAY; the E2E-with-live-keys part is `BLOCKED(human)` until §4.3.
+- [ ] 🚀 **W2.3 Deploy + §5 verification.**
+
+### WAVE 3 — Quality floor (G5)
+- [ ] **W3.1 Interaction states + fonts + contrast** — `PLAN-interaction-states.md`
+      Shared button/nav classes (hover/active/focus-visible), `next/font`, fix the
+      muted-text AA contrast token (this also closes the known site-wide
+      `--text-muted` 4.18:1 finding from the pricing review).
+- [ ] **W3.2 Mobile app shell** — `PLAN-mobile-app-shell.md`
+      Icon rail / top bar under 900px; kills the fixed-264px sidebar on phones.
+- [ ] **W3.3 Dashboard query batching** — `PLAN-dashboard-query-batching.md`
+      ~14–16 sequential queries → ~5–6; audit page 22 → ~3.
+- [ ] **W3.4 Consolidation** — `PLAN-consolidation.md`
+      Shared formatters/Notice/PageHeading/toCore/entitled-set helper + `error.tsx`
+      boundaries. Pure refactor; 145+ tests must stay green.
+- [ ] **W3.5 Micro-fix:** promote the `/how-it-works` hero `<h2 className="sec-title">`
+      to `<h1>` (same one-line pattern as the pricing page). No plan file needed.
+- [ ] 🚀 **W3.6 Deploy + §5 verification.**
+
+### WAVE 4 — Launch readiness sweep
+- [ ] **W4.1 Full-repo regression sweep**: run the gate, then `git grep -n "TODO\|FIXME\|HACK"
+      apps packages` and triage each hit — fix trivial ones, log the rest in
+      `OPEN_QUESTIONS.md`.
+- [ ] **W4.2 Ledger truth-up**: `STATUS.md`, `PROGRESS.md`, `DECISIONS.md` reflect
+      reality; every `BLOCKED(...)` item in this file has a matching BLOCKERS.md entry
+      with exactly what Satya must do.
+- [ ] 🚀 **W4.3 Final deploy + §5 verification + write `LAUNCH_REPORT.md`** summarizing:
+      what shipped, live-verification evidence, and the §4 items still waiting on Satya.
+
+---
+
+## 4 · HUMAN GATE — Satya only (the loop must NEVER attempt these)
+
+- [ ] **4.1 Shopify Partner dashboard**: add allowed redirect URL
+      `https://simplesense.co/api/stores/connect/callback`; enable protected customer
+      data (name/email/address) for dev stores; later: request `read_all_orders` +
+      protected-data approvals for real stores.
+- [ ] **4.2 First dev-store E2E**: create a dev store, seed ~15 orders, connect from
+      simplesense.co/connections, confirm moves render. (The loop's W1 work makes this
+      smooth; the click-through is human.)
+- [ ] **4.3 Stripe**: switch to live keys; set `STRIPE_SECRET_KEY`,
+      `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO` in Fly secrets
+      (`fly secrets set ... --app simplesense-co`); create the live webhook endpoint.
+- [ ] **4.4 Clerk**: create the production instance, swap publishable/secret keys,
+      configure the prod domain.
+- [ ] **4.5 Rotate the four secrets that passed through chat**: Anthropic API key,
+      Supabase DB password, Shopify API secret, Clerk secret key. Update Fly secrets +
+      `.env.local` afterward.
+- [ ] **4.6 Life OS**: paste the fine-grained `GITHUB_PROJECTS_PAT` (Contents:read on
+      the six venture repos) into Vercel so the Ventures card reads STATUS.md.
+
+---
+
+## 5 · LIVE VERIFICATION (run after every deploy — paste output)
+
+```bash
+# 1. health
+curl -s https://simplesense.co/api/health          # expect {"status":"ok",...}
+# 2. key pages return 200
+for p in / /pricing /how-it-works /audit/demo /sign-up; do
+  echo "$p $(curl -s -o /dev/null -w '%{http_code}' https://simplesense.co$p)"; done
+# 3. machine state
+fly status --app simplesense-co                     # expect started, health checks passing
+# 4. no error spike
+fly logs --app simplesense-co --no-tail | tail -40  # scan for stack traces
+```
+Any failure → §1.7 failure path (note, BLOCKERS.md, stop).
+
+---
+
+## 6 · Verify-only loop (optional, Haiku-friendly)
+
+A cheap watchdog to run between work sessions:
+```
+Read GO_LIVE.md §5. Run the LIVE VERIFICATION block against production. If anything
+fails, append the evidence to BLOCKERS.md and say BLOCKED loudly; otherwise reply OK.
+Do not modify any other file. Do not deploy.
+```
+
+---
+
+## 7 · Progress log (loop appends one line per completed item)
+
+| date | item | commit | notes |
+|------|------|--------|-------|
