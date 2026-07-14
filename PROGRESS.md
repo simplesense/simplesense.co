@@ -22,6 +22,47 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: Interaction states + visual baseline (2026-07-14)
+
+GO_LIVE.md W3.1 (`PLAN-interaction-states.md`), the first WAVE 3 (quality floor) slice. The
+entire app layer was styled with inline `style={{}}` objects, which physically cannot
+express `:hover`/`:active` — a live SaaS had zero hover feedback on its sidebar nav, upgrade
+CTAs, export buttons, and move-list actions. Added `packages/ui/src/components.css` with
+`.ss-btn-primary`/`.ss-btn-ghost`/`.ss-nav-item`/`.ss-link` classes built entirely from
+existing tokens, then migrated Sidebar/UpgradeLink/ExportButton/MovesList to them —
+critically, removing the conflicting inline `background`/`color` properties that would
+otherwise silently defeat the new `:hover` rules (a real landmine: everything compiles and
+nothing errors if you add the class but forget to strip the inline property). Replaced the
+existing box-shadow `:focus-visible` rule (which also mutated element geometry — a pill
+button snapped to a smaller radius when tabbed to) with a clean 2px outline ring, and added
+a global `prefers-reduced-motion` guard. Fonts moved from three render-blocking Google
+Fonts `<link>` tags to `next/font/google` (self-hosted); the typography tokens now consume
+next/font's injected CSS variables with the original font names as `var()` fallbacks, so
+every existing `var(--font-display)`/`var(--font-sans)`/`var(--font-ui-display)` consumer
+across the repo kept working with zero further edits. `--ss-muted` darkened from `#837a68`
+to `#6d6455` to clear WCAG AA (was ~3.9:1, now 5.1–5.7:1) — closing a known finding from the
+pricing-page contrast review.
+
+Full gate green: format:check, typecheck 8/8, test 206/206 (+5 new in
+`visual-baseline.test.ts`), lint 0/0, build (18 routes; the Google font files downloaded
+successfully at build time). Rather than defaulting to "BLOCKED(human), no authenticated
+session" for the visual screen check the way several prior UI-adjacent slices had to,
+found a real way to verify most of it directly: since `@ss/ui`'s CSS loads globally on
+every page (not gated by Clerk auth), started a dev server, opened the public homepage in a
+real Chrome tab, and (1) captured live network traffic showing zero requests to
+`fonts.googleapis.com`/`fonts.gstatic.com`, (2) read computed styles confirming
+`--font-display`/`--font-sans` resolve through next/font's actual generated font-family
+values, (3) tabbed to a focusable element and read its computed `outline` —
+`rgb(8,113,231) solid 2px` with `2px` offset, an exact match for `--ss-blue-500` — and
+screenshotted the visible ring, and (4) injected temporary test elements carrying each of
+the 5 new classes onto that same page and physically hovered each one with the mouse,
+screenshotting the before/after to confirm every hover transition renders correctly
+(including the muted-link source-order override). The one thing this couldn't reach: the
+real Sidebar/ExportButton/MovesList instances as rendered in their actual `/app` context,
+since that's behind Clerk auth and no session was available — code-diff inspection confirms
+their conflicting inline styles were correctly stripped, so this is logged as an honest
+residual gap rather than a blocker requiring anything from Satya. Commit `f1e94d3`.
+
 ## Completed: WAVE 2 deploy + live verification (2026-07-14)
 
 GO_LIVE.md W2.3 — the WAVE 2 boundary deploy, shipping W2.1 (outcome scheduler) + W2.2
