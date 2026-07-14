@@ -71,3 +71,46 @@ Also matches the STATUS.md open-action item. No code change needed afterward —
 scheduled run (or a manual `gh workflow run "Cron tick"`) will pick it up.
 
 ---
+
+## W2.2 — /plans screen check (upgraded/canceled banners, Manage-billing button)
+
+**Blocked on:** No authenticated Clerk session available in this loop session (same class
+of blocker as W1.5).
+
+**What's blocked:** PLAN-billing-go-live.md's screen-check acceptance item: sign in via
+Clerk dev, confirm `/plans?upgraded=1` shows the success banner, `/plans?canceled=1` shows
+the canceled banner, plain `/plans` shows neither, and the "Manage billing / cancel" button
+does NOT render (no `stripeCustomerId` in dev).
+
+**Why the loop can't do it:** `/plans` is behind `auth.protect()` (not in the middleware's
+public matcher). Checked `claude-in-chrome` `tabs_context_mcp` for an existing signed-in
+browser session — none exists — and creating/entering Clerk credentials is a prohibited
+action.
+
+**What WAS verified instead (2026-07-13):** Full code-path inspection (both banners are
+simple `sp.upgraded === '1'` / `sp.canceled === '1'` boolean renders off the `searchParams`
+Next 15 Promise pattern — no server state involved, so the plain-`/plans`-shows-neither case
+is structurally guaranteed) plus live end-to-end proof that `stripeCustomerId` can never be
+set for the demo org (the button's gate): a real `pnpm --filter @ss/web dev` curl with Clerk
+fully unset + a fake Stripe key/price showed `POST /api/billing/checkout` → `403 "not
+available for the demo org"` — the new DEMO guard added during adversarial review fires for
+real, not just in unit tests.
+
+**What Satya needs to do:** Sign in to `/plans` in a browser (dev or prod once merchant
+accounts exist) and confirm the banners/button render as coded, OR ask the loop to re-run
+the check in a session with browser access to an authenticated tab.
+
+---
+
+## W2.2 — Stripe customer-portal default configuration (one-time dashboard step)
+
+**Blocked on:** A Stripe Dashboard click (Settings → Billing → Customer portal → save a
+default configuration), required once per Stripe mode (test/live) before
+`createPortalSession`'s API call succeeds — otherwise Stripe returns "default configuration
+has not been created." This is a dashboard-only action, same bucket as pasting live keys.
+
+**What Satya needs to do:** In the Stripe Dashboard (test mode now, live mode before
+go-live), open Settings → Billing → Customer portal and save the default configuration once.
+No code or secret change needed.
+
+---

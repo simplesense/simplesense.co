@@ -22,6 +22,54 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: Billing go-live hardening (2026-07-13)
+
+GO_LIVE.md W2.2 (`PLAN-billing-go-live.md`). Closed 3 revenue-critical holes before live
+Stripe keys land: the Stripe customer id was never captured (no billing portal possible for
+any real merchant), `currentPeriodEnd` was never persisted so `currentTier()` only demoted
+on an explicit `CANCELED` webhook (a single missed cancellation = free paid access forever),
+and checkout had zero post-payment confirmation. `StripeEvent` gained `customerId`/
+`currentPeriodEnd` (parsed from either the subscription top level or the Basil API's
+`items.data[0]` location; an expanded customer object is deliberately ignored — only a
+plain string id is trusted). `currentTier()` now returns `'free'` once
+`subscriptionLapsed()` — 7-day grace past `currentPeriodEnd` — trips, even for a stale
+ACTIVE/PAST_DUE row. New `POST /api/billing/portal` opens the Stripe customer portal;
+`/plans` shows deliberately non-committal success/canceled banners (the webhook can beat
+the redirect, so it never claims a tier is active before that's actually true) and a
+"Manage billing / cancel" entry point gated on a captured `stripeCustomerId`.
+
+Before committing, ran a 3-dimension adversarial multi-agent review (money-correctness,
+security/tenancy, grounding/fail-closed) with every finding independently re-verified
+against the live code. 3 confirmed findings, all fixed: (should-fix) Stripe doesn't
+guarantee webhook delivery order — a stale/retried event carrying an older
+`current_period_end` could regress the stored value and, via the brand-new
+`subscriptionLapsed` check, wrongly demote a currently-paying customer to free; fixed with
+a pure `resolvePeriodEndUpdate(existing, incoming)` helper (mirrors `subscriptionLapsed`'s
+style, 5 new tests) that only ever advances the stored period end. (should-fix)
+checkout/webhook/portal had no `orgId === DEMO.orgId` guard — every other sensitive write
+path in the app has one (`connections/actions.ts`, `stores/connect/callback/route.ts`), and
+SECURITY.md explicitly states mutating actions refuse the demo org; without it, a
+Clerk-misconfiguration could let the shared demo org accumulate a real Stripe customer id,
+and any OTHER visitor also collapsed to DEMO could then open that stranger's real billing
+portal. Fixed with the same guard pattern, and verified END-TO-END against a live dev
+server (not just unit tests): with Clerk fully unset and a fake Stripe key/price supplied
+inline, `POST /api/billing/checkout` returned `403 "not available for the demo org"`.
+(minor) the `current_period_end` validity guard accepted type-valid-but-out-of-Date's-range
+values, which would silently produce an Invalid Date that `subscriptionLapsed` treats as
+"never lapses" — permanently disabling the grace-window safety net for that row; fixed to
+reject those the same way non-numeric/negative values already are.
+
+Full gate green: format:check, typecheck 8/8, test 201/201 (+16 new: 16 in
+`stripe.test.ts`, now 23 total), lint 0/0, build (`/api/billing/portal` present, 18
+routes). `prisma db push` confirmed no schema drift — both columns pre-existed exactly as
+the plan's correction stated. Local runtime verification against real `pnpm --filter
+@ss/web dev` instances (Clerk/Stripe env vars passed inline via the shell, `.env.local`
+never read or written): unauthenticated checkout and portal both 404 (Clerk parity), the
+Stripe webhook still 503s with no config (fail-closed unchanged), and the portal correctly
+503s with Clerk fully unset + Stripe unconfigured. `/plans`'s visual screen check (banners,
+Manage-billing button) and the one-time Stripe Dashboard "save default portal
+configuration" step are `BLOCKED(human)` — logged in BLOCKERS.md. Commit a4f72a7.
+
 ## Completed: Outcome scheduler — flywheel measurement leg (2026-07-13)
 
 GO_LIVE.md W2.1 (`PLAN-outcome-scheduler.md`). `measureOutcome` had zero production call
