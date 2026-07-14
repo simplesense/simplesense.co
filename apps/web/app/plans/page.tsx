@@ -1,5 +1,6 @@
 import { TIERS, stripeConfig, type TierId } from '@ss/config'
 import { Badge } from '@ss/ui'
+import { prisma } from '@ss/db'
 import { getSession } from '@/lib/auth'
 import { currentTier } from '@/lib/billing'
 import { AppShell } from '@/components/AppShell'
@@ -25,10 +26,19 @@ const FEATURES: Record<TierId, string[]> = {
 }
 const ORDER: TierId[] = ['free', 'basic', 'pro']
 
-export default async function PlansPage() {
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ upgraded?: string; canceled?: string }>
+}) {
+  const sp = await searchParams
   const { orgId } = await getSession()
   const tier = await currentTier(orgId)
   const cfg = stripeConfig()
+  const sub = await prisma.subscription.findUnique({
+    where: { orgId },
+    select: { stripeCustomerId: true },
+  })
 
   return (
     <AppShell>
@@ -49,6 +59,43 @@ export default async function PlansPage() {
       <p style={{ marginTop: 0, color: 'var(--text-body)' }}>
         The free Audit is the front door. Geo + Pareto — the omnichannel wedge — live in Basic.
       </p>
+      {sp.upgraded === '1' ? (
+        <div
+          style={{
+            background: 'var(--surface-card)',
+            border: '1px solid var(--border-hairline)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: 13,
+            margin: '12px 0',
+            maxWidth: 760,
+            color: 'var(--text-body)',
+          }}
+        >
+          <i
+            className="bi bi-check2-circle"
+            style={{ color: 'var(--ss-success)', marginRight: 8 }}
+          />
+          Payment received — thank you. Your plan activates as soon as Stripe confirms it (usually
+          seconds). Refresh if your Current badge hasn’t moved yet.
+        </div>
+      ) : null}
+      {sp.canceled === '1' ? (
+        <div
+          style={{
+            background: 'var(--ss-warning-bg)',
+            color: 'var(--ss-warning)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: 13,
+            margin: '12px 0',
+            maxWidth: 760,
+          }}
+        >
+          <i className="bi bi-info-circle" style={{ marginRight: 8 }} />
+          Checkout canceled — no charge was made. Pick a plan whenever you’re ready.
+        </div>
+      ) : null}
       {!cfg.hasCredentials ? (
         <div
           style={{
@@ -167,6 +214,25 @@ export default async function PlansPage() {
           )
         })}
       </div>
+      {cfg.hasCredentials && sub?.stripeCustomerId ? (
+        <form action="/api/billing/portal" method="post" style={{ marginTop: 16 }}>
+          <button
+            type="submit"
+            style={{
+              height: 38,
+              padding: '0 16px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-hairline)',
+              background: 'var(--surface-card)',
+              color: 'var(--text-body)',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Manage billing / cancel
+          </button>
+        </form>
+      ) : null}
     </AppShell>
   )
 }

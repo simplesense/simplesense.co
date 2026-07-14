@@ -14,12 +14,17 @@ export interface StripeEvent {
   orgId: string | null
   tier: 'BASIC' | 'PRO' | null
   status: 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | null
+  /** Stripe customer id (cus_...) when the event carries one as a plain string. */
+  customerId: string | null
+  /** End of the paid period, when the event carries current_period_end (unix seconds). */
+  currentPeriodEnd: Date | null
 }
 
 export interface StripeClient {
   createCheckoutSession(p: CheckoutParams): Promise<string>
   /** Verify the Stripe-Signature header over the raw body, then parse to our event shape. */
   parseWebhook(rawBody: string, signature: string | null): StripeEvent | null
+  createPortalSession(p: { customerId: string; returnUrl: string }): Promise<string>
 }
 
 /** Max age of a signed webhook before it's considered a replay (Stripe's own default). */
@@ -95,9 +100,31 @@ export class RealStripeClient implements StripeClient {
     if (!verifyStripeSignature(rawBody, signature, this.cfg.webhookSecret)) return null
     const evt = JSON.parse(rawBody) as {
       type: string
-      data?: { object?: { metadata?: { orgId?: string; tier?: string }; status?: string } }
+      data?: {
+        object?: {
+          metadata?: { orgId?: string; tier?: string }
+          status?: string
+          customer?: unknown
+          current_period_end?: unknown
+          items?: { data?: Array<{ current_period_end?: unknown }> }
+        }
+      }
     }
     const obj = evt.data?.object
+    // customer may arrive expanded as an object; we only trust a plain string id.
+    const customerId =
+      typeof obj?.customer === 'string' && obj.customer !== '' ? obj.customer : null
+    // Stripe API >= 2025-03-31 (Basil) moved current_period_end from the Subscription top
+    // level onto items.data[]. Accept either location; validate it's a positive finite number
+    // that also produces a representable Date (an in-range-but-absurd value would otherwise
+    // become an Invalid Date that subscriptionLapsed silently treats as "never lapses").
+    const rawPeriodEnd = obj?.current_period_end ?? obj?.items?.data?.[0]?.current_period_end
+    const parsedPeriodEnd =
+      typeof rawPeriodEnd === 'number' && Number.isFinite(rawPeriodEnd) && rawPeriodEnd > 0
+        ? new Date(rawPeriodEnd * 1000)
+        : null
+    const currentPeriodEnd =
+      parsedPeriodEnd && !Number.isNaN(parsedPeriodEnd.getTime()) ? parsedPeriodEnd : null
     // FAIL CLOSED on revocation-shaped statuses: an unmapped status must never silently keep
     // paid entitlements. unpaid/incomplete_expired = dunning gave up → revoke; paused/
     // incomplete = limbo → PAST_DUE; and any FUTURE status Stripe adds on a subscription
@@ -123,7 +150,26 @@ export class RealStripeClient implements StripeClient {
         : evt.type === 'checkout.session.completed'
           ? 'ACTIVE'
           : null,
+      customerId,
+      currentPeriodEnd,
     }
+  }
+
+  /** Create a Stripe customer-portal session; returns the URL to redirect the merchant to. */
+  async createPortalSession(p: { customerId: string; returnUrl: string }): Promise<string> {
+    const body = new URLSearchParams({ customer: p.customerId, return_url: p.returnUrl })
+    const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.cfg.secretKey}`,
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    })
+    if (!res.ok) throw new Error(`Stripe portal failed: ${res.status}`)
+    const data = (await res.json()) as { url?: string }
+    if (!data.url) throw new Error('Stripe returned no portal url')
+    return data.url
   }
 }
 
@@ -137,13 +183,21 @@ export class MockStripeClient implements StripeClient {
       orgId?: string
       tier?: StripeEvent['tier']
       status?: StripeEvent['status']
+      customerId?: string
+      currentPeriodEnd?: number
     }
     return {
       type: evt.type,
       orgId: evt.orgId ?? null,
       tier: evt.tier ?? null,
       status: evt.status ?? null,
+      customerId: evt.customerId ?? null,
+      currentPeriodEnd:
+        typeof evt.currentPeriodEnd === 'number' ? new Date(evt.currentPeriodEnd * 1000) : null,
     }
+  }
+  createPortalSession(p: { customerId: string; returnUrl: string }): Promise<string> {
+    return Promise.resolve(`${p.returnUrl}?mock_portal=1`)
   }
 }
 
@@ -152,4 +206,33 @@ export function createStripeClient(env: NodeJS.ProcessEnv = process.env): Stripe
   return cfg.hasCredentials && cfg.secretKey
     ? new RealStripeClient({ secretKey: cfg.secretKey, webhookSecret: cfg.webhookSecret })
     : new MockStripeClient()
+}
+
+/** Grace window after a paid period ends before access is revoked (missed-webhook safety). */
+export const BILLING_GRACE_DAYS = 7
+
+/**
+ * True when the paid period ended more than the grace window ago. A null periodEnd never
+ * lapses: legacy rows and mock/dev flows have no period end and must keep current behavior.
+ */
+export function subscriptionLapsed(
+  currentPeriodEnd: Date | null,
+  nowMs = Date.now(),
+  graceDays = BILLING_GRACE_DAYS,
+): boolean {
+  if (!currentPeriodEnd) return false
+  return currentPeriodEnd.getTime() + graceDays * 86_400_000 < nowMs
+}
+
+/**
+ * Stripe does not guarantee webhook delivery order (retries especially can arrive after a
+ * newer event already landed). Returns the incoming period end only when it actually moves
+ * the paid period forward — a stale/out-of-order event must never regress it, since
+ * `subscriptionLapsed` would then wrongly revoke a paying customer's access. Returns null
+ * (meaning "leave the stored value alone") when there's nothing to advance.
+ */
+export function resolvePeriodEndUpdate(existing: Date | null, incoming: Date | null): Date | null {
+  if (!incoming) return null
+  if (!existing || incoming.getTime() > existing.getTime()) return incoming
+  return null
 }

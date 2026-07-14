@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripeConfig } from '@ss/config'
 import { createStripeClient } from '@ss/integrations'
+import { DEMO } from '@ss/db'
 import { getSession } from '@/lib/auth'
 import { priceIdForTier } from '@/lib/billing'
 import { rateLimit } from '@/lib/security'
@@ -27,13 +28,20 @@ export async function POST(req: Request): Promise<Response> {
   if (!priceId) return NextResponse.json({ error: `no Stripe price for ${tier}` }, { status: 503 })
 
   const { orgId } = await getSession()
+  // The shared demo org is a read-only showcase — never let it start a real Stripe checkout
+  // (would otherwise let ANY unauthenticated/no-Clerk-session visitor become the customer of
+  // record for the demo org's Subscription row, which every other DEMO-collapsed visitor
+  // then shares).
+  if (orgId === DEMO.orgId) {
+    return NextResponse.json({ error: 'not available for the demo org' }, { status: 403 })
+  }
   const origin = new URL(req.url).origin
   const url = await createStripeClient().createCheckoutSession({
     priceId,
     orgId,
     tier,
     successUrl: `${origin}/plans?upgraded=1`,
-    cancelUrl: `${origin}/plans`,
+    cancelUrl: `${origin}/plans?canceled=1`,
   })
   return NextResponse.redirect(url, { status: 303 })
 }
