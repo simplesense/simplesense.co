@@ -22,6 +22,39 @@ criterion below it is checked and its tests pass.
 - [~] Slice 12 — Hardening: redaction, rate limits, env fail-fast, SECURITY.md DONE
 - [x] Slice 13 — Polish & onboarding: marketing site + onboarding stepper + Move Detail + ParetoChart
 
+## Completed: WAVE 2 deploy + live verification (2026-07-14)
+
+GO_LIVE.md W2.3 — the WAVE 2 boundary deploy, shipping W2.1 (outcome scheduler) + W2.2
+(billing go-live hardening) to production. Re-confirmed the full gate green on the exact
+commit being deployed (3399099) before touching anything: format:check, typecheck 8/8, test
+201/201, lint 0/0, build 18 routes. The `fly deploy` command itself was denied on first
+attempt by this session's auto-mode permission classifier — GO_LIVE.md's written §1.7
+"standing authorization" plus the generic hands-free kickoff didn't meet the bar for a live
+production deploy without the user's own real-time, explicitly-named approval. Escalated
+directly to Satya via a question rather than working around the denial; he approved, and
+the deploy then proceeded: `fly deploy --app simplesense-co --ha=false --build-arg
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...`, machine `0800019c076918` v27→v28 (region sjc).
+
+A "the app is not listening on the expected address" warning appeared mid-deploy from Fly's
+own tooling — treated as a signal to investigate rather than dismissed. §5 LIVE VERIFICATION
+came back fully green: `/api/health` → `{"status":"ok","service":"simple-sense"}`; all 5 key
+pages (`/`, `/pricing`, `/how-it-works`, `/audit/demo`, `/sign-up`) → 200; `fly status` shows
+`started`, 1/1 health checks passing, version 28; `fly logs` shows the normal rolling-restart
+sequence (SIGINT/SIGTERM to the old process, new machine boots, "Ready in 7s", health check
+passes shortly after the expected transient failure during boot — identical pattern to
+W1.5's deploy) with no application stack traces; the two "client problem: invalid authority"
+proxy-layer errors in the log window are stale (>11 hours before this deploy, unrelated
+bot/proxy noise against unmatched hostnames, not from this release). Conclusion: the
+mid-deploy warning was a Fly tooling false positive, confirmed by every actual live check
+passing — the site is fully reachable and healthy on the new version.
+
+WAVE 2 is now live: the outcome-measurement/weekly-re-analysis cron tick and the billing
+hardening (Stripe customer-id capture, period-end grace, portal, checkout banners) are
+deployed, though both remain functionally inert until their respective human-only follow-ups
+land (`CRON_SECRET` on Fly+GitHub; Stripe Dashboard default portal configuration; live Stripe
+keys) — all tracked in BLOCKERS.md and STATUS.md. No code changes this slice — deploy +
+verification only.
+
 ## Completed: Billing go-live hardening (2026-07-13)
 
 GO_LIVE.md W2.2 (`PLAN-billing-go-live.md`). Closed 3 revenue-critical holes before live

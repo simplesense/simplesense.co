@@ -58,6 +58,12 @@ Each iteration = **one slice**. Repeat until every checkbox in §3 is `[x]` or b
    ```
    Standing authorization: this command is PRE-APPROVED by Satya for wave-boundary
    deploys **only when** the full gate passed on the exact commit being deployed.
+   NOTE (learned at W2.3): the session's auto-mode permission classifier may still deny
+   the raw `fly deploy` call even with the gate green, since it does not treat this
+   written clause as sufficient on its own for a production deploy — it wants Satya's
+   own real-time, explicitly-named approval. If denied, do not retry the same call or
+   try to route around it; ask Satya directly (AskUserQuestion) with the exact command
+   and gate evidence, then proceed once approved.
    After every deploy run §5 LIVE VERIFICATION and paste the output into PROGRESS.md.
    If verification fails: `fly releases --app simplesense-co` → note the failure in
    BLOCKERS.md → STOP the loop (do not retry-deploy, do not keep working on top of a
@@ -143,7 +149,13 @@ log tempting extras under "Follow-ups" in TASK.md.
       missing demo-org guard) before commit. `/plans` screen check BLOCKED(human: no
       authenticated session); Stripe portal default-configuration dashboard step also
       BLOCKED(human). See BLOCKERS.md.
-- [ ] 🚀 **W2.3 Deploy + §5 verification.**
+- [x] 🚀 **W2.3 Deploy + §5 verification.**
+      Deployed v27→v28 (machine 0800019c076918, sjc). §5 LIVE VERIFICATION all pass (health
+      ok, 5/5 pages 200, machine started 1/1 checks, no app stack traces — a mid-deploy Fly
+      tooling warning about "not listening" was investigated and confirmed a false positive
+      by the live checks). Deploy itself required Satya's explicit real-time approval —
+      this session's auto-mode classifier does not treat GO_LIVE.md's written §1.7
+      pre-approval as sufficient on its own for a production deploy.
 
 ### WAVE 3 — Quality floor (G5)
 - [ ] **W3.1 Interaction states + fonts + contrast** — `PLAN-interaction-states.md`

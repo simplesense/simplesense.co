@@ -1,10 +1,10 @@
 ---
 status: building
-focus: WAVE 1 live (v27); W2.1+W2.2 shipped in code (need CRON_SECRET + live Stripe keys to actually run) — next up W2.3 wave-boundary deploy
-updated: 2026-07-13
+focus: WAVE 2 shipped and live (v28) — outcome scheduler + billing hardening deployed, both inert until CRON_SECRET + Stripe Dashboard config + live Stripe keys land — next up WAVE 3 (quality floor)
+updated: 2026-07-14
 ---
 
-- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 done — W1.1 funnel, W1.2 sync-scale, W1.3 scope-grants, W1.4 acquisition-source, W1.5 deploy+verify all shipped and live; W2.1 outcome scheduler + W2.2 billing hardening shipped in code, awaiting secrets below to actually run; next: W2.3 wave-boundary deploy + §5 verification)
+- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 + WAVE 2 done — W1.1-W1.5, W2.1 outcome scheduler, W2.2 billing hardening, W2.3 deploy+verify (v28) all shipped and live; next: WAVE 3 — W3.1 interaction states)
 - [ ] Set CRON_SECRET (openssl rand -hex 32) on Fly (fly secrets set CRON_SECRET=… -a simplesense-co) and as a GitHub repo secret (gh secret set CRON_SECRET) — enables the outcome-measurement / weekly re-analysis tick (.github/workflows/cron.yml). For local testing put it in apps/web/.env.local.
 - [ ] In the Stripe Dashboard (test mode now, live mode before go-live): Settings → Billing → Customer portal → save a default configuration, or POST /api/billing/portal's createPortalSession call fails ("default configuration has not been created").
 - [ ] Live Stripe keys + the 3 price IDs → turn tier gating into revenue
