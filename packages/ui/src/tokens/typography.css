@@ -6,10 +6,11 @@
 
 :root {
   /* Families */
-  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-display:
+    var(--font-instrument-serif, 'Instrument Serif'), Georgia, 'Times New Roman', serif;
   --font-ui-display:
-    'Manrope', 'Inter', system-ui, sans-serif; /* in-product display & labels (CRM / app UI) — never marketing display */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    var(--font-manrope, 'Manrope'), var(--font-inter, 'Inter'), system-ui, sans-serif; /* in-product display & labels (CRM / app UI) — never marketing display */
+  --font-sans: var(--font-inter, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Type scale (rem) */

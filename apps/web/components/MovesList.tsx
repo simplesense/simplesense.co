@@ -141,23 +141,19 @@ export function MovesList({
                 >
                   <a
                     href={`/app/moves/${rec.id}`}
-                    style={{
-                      fontSize: 12.5,
-                      color: 'var(--text-link)',
-                      textDecoration: 'none',
-                      padding: '4px 6px',
-                    }}
+                    className="ss-link"
+                    style={{ fontSize: 12.5, padding: '4px 6px' }}
                   >
                     See the evidence <i className="bi bi-arrow-right" />
                   </a>
                   <button
                     onClick={() => set(rec.id, 'DISMISSED')}
+                    className="ss-link ss-link--muted"
                     style={{
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
                       fontSize: 12.5,
-                      color: 'var(--text-muted)',
                       padding: '4px 6px',
                     }}
                   >

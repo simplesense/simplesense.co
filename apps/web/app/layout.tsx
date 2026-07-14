@@ -1,8 +1,19 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Instrument_Serif, Manrope, Inter } from 'next/font/google'
 import '@ss/ui/styles.css'
 import './globals.css'
+
+const instrumentSerif = Instrument_Serif({
+  weight: '400', // Instrument Serif is NOT a variable font — weight is required
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-instrument-serif',
+  display: 'swap',
+})
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 
 const DESCRIPTION =
   'Simple Sense reads your whole Shopify store and tells you the few moves to make this week — what to do, why, and the dollar impact. Every number earned from your own data.'
@@ -31,15 +42,8 @@ const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const shell = (
-    <html lang="en">
+    <html lang="en" className={`${instrumentSerif.variable} ${manrope.variable} ${inter.variable}`}>
       <head>
-        {/* Fonts: Instrument Serif (display) + Manrope (in-product) + Inter (UI/body). */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400..800&family=Inter:ital,wght@0,100..900;1,100..900&display=swap"
-          rel="stylesheet"
-        />
         {/* Bootstrap Icons webfont (vendored locally under /public). */}
         <link rel="stylesheet" href="/vendor/bootstrap-icons/font/bootstrap-icons.min.css" />
       </head>

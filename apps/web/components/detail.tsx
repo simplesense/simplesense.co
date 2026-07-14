@@ -91,19 +91,8 @@ export function ExportButton({
       href={locked ? '/plans' : href}
       download={locked ? undefined : true}
       title={locked ? 'Segment exports are a Basic feature' : undefined}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        fontSize: 13.5,
-        fontWeight: 600,
-        color: locked ? 'var(--text-muted)' : 'var(--text-strong)',
-        background: 'var(--surface-card)',
-        border: `1px ${locked ? 'dashed' : 'solid'} var(--border-strong)`,
-        borderRadius: 'var(--radius-pill)',
-        padding: '9px 16px',
-        textDecoration: 'none',
-      }}
+      className="ss-btn-ghost"
+      style={locked ? { color: 'var(--text-muted)', borderStyle: 'dashed' } : undefined}
     >
       <i className={`bi bi-${locked ? 'lock' : 'download'}`} aria-hidden="true" />
       {locked ? `${label} · Basic` : label}

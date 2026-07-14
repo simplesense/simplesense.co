@@ -39,9 +39,8 @@ a:hover {
 }
 
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: var(--radius-xs);
+  outline: 2px solid var(--ss-blue-500);
+  outline-offset: 2px;
 }
 
 ::selection {
@@ -79,4 +78,14 @@ a:hover {
 .ss-prose {
   max-width: 65ch;
   line-height: var(--lh-relaxed);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

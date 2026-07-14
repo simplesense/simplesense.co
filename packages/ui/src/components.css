@@ -1,0 +1,82 @@
+/* ============================================================
+   SimpleSense — shared component classes for interactive elements.
+   Inline style objects cannot express :hover/:active/:focus states,
+   so stateful interactive elements get classes here. Tokens only.
+   ============================================================ */
+
+/* Solid pill CTA (UpgradeLink, primary actions) */
+.ss-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--action-primary);
+  color: var(--text-onbrand);
+  border-radius: var(--radius-pill);
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-inset-glint), var(--shadow-sm);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.ss-btn-primary:hover {
+  background: var(--action-primary-hover);
+  color: var(--text-onbrand);
+  text-decoration: none;
+}
+.ss-btn-primary:active {
+  background: var(--action-primary-active);
+}
+
+/* Outlined pill secondary (ExportButton) */
+.ss-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  padding: 9px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.ss-btn-ghost:hover {
+  background: var(--surface-soft);
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+/* Sidebar nav rows — Sidebar.tsx already emits className="ss-nav-item"
+   and aria-current="page" on the active row; no rule existed until now. */
+.ss-nav-item {
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.ss-nav-item:hover {
+  background: var(--surface-soft);
+  text-decoration: none;
+}
+.ss-nav-item[aria-current='page'] {
+  background: var(--surface-soft);
+}
+
+/* Inline text links / quiet text buttons */
+.ss-link {
+  color: var(--text-link);
+  text-decoration: none;
+}
+.ss-link:hover {
+  color: var(--action-primary-active);
+  text-decoration: underline;
+}
+/* Muted modifier MUST come after .ss-link:hover (equal specificity — order decides). */
+.ss-link--muted {
+  color: var(--text-muted);
+}
+.ss-link--muted:hover {
+  color: var(--text-strong);
+}

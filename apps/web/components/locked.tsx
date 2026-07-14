@@ -7,22 +7,7 @@ import type { ReactNode } from 'react'
 
 function UpgradeLink({ children }: { children: ReactNode }) {
   return (
-    <a
-      href="/plans"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        background: 'var(--action-primary)',
-        color: 'var(--text-onbrand)',
-        borderRadius: 'var(--radius-pill)',
-        padding: '9px 18px',
-        fontSize: 13.5,
-        fontWeight: 600,
-        textDecoration: 'none',
-        boxShadow: 'var(--shadow-inset-glint), var(--shadow-sm)',
-      }}
-    >
+    <a href="/plans" className="ss-btn-primary">
       {children}
     </a>
   )

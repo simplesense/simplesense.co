@@ -80,7 +80,6 @@ export function Sidebar({ openMoves }: { openMoves: number }) {
                 fontSize: 14,
                 fontWeight: active ? 600 : 500,
                 color: active ? 'var(--text-strong)' : 'var(--text-body)',
-                background: active ? 'var(--surface-soft)' : 'transparent',
                 textDecoration: 'none',
               }}
             >

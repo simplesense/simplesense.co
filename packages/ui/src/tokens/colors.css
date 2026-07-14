@@ -34,7 +34,7 @@
   --ss-border-2: #d8cfbd; /* stronger dividers */
   --ss-ink: #211c15; /* primary text (warm near-black) */
   --ss-ink-soft: #4a4234; /* secondary text */
-  --ss-muted: #837a68; /* muted text / captions */
+  --ss-muted: #6d6455; /* muted text / captions — AA: 5.7:1 on paper, 5.1:1 on cream */
 
   /* --- Semantic (warmed) --- */
   --ss-success: #1f8a5b;
