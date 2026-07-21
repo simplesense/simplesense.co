@@ -149,14 +149,7 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
         {pattern}
       </h1>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-          gap: 24,
-          alignItems: 'start',
-        }}
-      >
+      <div className="ss-move-grid">
         {/* Left column — evidence, why, the move */}
         <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
           <Panel label="The evidence">
@@ -231,7 +224,7 @@ export default async function MoveDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* Right rail — impact, confidence, apply, ship plan */}
-        <div style={{ display: 'grid', gap: 20, position: 'sticky', top: 88, minWidth: 0 }}>
+        <div className="ss-move-rail">
           <Panel label="Expected impact">
             <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
               <div style={{ flex: 1, minWidth: 0 }}>

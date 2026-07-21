@@ -8,29 +8,18 @@ export default function DashboardLoading() {
     animation: 'ss-pulse 1.3s ease-in-out infinite',
   })
   return (
-    <div style={{ display: 'flex', minHeight: '100dvh', background: 'var(--surface-page)' }}>
+    <div className="ss-shell">
       <style>{`@keyframes ss-pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
       {/* sidebar placeholder */}
-      <aside
-        style={{
-          width: '16.5rem',
-          flex: 'none',
-          borderRight: '1px solid var(--border-hairline)',
-          background: 'var(--surface-card)',
-          padding: '24px 18px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
+      <aside className="ss-sidebar" style={{ gap: 12 }}>
         <div style={{ ...bar(140, 22), marginBottom: 12 }} />
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} style={bar('80%')} />
         ))}
       </aside>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ height: '4rem', borderBottom: '1px solid var(--border-hairline)' }} />
-        <main style={{ maxWidth: 1500, margin: '0 auto', padding: '32px 28px' }}>
+      <div className="ss-shell-col">
+        <div className="ss-topbar" />
+        <main className="ss-main">
           <div style={{ ...bar(180, 12), marginBottom: 10 }} />
           <div style={{ ...bar(320, 34), marginBottom: 28 }} />
           <div

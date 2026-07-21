@@ -33,36 +33,16 @@ function isActive(pathname: string, href: string): boolean {
 export function Sidebar({ openMoves }: { openMoves: number }) {
   const pathname = usePathname() ?? ''
   return (
-    <aside
-      style={{
-        width: '16.5rem',
-        flex: 'none',
-        borderRight: '1px solid var(--border-hairline)',
-        background: 'var(--surface-card)',
-        height: '100dvh',
-        position: 'sticky',
-        top: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '20px 14px',
-        gap: 6,
-      }}
-    >
-      <div style={{ padding: '6px 10px 18px' }}>
-        <Link
-          href="/app"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 24,
-            letterSpacing: '-0.01em',
-            color: 'var(--text-strong)',
-            textDecoration: 'none',
-          }}
-        >
-          Simple Sense
+    <aside className="ss-sidebar">
+      <div>
+        <Link href="/app" className="ss-brand" aria-label="Simple Sense">
+          <span className="ss-brand-full">Simple Sense</span>
+          <span className="ss-brand-mini" aria-hidden="true">
+            S
+          </span>
         </Link>
       </div>
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav className="ss-nav">
         {navItems(openMoves).map((it) => {
           const active = isActive(pathname, it.href)
           return (
@@ -70,49 +50,18 @@ export function Sidebar({ openMoves }: { openMoves: number }) {
               key={it.label}
               href={it.href}
               aria-current={active ? 'page' : undefined}
+              aria-label={it.label}
+              title={it.label}
               className="ss-nav-item"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 11,
-                padding: '9px 11px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 14,
-                fontWeight: active ? 600 : 500,
-                color: active ? 'var(--text-strong)' : 'var(--text-body)',
-                textDecoration: 'none',
-              }}
             >
-              <i
-                className={`bi bi-${it.icon}`}
-                aria-hidden="true"
-                style={{
-                  fontSize: 17,
-                  color: active ? 'var(--action-primary)' : 'var(--text-muted)',
-                }}
-              />
-              <span style={{ flex: 1 }}>{it.label}</span>
-              {it.badge ? (
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: 'var(--text-onbrand)',
-                    background: 'var(--action-primary)',
-                    borderRadius: 'var(--radius-pill)',
-                    padding: '1px 8px',
-                  }}
-                >
-                  {it.badge}
-                </span>
-              ) : null}
+              <i className={`bi bi-${it.icon} ss-nav-icon`} aria-hidden="true" />
+              <span className="ss-nav-label">{it.label}</span>
+              {it.badge ? <span className="ss-nav-badge">{it.badge}</span> : null}
             </Link>
           )
         })}
       </nav>
-      <div style={{ marginTop: 'auto', padding: '10px', fontSize: 12, color: 'var(--text-muted)' }}>
-        Operator co-pilot
-      </div>
+      <div className="ss-sidebar-foot">Operator co-pilot</div>
     </aside>
   )
 }

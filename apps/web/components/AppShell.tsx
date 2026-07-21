@@ -25,22 +25,7 @@ function Topbar({
 }) {
   const pill = PILL[syncStatus]
   return (
-    <header
-      style={{
-        height: '4rem',
-        flex: 'none',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 28px',
-        borderBottom: '1px solid var(--border-hairline)',
-        background: 'color-mix(in srgb, var(--surface-card) 92%, transparent)',
-        backdropFilter: 'blur(10px)',
-      }}
-    >
+    <header className="ss-topbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <i className="bi bi-shop" aria-hidden="true" style={{ color: 'var(--text-muted)' }} />
         <span
@@ -73,7 +58,7 @@ function Topbar({
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        <span className="ss-topbar-model">
           {model === 'mock' ? 'Demo data · mock synthesis' : model ? `Synthesis · ${model}` : ''}
         </span>
         {hasClerk ? <UserButton /> : null}
@@ -90,21 +75,11 @@ function Topbar({
 export async function AppShell({ children }: { children: ReactNode }) {
   const ctx = await getShellContext()
   return (
-    <div style={{ display: 'flex', minHeight: '100dvh', background: 'var(--surface-page)' }}>
+    <div className="ss-shell">
       <Sidebar openMoves={ctx.openMoves} />
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className="ss-shell-col">
         <Topbar storeName={ctx.storeName} syncStatus={ctx.syncStatus} model={ctx.model} />
-        <main
-          style={{
-            flex: 1,
-            width: '100%',
-            maxWidth: 1500,
-            margin: '0 auto',
-            padding: '32px 28px 64px',
-          }}
-        >
-          {children}
-        </main>
+        <main className="ss-main">{children}</main>
       </div>
     </div>
   )

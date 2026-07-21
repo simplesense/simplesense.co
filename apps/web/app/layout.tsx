@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Instrument_Serif, Manrope, Inter } from 'next/font/google'
 import '@ss/ui/styles.css'
 import './globals.css'
+import './app-shell.css'
 
 const instrumentSerif = Instrument_Serif({
   weight: '400', // Instrument Serif is NOT a variable font — weight is required
