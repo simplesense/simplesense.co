@@ -9,6 +9,27 @@ Newest first.
 
 ---
 
+## Pausing before M2 AgentReady's scanner — wants a deliberate security pass, not a rushed one
+
+M8 and M5 were both safe to build end-to-end quickly because their "chassis" only
+ever computes over data the founder/customer explicitly hands over (a Klaviyo API
+key, CSV exports) — nothing SimpleSense's server reaches out to on its own. M2's free
+public scanner (`/audits/agent-ready`, plan §4) is different in kind: it's a service
+that takes an arbitrary URL from a stranger on the internet and has *our server* fetch
+it. That needs real SSRF-safe design before any code — block private/link-local/cloud-
+metadata IP ranges (including after DNS resolution, not just by hostname, to close
+DNS-rebinding), cap redirects and refuse ones that land on a blocked range, timeouts
+and response-size limits, and rate-limiting so the scanner can't be turned into a
+free HTTP proxy or DDoS amplifier for someone else's target. That's a genuinely
+different risk profile than anything built so far this session, and rushing it inside
+the same "keep building" pass felt like the wrong tradeoff — a security design deserves
+a clear head, not a 15th-thing-tonight pass. I stopped here rather than build it
+carelessly. Worth noting: a meaningful slice of M2's rubric (schema.org validity,
+policy-text presence, robots.txt checks) doesn't actually need Playwright/a full
+headless browser — a plain rate-limited `fetch()` covers most of it; only the
+"JS-only price rendering" check needs real browser rendering. So M2 doesn't have to
+wait on the Playwright decision below, just on getting the fetcher's safety net right.
+
 ## Hand-wrote the CSV parser instead of adding a library (S2)
 
 `@ss/csv-ingest`'s `parse-csv.ts` is a from-scratch RFC4180 parser (quoted fields,
