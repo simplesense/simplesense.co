@@ -23,6 +23,15 @@ the audit.
 
 ## Build log (newest first)
 
+### 2026-07-24 — `/audits/return-lens` landing page
+
+Closes the M5 "not done" item flagged in the entry below: a real page to pitch
+ReturnLens prospects to, mirroring `/audits/retention-x-ray` (S5) exactly —
+`$1,000/audit` price band (plan §4), the 6 rules as read categories, an illustrative
+sample finding, the same intake form/action wired to `module: 'return-lens'`. Verified
+in-browser (no console/server errors, form fields render correctly); gate green
+(typecheck 11/11, 342 tests, lint 0/0, build compiled with the new route).
+
 ### 2026-07-23/24 — S2 CSV ingest kit + M5 ReturnLens v0: full chassis
 
 **Scope:** the next Track C priority after M8+S5, re-prioritized ahead of S7 (entity
