@@ -1,17 +1,17 @@
 ---
 status: building
-focus: WAVE 2 live (v28); WAVE 3 (quality floor) underway — W3.1 interaction states/fonts/contrast shipped, not yet deployed — next up W3.2 mobile app shell
+focus: WAVE 2 live (v28); WAVE 3 (quality floor) underway — W3.1 + W3.2 shipped, not yet deployed — next up W3.3 dashboard query batching
 updated: 2026-07-14
 ---
 
-- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 + WAVE 2 done and live; WAVE 3 underway — W3.1 interaction states/fonts/contrast shipped in code, awaiting the W3.6 wave-boundary deploy; next: W3.2 mobile app shell)
+- [ ] Execute the ranked PLAN-*.md backlog (10 verified plans; WAVE 1 + WAVE 2 done and live; WAVE 3 underway — W3.1 + W3.2 shipped in code, awaiting the W3.6 wave-boundary deploy; next: W3.3 dashboard query batching)
 - [ ] Set CRON_SECRET (openssl rand -hex 32) on Fly (fly secrets set CRON_SECRET=… -a simplesense-co) and as a GitHub repo secret (gh secret set CRON_SECRET) — enables the outcome-measurement / weekly re-analysis tick (.github/workflows/cron.yml). For local testing put it in apps/web/.env.local.
 - [ ] In the Stripe Dashboard (test mode now, live mode before go-live): Settings → Billing → Customer portal → save a default configuration, or POST /api/billing/portal's createPortalSession call fails ("default configuration has not been created").
 - [ ] Live Stripe keys + the 3 price IDs → turn tier gating into revenue
 - [ ] Shopify redirect-URL allowlist entry → first real dev-store connect end-to-end
 - [ ] Shopify approvals: read_all_orders + protected-customer-data (full history + PII on real stores)
 - [ ] Rotate the secrets that passed through chat (Anthropic / Supabase DB pw / Shopify secret / Clerk)
-- [ ] P1 UX: mobile app-shell responsiveness, dashboard DB-query batching (hover/focus states + next/font shipped in W3.1)
+- [ ] P1 UX: dashboard DB-query batching (hover/focus states + next/font shipped in W3.1; mobile app-shell shipped in W3.2)
 - [ ] Shopify App Store (embedded) — parked; build plan in docs/SHOPIFY_APP_STORE_PLAN.md
 - [x] Grounded engine: analyzers → signal detection → LLM synthesis → grounding validation → ranking
 - [x] App: dashboard, move detail, customers/geography/products, monitoring, connections, settings
