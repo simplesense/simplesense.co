@@ -43,3 +43,19 @@ pnpm monorepo: `@ss/core` (pure analyzers/grounding/ranking), `@ss/config`, `@ss
 
 Live Stripe keys, Shopify Partner allowlist/approvals (`read_all_orders`, protected customer
 data), Clerk production instance. Details in `STATUS.md`.
+
+## Intelligence audit modules — working agreement
+
+Per `COMPOUND_ENGINEERING_PLAN.md` (paid concierge audits: M8 Retention X-Ray, M1 AnswerShelf,
+M2 AgentReady, M3 ReviewProof, M5 ReturnLens — separate from the core SimpleSense product).
+
+- Rulebooks are data. New detection = new rule file with citation + `addedBecause`.
+- Every failure becomes a fixture with a golden output BEFORE the fix.
+- Reports run through the grounding validator. "Insufficient" beats a guess.
+- Report voice: operator-to-operator, findings → dollar frame → exact next step. No
+  adjectives doing the work numbers should do.
+- Never edit a golden output to make a test pass; regenerate via founder review.
+- Cost: every LLM call logs tokens+$ per run-id. Batteries respect daily caps.
+- No new entitlement/billing code in this phase — Stripe payment links only, founder-created.
+- No Shopify App Store work, no embedded app, no new data-source ingests into SimpleSense
+  core from this phase's work.
