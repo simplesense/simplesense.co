@@ -1,5 +1,5 @@
 {
-  "name": "@ss/integrations",
+  "name": "@ss/reports",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,11 +13,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ss/config": "workspace:*",
-    "@ss/core": "workspace:*",
     "@ss/rulebooks": "workspace:*"
   },
   "devDependencies": {
+    "@ss/integrations": "workspace:*",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

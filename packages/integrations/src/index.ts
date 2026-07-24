@@ -35,6 +35,13 @@ export {
   type ShopifyClient,
   type ShopifyClientConfig,
 } from './shopify/client'
+export {
+  RealKlaviyoClient,
+  MockKlaviyoClient,
+  createKlaviyoClient,
+  type KlaviyoClient,
+  type KlaviyoClientConfig,
+} from './klaviyo/client'
 
 /** Topics we subscribe to on connect (MVP: keep orders fresh + handle disconnect). */
 export const DEFAULT_WEBHOOK_TOPICS = ['orders/create', 'orders/updated', 'app/uninstalled']

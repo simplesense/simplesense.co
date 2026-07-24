@@ -1,0 +1,122 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`M8 Retention X-Ray — end-to-end chassis (Klaviyo pull → rulebook → report) > fixture case-01 — grounding proof > matches the reviewed golden report (regenerate deliberately with \`vitest -u\`, never hand-edit) 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Retention X-Ray — Northgate Outdoor Co.</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; background: #f4f1ea; color: #211c15; margin: 0; padding: 0; }
+  .page { max-width: 760px; margin: 0 auto; padding: 56px 32px; }
+  .cover { text-align: center; padding-bottom: 40px; border-bottom: 1px solid #e4ddcf; margin-bottom: 40px; }
+  .cover .eyebrow { font-family: Helvetica, Arial, sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #c25a3c; margin-bottom: 12px; }
+  .cover h1 { font-size: 34px; font-weight: 400; margin: 0 0 12px; }
+  .cover .sub { font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: #4a4234; }
+  .methodology { font-family: Helvetica, Arial, sans-serif; font-size: 13.5px; color: #4a4234; line-height: 1.6; background: #fffdf9; border: 1px solid #e4ddcf; border-radius: 8px; padding: 16px 20px; margin-bottom: 32px; }
+  .finding { background: #fffdf9; border: 1px solid #e4ddcf; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding.insufficient { opacity: 0.75; }
+  .finding-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .finding-head h3 { font-size: 18px; font-weight: 400; margin: 0; }
+  .badge { font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+  .evidence { font-size: 15px; line-height: 1.6; margin: 0 0 10px; }
+  .dollar-frame { background: #e2f1e9; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+  .dollar-range { font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700; color: #1f8a5b; }
+  .dollar-basis { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #4a4234; margin-top: 2px; }
+  .action { font-family: Helvetica, Arial, sans-serif; font-size: 13.5px; line-height: 1.6; margin: 0 0 8px; }
+  .citation { font-family: Helvetica, Arial, sans-serif; font-size: 11.5px; color: #837a68; margin: 0; }
+  .note { font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #837a68; margin: 0; }
+  .disclaimer { font-family: Helvetica, Arial, sans-serif; font-size: 11.5px; color: #837a68; line-height: 1.6; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e4ddcf; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="cover">
+    <div class="eyebrow">Retention X-Ray</div>
+    <h1>Northgate Outdoor Co.</h1>
+    <div class="sub">Generated July 23, 2026 · 6 finding(s)</div>
+  </div>
+  <div class="methodology">
+    Every figure in this report is computed directly from your own connected data. Where the
+    data needed to assess something wasn't available, it's marked "insufficient" — never
+    estimated to fill the gap. Dollar ranges are conservative and traced to your own numbers;
+    ranges marked "editorial estimate" are explicitly labeled as such rather than presented as
+    measured.
+  </div>
+  
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#cd84201a;color:#cd8420">high</span>
+        <h3>Canonical flow coverage</h3>
+      </div>
+      <p class="evidence">2 missing, 1 dormant of 6 canonical flows: Abandoned browse, Sunset / list-cleaning, Winback.</p>
+      
+      <p class="action"><strong>Next step:</strong> Build the missing flow(s): Abandoned browse, Sunset / list-cleaning. Also reactivate the dormant flow(s): Winback.</p>
+      <p class="citation">SimpleSense retention benchmark — 6-flow canonical set</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#cd84201a;color:#cd8420">high</span>
+        <h3>Flow revenue-per-recipient trend</h3>
+      </div>
+      <p class="evidence">1 flow(s) down 20%+ in revenue-per-recipient vs. 90 days ago: Welcome Series.</p>
+      <div class="dollar-frame">
+        <span class="dollar-range">$500–$1,000</span>
+        <span class="dollar-basis">(90-day-ago revenue/recipient − current revenue/recipient) × last-30-day send volume, summed across declining flows; low bound conservatively halves the gap.</span>
+      </div>
+      <p class="action"><strong>Next step:</strong> Refresh creative/copy on: Welcome Series. Re-check revenue-per-recipient in 30 days.</p>
+      <p class="citation">SimpleSense retention benchmark — 90-day flow trend comparison</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>Send cadence &amp; subscriber fatigue</h3>
+      </div>
+      <p class="evidence">spam complaints up 50% vs. 90 days ago; 1 quiet-hours violation(s) detected</p>
+      
+      <p class="action"><strong>Next step:</strong> Cut send frequency to the most-fatigued segments and fix quiet-hours scheduling; re-check in 30 days.</p>
+      <p class="citation">SimpleSense retention benchmark — cadence/fatigue thresholds</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>List health &amp; sunset policy</h3>
+      </div>
+      <p class="evidence">no sunset/re-engagement flow found; 35% of the subscribed list shows no engagement in 90 days</p>
+      
+      <p class="action"><strong>Next step:</strong> Build a sunset flow to re-engage or suppress chronically inactive profiles. Segment out the inactive share before your next major send to protect deliverability.</p>
+      <p class="citation">SimpleSense retention benchmark — list hygiene</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>VIP / at-risk segment architecture</h3>
+      </div>
+      <p class="evidence">Missing: an at-risk / win-back-eligible segment.</p>
+      
+      <p class="action"><strong>Next step:</strong> Build an at-risk / win-back-eligible segment, then route it to a targeted win-back flow.</p>
+      <p class="citation">SimpleSense retention benchmark — Pareto/VIP segment presence</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>Campaign discount dependency</h3>
+      </div>
+      <p class="evidence">82.2% of campaign revenue (37,000 of 45,000) was sent with a discount code.</p>
+      <div class="dollar-frame">
+        <span class="dollar-range">$5,550–$9,250</span>
+        <span class="dollar-basis">Editorial estimate: 15–25% average discount depth applied to 37,000 in discount-driven campaign revenue — not measured from actual per-order discount amounts (not available in this pull).</span>
+      </div>
+      <p class="action"><strong>Next step:</strong> Run your next 2–3 campaigns as value-led (no discount) and compare revenue-per-recipient before deciding how much discount-driven revenue is actually incremental.</p>
+      <p class="citation">SimpleSense retention benchmark — margin-risk via discount-driven campaign revenue</p>
+    </div>
+  <div class="disclaimer">Estimates are ranges grounded in your own data; figures labeled &quot;editorial estimate&quot; are not measured.</div>
+</div>
+</body>
+</html>"
+`;

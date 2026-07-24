@@ -1,0 +1,105 @@
+{
+  "accountName": "Northgate Outdoor Co.",
+  "windowDays": 90,
+  "flows": [
+    {
+      "id": "flow_welcome",
+      "name": "Welcome Series",
+      "canonicalType": "welcome",
+      "status": "live",
+      "sends30d": 2000,
+      "revenuePerRecipient": 1.5,
+      "revenuePerRecipient90dAgo": 2.0
+    },
+    {
+      "id": "flow_abandoned_checkout",
+      "name": "Abandoned Checkout",
+      "canonicalType": "abandoned_checkout",
+      "status": "live",
+      "sends30d": 900,
+      "revenuePerRecipient": 4.2,
+      "revenuePerRecipient90dAgo": 4.1
+    },
+    {
+      "id": "flow_abandoned_browse",
+      "name": "Abandoned Browse",
+      "canonicalType": "abandoned_browse",
+      "status": "draft",
+      "sends30d": 0,
+      "revenuePerRecipient": null,
+      "revenuePerRecipient90dAgo": null
+    },
+    {
+      "id": "flow_post_purchase",
+      "name": "Post-Purchase Thank You",
+      "canonicalType": "post_purchase",
+      "status": "live",
+      "sends30d": 1100,
+      "revenuePerRecipient": 0.9,
+      "revenuePerRecipient90dAgo": 0.88
+    },
+    {
+      "id": "flow_winback",
+      "name": "Winback 90-day",
+      "canonicalType": "winback",
+      "status": "live",
+      "sends30d": 0,
+      "revenuePerRecipient": 1.1,
+      "revenuePerRecipient90dAgo": 1.1
+    },
+    {
+      "id": "flow_sunset",
+      "name": "Sunset",
+      "canonicalType": "sunset",
+      "status": "archived",
+      "sends30d": 0,
+      "revenuePerRecipient": null,
+      "revenuePerRecipient90dAgo": null
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "camp_1",
+      "name": "Summer Clearance",
+      "sentAt": "2026-07-15",
+      "revenue": 22000,
+      "recipientCount": 45000,
+      "usedDiscountCode": true
+    },
+    {
+      "id": "camp_2",
+      "name": "New Gear Drop",
+      "sentAt": "2026-07-05",
+      "revenue": 8000,
+      "recipientCount": 42000,
+      "usedDiscountCode": false
+    },
+    {
+      "id": "camp_3",
+      "name": "Weekend Flash Sale",
+      "sentAt": "2026-06-25",
+      "revenue": 15000,
+      "recipientCount": 40000,
+      "usedDiscountCode": true
+    }
+  ],
+  "listHealth": {
+    "hasSunsetFlow": false,
+    "inactiveSharePct": 0.35,
+    "subscribedGrowth90d": 2800,
+    "subscribedChurn90d": 1100
+  },
+  "cadence": {
+    "sendsPerSubscriberPerWeek": 3.1,
+    "spamComplaintRatePct": 0.06,
+    "spamComplaintRatePct90dAgo": 0.04,
+    "unsubscribeRatePct": 0.4,
+    "unsubscribeRatePct90dAgo": 0.32,
+    "quietHoursViolationCount": 1
+  },
+  "segments": {
+    "hasVipSegment": true,
+    "hasAtRiskSegment": false,
+    "usesPredictedLtv": false
+  }
+}
