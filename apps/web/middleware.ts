@@ -11,6 +11,7 @@ const isPublic = createRouteMatcher([
   '/privacy',
   '/terms',
   '/audit(.*)',
+  '/audits(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   // Metadata routes (extensionless, so the matcher below doesn't auto-exclude them) — must be

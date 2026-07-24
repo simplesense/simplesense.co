@@ -140,6 +140,18 @@ export function stripeConfig(src: EnvSource = process.env): StripeConfig {
 }
 
 /**
+ * Intelligence-audit modules (COMPOUND_ENGINEERING_PLAN.md, Decision 2): paid concierge
+ * audits, sold via a founder-created Stripe Payment Link (dashboard, no API integration —
+ * "no new entitlement/billing code in this phase"). Each module's env var is optional; a
+ * page reads its own link and degrades to a contact-only CTA rather than fabricating a URL
+ * when unset.
+ */
+export function auditPaymentLink(module: string, src: EnvSource = process.env): string | null {
+  const key = `STRIPE_PAYMENT_LINK_${module.toUpperCase().replace(/-/g, '_')}`
+  return str(src, key)
+}
+
+/**
  * Fail fast in production if a required secret is missing (§12). Call at server startup.
  * Mockable integrations (Shopify/Stripe/Clerk/Resend) are intentionally NOT required —
  * they degrade to mocks until supplied. The one exception is Clerk's two keys, which must be

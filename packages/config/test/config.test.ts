@@ -9,6 +9,7 @@ import {
   shopifyConfig,
   storeHasAllOrdersScope,
   missingScopes,
+  auditPaymentLink,
 } from '../src/index'
 
 describe('shopifyConfig.hasAllOrdersScope', () => {
@@ -59,6 +60,26 @@ describe('missingScopes (re-grant detection)', () => {
         SHOPIFY_SCOPES: 'read_orders,read_customers,read_all_orders',
       }),
     ).toEqual(['read_all_orders'])
+  })
+})
+
+describe('auditPaymentLink', () => {
+  it('returns null when the module has no configured payment link', () => {
+    expect(auditPaymentLink('retention-x-ray', {})).toBeNull()
+  })
+  it('reads the module-specific env var, uppercased with hyphens as underscores', () => {
+    expect(
+      auditPaymentLink('retention-x-ray', {
+        STRIPE_PAYMENT_LINK_RETENTION_X_RAY: 'https://buy.stripe.com/test123',
+      }),
+    ).toBe('https://buy.stripe.com/test123')
+  })
+  it("does not leak one module's link into another module's lookup", () => {
+    expect(
+      auditPaymentLink('answershelf', {
+        STRIPE_PAYMENT_LINK_RETENTION_X_RAY: 'https://buy.stripe.com/test123',
+      }),
+    ).toBeNull()
   })
 })
 

@@ -64,6 +64,13 @@ enum SubStatus {
   CANCELED
 }
 
+enum AuditIntakeStatus {
+  NEW
+  CONTACTED
+  DELIVERED
+  DECLINED
+}
+
 model Organization {
   id           String        @id @default(cuid())
   name         String
@@ -288,4 +295,23 @@ model Subscription {
   status           SubStatus    @default(TRIALING)
   currentPeriodEnd DateTime?
   org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+// Compound-engineering audit modules (COMPOUND_ENGINEERING_PLAN.md) — deliberately
+// NOT org-scoped: these are pre-auth leads for founder-fulfilled paid audits, not
+// tenant product data.
+model AuditIntake {
+  id          String            @id @default(cuid())
+  /** e.g. "retention-x-ray" — matches the rulebook's `module` field. */
+  module      String
+  companyName String
+  contactName String
+  email       String
+  /** Free text: store/account URL, key-handoff notes, anything the intake form collects. */
+  notes       String?
+  status      AuditIntakeStatus @default(NEW)
+  createdAt   DateTime          @default(now())
+
+  @@index([module])
+  @@index([status])
 }

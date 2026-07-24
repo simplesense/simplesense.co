@@ -82,3 +82,16 @@ The direct host `db.<ref>.supabase.co` is **IPv6-only** (AAAA only). This machin
 so the direct `:5432` connection works for both `DATABASE_URL` and `DIRECT_URL` — no IPv4
 pooler/region needed. If a future host is IPv4-only, switch to the pooler
 (`aws-0-<region>.pooler.supabase.com`, user `postgres.<ref>`) from the Connect dialog.
+
+### Supabase connectivity regression, this session only (2026-07-23)
+
+The above stopped holding in this Claude Code session/sandbox: `dig` shows the host is
+still AAAA-only (no A record), and this box still carries global IPv6 addresses on `en0`,
+but `nc -6` to the resolved address returns **"No route to host"** — no actual IPv6 uplink
+from this sandbox, even though plain IPv4 internet egress (google.com, api.anthropic.com)
+works fine. `prisma migrate status` against `apps/web/.env.local`'s `DATABASE_URL` fails
+with P1001 for the same reason. Net effect: no live-DB verification or `prisma migrate
+deploy` was possible from this session for the S5 (`AuditIntake`) migration — see
+PARKING_LOT.md. This is very likely sandbox-specific (a different container/network path
+than 2026-06-27's), not a Supabase-side change — verify from a normal terminal before
+assuming the pooler is now required.
