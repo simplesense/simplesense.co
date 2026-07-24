@@ -92,6 +92,15 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.0)
 
+  packages/csv-ingest:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
   packages/db:
     dependencies:
       '@prisma/client':
@@ -177,6 +186,9 @@ importers:
         specifier: workspace:*
         version: link:../rulebooks
     devDependencies:
+      '@ss/csv-ingest':
+        specifier: workspace:*
+        version: link:../csv-ingest
       '@ss/integrations':
         specifier: workspace:*
         version: link:../integrations
@@ -188,6 +200,10 @@ importers:
         version: 2.1.9(@types/node@22.20.0)
 
   packages/rulebooks:
+    dependencies:
+      '@ss/csv-ingest':
+        specifier: workspace:*
+        version: link:../csv-ingest
     devDependencies:
       typescript:
         specifier: ^5.7.3

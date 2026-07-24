@@ -1,5 +1,5 @@
 {
-  "name": "@ss/reports",
+  "name": "@ss/csv-ingest",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,12 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@ss/rulebooks": "workspace:*"
-  },
   "devDependencies": {
-    "@ss/csv-ingest": "workspace:*",
-    "@ss/integrations": "workspace:*",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

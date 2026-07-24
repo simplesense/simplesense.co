@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`M5 ReturnLens — end-to-end chassis (CSV ingest → rulebook → report) > matches the reviewed golden report (regenerate deliberately with \`vitest -u\`, never hand-edit) 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Return Lens — Cascade Trailwear</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; background: #f4f1ea; color: #211c15; margin: 0; padding: 0; }
+  .page { max-width: 760px; margin: 0 auto; padding: 56px 32px; }
+  .cover { text-align: center; padding-bottom: 40px; border-bottom: 1px solid #e4ddcf; margin-bottom: 40px; }
+  .cover .eyebrow { font-family: Helvetica, Arial, sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #c25a3c; margin-bottom: 12px; }
+  .cover h1 { font-size: 34px; font-weight: 400; margin: 0 0 12px; }
+  .cover .sub { font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: #4a4234; }
+  .methodology { font-family: Helvetica, Arial, sans-serif; font-size: 13.5px; color: #4a4234; line-height: 1.6; background: #fffdf9; border: 1px solid #e4ddcf; border-radius: 8px; padding: 16px 20px; margin-bottom: 32px; }
+  .finding { background: #fffdf9; border: 1px solid #e4ddcf; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; }
+  .finding.insufficient { opacity: 0.75; }
+  .finding-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .finding-head h3 { font-size: 18px; font-weight: 400; margin: 0; }
+  .badge { font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+  .evidence { font-size: 15px; line-height: 1.6; margin: 0 0 10px; }
+  .dollar-frame { background: #e2f1e9; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+  .dollar-range { font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700; color: #1f8a5b; }
+  .dollar-basis { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #4a4234; margin-top: 2px; }
+  .action { font-family: Helvetica, Arial, sans-serif; font-size: 13.5px; line-height: 1.6; margin: 0 0 8px; }
+  .citation { font-family: Helvetica, Arial, sans-serif; font-size: 11.5px; color: #837a68; margin: 0; }
+  .note { font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #837a68; margin: 0; }
+  .disclaimer { font-family: Helvetica, Arial, sans-serif; font-size: 11.5px; color: #837a68; line-height: 1.6; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e4ddcf; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="cover">
+    <div class="eyebrow">Return Lens</div>
+    <h1>Cascade Trailwear</h1>
+    <div class="sub">Generated July 24, 2026 · 6 finding(s)</div>
+  </div>
+  <div class="methodology">
+    Every figure in this report is computed directly from your own connected data. Where the
+    data needed to assess something wasn't available, it's marked "insufficient" — never
+    estimated to fill the gap. Dollar ranges are conservative and traced to your own numbers;
+    ranges marked "editorial estimate" are explicitly labeled as such rather than presented as
+    measured.
+  </div>
+  
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#cd84201a;color:#cd8420">high</span>
+        <h3>Cross-email identity resolution</h3>
+      </div>
+      <p class="evidence">1 customer identity spans more than one email at the same shipping address, across 4 combined orders, 3 returns, and $240.00 in refunds.</p>
+      
+      <p class="action"><strong>Next step:</strong> Manually review the flagged identities before acting — this is a &quot;review cohort,&quot; never an auto-deny list.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — email+address clustering</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#cd84201a;color:#cd8420">high</span>
+        <h3>Serial-refunder scoring vs. cohort baseline</h3>
+      </div>
+      <p class="evidence">2 customer(s) return at 3x+ the cohort average (21%) — the highest returns 75% of their orders.</p>
+      
+      <p class="action"><strong>Next step:</strong> Move 2 flagged customer(s) to an inspection-required refund tier for their next order; re-score after 90 days.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — cohort-relative return rate</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>Size-bracketing detection</h3>
+      </div>
+      <p class="evidence">1 order(s) show a bracketing pattern — 2+ size/variants of the same style ordered, most returned. Most common style: &quot;trail jacket&quot; (1 order(s)).</p>
+      
+      <p class="action"><strong>Next step:</strong> Introduce a bracketing-aware policy (restocking fee or size-confirmation nudge at checkout) for the flagged style(s) first.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — same-style multi-variant orders</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>Wardrobing (wear-then-return) timing signal</h3>
+      </div>
+      <p class="evidence">61.5% of returns (8 of 13) fall in the 5-21 day &quot;wear window&quot; after order date — above the 40% v0 watch threshold. Order date is used as a proxy for delivery date; not proof of wear on its own.</p>
+      
+      <p class="action"><strong>Next step:</strong> Cross-check a sample of these returns manually (condition notes, photos if collected) before changing policy — timing alone is a signal, not proof.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — order-to-return timing</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#0871e71a;color:#0871e7">medium</span>
+        <h3>High-return SKU clustering</h3>
+      </div>
+      <p class="evidence">1 SKU(s) return at 25%+ — worst is &quot;SKU-HOOD&quot; at 83% (5 of 6 units), dominant reason: SIZE_TOO_SMALL.</p>
+      
+      <p class="action"><strong>Next step:</strong> Investigate &quot;SKU-HOOD&quot; first — dominant reason is SIZE_TOO_SMALL: check sizing chart accuracy, photography, and QC notes.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — per-SKU return rate</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head">
+        <span class="badge" style="background:#4a42341a;color:#4a4234">low</span>
+        <h3>Policy-tier recommendation</h3>
+      </div>
+      <p class="evidence">At a 42% return-rate cutoff (2x this store's own cohort average return rate (21%)), 4 of 16 customers (25%) would move to an inspection-required tier; 12 keep instant refunds.</p>
+      
+      <p class="action"><strong>Next step:</strong> Move the 4 flagged customer(s) to inspection-required refunds; keep instant refunds for everyone else. Re-run this scoring quarterly as the cohort baseline shifts.</p>
+      <p class="citation">SimpleSense returns-integrity benchmark v0 — return-rate policy cutoff</p>
+    </div>
+  <div class="disclaimer">Returns intelligence surfaces review cohorts, never an auto-deny list — a false positive punishes a good customer. Every figure is computed directly from the CSV exports provided.</div>
+</div>
+</body>
+</html>"
+`;

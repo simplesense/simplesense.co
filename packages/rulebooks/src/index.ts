@@ -10,6 +10,7 @@ export type {
 } from './types'
 export { runRulebook } from './engine'
 export * as retentionXRay from './retention-x-ray'
+export * as returnLens from './return-lens'
 // Also re-exported at the top level for convenience — adapters typically only need one module's types.
 export { retentionXRayRulebook } from './retention-x-ray/rulebook'
 export type {
@@ -21,3 +22,12 @@ export type {
   SegmentArchitecture,
   KlaviyoAccountSnapshot,
 } from './retention-x-ray/types'
+export { returnLensRulebook } from './return-lens/rulebook'
+export { analyzeReturns } from './return-lens/derive'
+export type {
+  EntitySummary,
+  SkuReturnSummary,
+  BracketingCandidate,
+  WardrobingStats,
+  ReturnsSnapshot,
+} from './return-lens/types'

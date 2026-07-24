@@ -9,6 +9,28 @@ Newest first.
 
 ---
 
+## Hand-wrote the CSV parser instead of adding a library (S2)
+
+`@ss/csv-ingest`'s `parse-csv.ts` is a from-scratch RFC4180 parser (quoted fields,
+embedded commas/newlines, escaped quotes, CRLF, BOM) rather than a dependency like
+`papaparse`/`csv-parse`. Default call to avoid a new dependency without your sign-off
+(D5) given the repo's zero-heavy-dependency pattern so far; backed by 10 correctness
+tests for the fiddly quoting/escaping cases specifically. If you'd rather standardize
+on a battle-tested library here, this is a contained, single-file swap — nothing
+downstream depends on the parser's internals, only on `parseOrdersCsv`/`parseReturnsCsv`'s
+output shape.
+
+## Re-prioritized S7 (entity registry) behind S2 + M5
+
+The plan's Wave-0 order lists S7 alongside S1-S6, but with only M8 built so far, an
+entity registry has no second module to cross-reference yet — and any real version of
+it needs a DB table, which this session can't apply live (see the S5 entry above). Built
+S2 CSV ingest kit + M5 ReturnLens instead (both fully DB-free, same profile as M8).
+S7 is still on the list, just not next — worth revisiting once a second module's data
+actually needs cross-referencing.
+
+---
+
 ## [BLOCKING] S5 migration not applied to the live DB — this session can't reach Supabase
 
 `packages/db/prisma/migrations/20260723000001_audit_intake/` (the `AuditIntake` table

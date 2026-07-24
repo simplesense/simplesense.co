@@ -100,7 +100,7 @@ Per-run LLM cost logging and daily caps (A-Z review item P0-C7) apply to every m
 ## 3. Wave 0 — shared builds (do these once, days 1–3)
 
 - [ ] **S1 Crawler service** — Playwright; robots-aware, per-domain rate limits and politeness delays, full-page screenshot + DOM + extracted-field triple per capture, retry/backoff, snapshot store. No login walls, no CAPTCHA evasion, public pages only. Serves M2 and M3.
-- [ ] **S2 CSV ingest kit** — schema sniffing for Shopify order/return exports, versioned parsers, quarantine-on-drift. Serves M5.
+- [x] **S2 CSV ingest kit** — schema sniffing for Shopify order/return exports, versioned parsers, quarantine-on-drift. Serves M5.
 - [ ] **S3 LLM battery runner** — prompt-set files per niche, n-samples per model per prompt, nightly cron, response store with run-ids, per-run cost log, daily budget cap. Serves M1 (and doubles as SimpleSense's own AI-visibility dogfood — see §6).
 - [ ] **S4 Report engine** — branded HTML→PDF audit template: cover, methodology, findings (shared schema with Moves: finding → evidence → dollar frame → exact action), citations, disclaimer footer. One template, per-module skins.
 - [ ] **S5 Audit intake** — one landing section per module on simplesense.co (`/audits/<module>`), Stripe **payment link** + a short intake form (store URL, exports upload, or API-key handoff instructions). Founder-fulfilled. No entitlement code (Decision 2). `[VERIFY]` marketing-site structure for where these pages mount.
