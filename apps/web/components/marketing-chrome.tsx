@@ -42,6 +42,12 @@ export function MarketingFooter() {
           <a href="/app">Dashboard</a>
         </div>
         <div className="fcol">
+          <h4>Who it&rsquo;s for</h4>
+          <a href="/for/pet-brands">Pet brands</a>
+          <a href="/for/candle-brands">Candle &amp; home fragrance</a>
+          <a href="/for/apparel-brands">Apparel &amp; footwear</a>
+        </div>
+        <div className="fcol">
           <h4>Company</h4>
           <a href="/sign-in">Sign in</a>
           <a href="/sign-up">Sign up</a>

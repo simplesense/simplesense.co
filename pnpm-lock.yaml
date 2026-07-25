@@ -53,6 +53,9 @@ importers:
       '@ss/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@ss/verticals':
+        specifier: workspace:*
+        version: link:../../packages/verticals
       next:
         specifier: ^15.1.4
         version: 15.5.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -242,6 +245,25 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+
+  packages/verticals:
+    dependencies:
+      '@ss/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ss/csv-ingest':
+        specifier: workspace:*
+        version: link:../csv-ingest
+      '@ss/rulebooks':
+        specifier: workspace:*
+        version: link:../rulebooks
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
 
 packages:
 

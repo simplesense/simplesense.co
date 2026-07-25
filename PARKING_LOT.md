@@ -9,6 +9,45 @@ Newest first.
 
 ---
 
+## Niche pages (/for/*): decisions made overnight without stopping to ask
+
+Built the entire `SIMPLESENSE_NICHE_PAGES_CE_ADDENDUM_2026-07-25.md` per your "complete
+everything — GET IT DONE" instruction. Everything below shipped; these are the calls I
+made on my own that you might want to revisit, not blockers.
+
+1. **Demo stores are computed, not persisted.** The addendum asked for 3 real demo
+   stores through the live DB+LLM pipeline. I built a pure computed pipeline instead
+   (synthetic store → `@ss/core`'s real analyzers → pre-written move copy) to avoid
+   extending tenant isolation and spending LLM budget autonomously overnight. See
+   LEDGER.md for the full reasoning. If you want the 3 niches to actually live as
+   persisted `demo_org`-style stores later (e.g. so a merchant can click through a
+   *real* `/audit/[slug]` page per vertical instead of a static computed strip), that's
+   a bigger, separate piece of work — flagging it, not defaulting to it.
+2. **Grand View Research (home fragrance market size, candle page) — unverified.**
+   Every other citation was independently re-fetched and matched the addendum's figures
+   exactly. Grand View Research returned HTTP 403 to automated fetch both times I tried.
+   Used the addendum's figure as-is (low-stakes market-sizing stat, not a product claim)
+   but it's the one number in the whole build I couldn't independently confirm myself.
+3. **`HowItWorksCondensed` duplicates copy from `/how-it-works` rather than sharing a
+   component with it.** Copied the existing 3-step copy verbatim into a new condensed
+   component instead of refactoring the original page to share it, to limit edit surface
+   on an existing, already-shipped page. If the two ever need to change together, they
+   won't — worth a follow-up refactor if that becomes a real cost.
+4. **No nav-bar dropdown for "Who it's for," only a footer column.** The addendum didn't
+   specify nav treatment explicitly; a footer link is lower-risk/lower-effort than adding
+   a dropdown to the main nav. Easy to add later if the footer placement doesn't convert.
+5. **Analytics-event stub is a placeholder, not real tracking.** No analytics vendor
+   (PostHog/Segment/etc.) is wired into this repo at all — confirmed via grep, not
+   assumed. Built `apps/web/lib/analytics.ts`'s `trackEvent()` as a console-only stub
+   (verified firing correctly with the right `vertical` property on the hero + spearhead
+   CTAs) so the call sites already exist once you pick a real vendor. Nothing is actually
+   being measured yet.
+6. **Scale rule (3→4th page) needs a human read of real funnel data**, per the
+   addendum's own "directional read Tue Aug 4, honest read by Tue Aug 18" schedule —
+   not something I can or should call myself.
+
+---
+
 ## M1 AnswerShelf: real battery needs provider keys + sentiment classification is an open question
 
 Built the full M1 chassis (rulebook + mock battery + fixture), but two things are

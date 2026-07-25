@@ -785,16 +785,16 @@ footer.mkt {
 .footer-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 40px;
-  max-width: 1000px;
+  max-width: 1160px;
 }
 @media (max-width: 760px) {
   footer.mkt {
     margin-top: 56px;
     padding: 48px 24px 32px;
   }
-  /* Brand spans the full width up top; the two link groups sit in a tidy 2-col row below. */
+  /* Brand spans the full width up top; the link groups sit in a tidy 2-col grid below. */
   .footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: 32px 20px;

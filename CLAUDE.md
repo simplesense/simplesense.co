@@ -59,3 +59,10 @@ M2 AgentReady, M3 ReviewProof, M5 ReturnLens — separate from the core SimpleSe
 - No new entitlement/billing code in this phase — Stripe payment links only, founder-created.
 - No Shopify App Store work, no embedded app, no new data-source ingests into SimpleSense
   core from this phase's work.
+
+## Niche pages (/for/*)
+- Verticals are config, not code. New vertical = new config file, founder-approved copy.
+- Demo numbers come from the pipeline on synthetic stores. No literal $/% in
+  move templates (computed tokens only). No stat without a sourceUrl.
+- Banned-claims lint is non-negotiable: no invented social proof, ever.
+- Three pages until one wins. The funnel data decides, not enthusiasm.

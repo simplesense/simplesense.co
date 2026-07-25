@@ -12,12 +12,14 @@ const isPublic = createRouteMatcher([
   '/terms',
   '/audit(.*)',
   '/audits(.*)',
+  '/for(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
   // Metadata routes (extensionless, so the matcher below doesn't auto-exclude them) — must be
   // public so social scrapers can fetch the OG card without hitting the Clerk auth wall.
   '/opengraph-image(.*)',
   '/twitter-image(.*)',
+  '/sitemap.xml',
   '/api/health',
   '/api/webhooks(.*)',
   '/api/stores/connect(.*)',
