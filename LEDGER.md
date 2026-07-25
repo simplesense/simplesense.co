@@ -23,6 +23,30 @@ the audit.
 
 ## Build log (newest first)
 
+### 2026-07-24 — M3 ReviewProof v0: one real signal, honestly scoped as such
+
+**Scope:** revisited the earlier call to skip M3 entirely. On reflection, "1 of 5
+signals real, rest need S1" doesn't mean nothing should ship — it means the *rulebook*
+should honestly contain 1 rule today, not 6 rules where 5 always return `insufficient`
+forever (which would be padding, not honesty). Built exactly that: a single rule,
+`incentivizedReviewDisclosureRule`, operating on review-request emails a client
+forwards (no crawler needed).
+
+**What's real and tested (8 tests, no fixture — the rule has no separate aggregation
+step to prove, unlike the 6-rule modules):** detects incentive language ("10% off,"
+"free gift," etc.) conditioned specifically on a *positive* review outcome ("5-star,"
+"great review"), citing 16 CFR Part 465 (the FTC's real final rule, effective Oct 21,
+2024). Got the actual legal nuance right, not a naive heuristic: a dedicated test
+confirms the rule does **not** flag an incentive offered for *any* review regardless of
+sentiment ("leave a review, get 10% off — good or bad") — that's explicitly legal under
+the FTC rule; only sentiment-contingent incentives are prohibited. Every finding carries
+the plan's required "risk surfacing, not legal advice; judgment calls go to counsel"
+framing verbatim.
+
+**Deliberately not built:** a `/audits/review-proof` landing page. The plan's $750
+price point assumes the full 5-signal audit; pitching that price against 1 signal is a
+positioning call for you, not a default I should make. See PARKING_LOT.md.
+
 ### 2026-07-24 — M1 AnswerShelf v0: full chassis (mock battery, real battery deferred)
 
 **Scope:** fourth module this pass. Detoured through M3 first and found it doesn't have

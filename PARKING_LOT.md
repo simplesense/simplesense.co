@@ -32,11 +32,21 @@ plan's own calendar, not something to default on my own.
 
 ---
 
-## M3 ReviewProof: skipped a chassis build this pass — 4 of 5 named rules need data I have no source for
+## M3 ReviewProof: built the 1 real signal, deliberately did NOT build a landing page or the other 4 rules
 
-Looked at building M3 next (same "chassis without the crawler" playbook that worked for
-M2) and found it doesn't actually work the same way. Researched the FTC's real Rule on
-Consumer Reviews and Testimonials (16 CFR Part 465) via WebSearch/WebFetch before
+Update: reconsidered "skip M3 entirely" (below) and built the one standalone-buildable
+signal after all — a permanently-`insufficient` rule for the other 4 would be padding,
+but ONE honestly-scoped real rule isn't. `packages/rulebooks/src/review-proof/` now has
+`incentivizedReviewDisclosureRule` (8 tests, including a test that the rule correctly
+does NOT flag incentivizing reviews of any sentiment — only sentiment-*contingent*
+incentives, matching what I verified is actually illegal). What I still didn't build:
+a `/audits/review-proof` page. The plan's $750 price assumes the full 5-signal audit;
+whether/how to pitch 1-of-5 signals at some price is a positioning call for you, not
+something to default silently. Say the word and I'll build the page too — happy to at
+whatever price/framing you want, just didn't want to invent one.
+
+Original research before deciding what was buildable — researched the FTC's real Rule
+on Consumer Reviews and Testimonials (16 CFR Part 465) via WebSearch/WebFetch before
 writing any rule text, since the plan itself flags the penalty figure needs
 re-verification:
 

@@ -13,6 +13,7 @@ export * as retentionXRay from './retention-x-ray'
 export * as returnLens from './return-lens'
 export * as agentReady from './agent-ready'
 export * as answerShelf from './answer-shelf'
+export * as reviewProof from './review-proof'
 // Also re-exported at the top level for convenience — adapters typically only need one module's types.
 export { retentionXRayRulebook } from './retention-x-ray/rulebook'
 export type {
@@ -53,3 +54,5 @@ export type {
   CitedDomainCount,
   AnswerShelfSnapshot,
 } from './answer-shelf/types'
+export { reviewProofRulebook } from './review-proof/rulebook'
+export type { ReviewRequestEmail, ReviewProofSnapshot } from './review-proof/types'
