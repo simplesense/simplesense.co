@@ -9,6 +9,63 @@ Newest first.
 
 ---
 
+## M1 AnswerShelf: real battery needs provider keys + sentiment classification is an open question
+
+Built the full M1 chassis (rulebook + mock battery + fixture), but two things are
+genuinely blocked on your input, not just build time:
+1. **Provider keys.** The real point of the module is comparing how a brand shows up
+   *across* OpenAI/Google/Perplexity/Anthropic — only `ANTHROPIC_API_KEY` is configured
+   today (same gap flagged earlier this session for S3). A Claude-only real battery
+   would prove the plumbing but not the module's actual value proposition, and every
+   real call costs real money I shouldn't spend building autonomously.
+2. **Sentiment classification for real responses.** The mock battery hand-labels
+   sentiment directly (no analysis needed for a deterministic fixture) — a
+   `RealAnswerShelfBattery` will need to actually classify a live model response's tone
+   toward the brand, which means either a cheap heuristic (keyword/phrase matching,
+   probably not reliable enough) or a second LLM call per response to classify
+   sentiment (adds cost and latency to every single battery run, not just once).
+   Worth deciding which tradeoff you want before this gets built for real.
+
+Also still open from earlier: the Track F prompt-set/niche selection ("pick 3 niches +
+15 target brands, approve prompt batteries") is explicitly a founder action in the
+plan's own calendar, not something to default on my own.
+
+---
+
+## M3 ReviewProof: skipped a chassis build this pass — 4 of 5 named rules need data I have no source for
+
+Looked at building M3 next (same "chassis without the crawler" playbook that worked for
+M2) and found it doesn't actually work the same way. Researched the FTC's real Rule on
+Consumer Reviews and Testimonials (16 CFR Part 465) via WebSearch/WebFetch before
+writing any rule text, since the plan itself flags the penalty figure needs
+re-verification:
+
+- **The plan's "review hijacking" rule doesn't map to an enforceable Part 465
+  provision.** It was in the FTC's *proposed* rule but explicitly dropped from the
+  *final* rule (effective Oct 21, 2024) — the FTC said commenters' concerns about
+  defining "substantially different product" couldn't be resolved "on the current
+  rulemaking record." (The FTC has separately said it would still pursue such practices
+  under Section 5 of the FTC Act generally, just not this rule's specific civil-penalty
+  mechanism.) Confirmed current max civil penalty: $51,744/violation, matching the
+  plan's own figure, per a September 2024 Goodwin Law summary — I could not get eCFR.gov
+  or FTC.gov to serve directly (both blocked automated fetches; used search-indexed law-
+  firm summaries instead, so treat exact section numbers as needing a final check
+  against the primary text before they go in a real client report).
+- **More importantly, scope:** of the plan's 5 named M3 signals (incentivized reviews,
+  review suppression, insider reviews, review hijacking, purchased-review timing/
+  template indicators), only ONE — incentivized-review language in forwarded emails —
+  has a data source I can actually work with this session (the client forwards emails;
+  no crawler needed). The other four all need real review-widget data (timestamps,
+  reviewer patterns, site structure) that only S1's crawler can collect — unlike M8
+  (Klaviyo API), M5 (CSV export), or M2 (a URL to fetch), there's no "founder just hands
+  me a file" equivalent for these. Building a "6-rule rulebook" where 4 rules always
+  return `insufficient` isn't a real chassis, just the appearance of one — so I didn't
+  build it. M3 is genuinely blocked on the Playwright/S1 decision (see that entry
+  below) for most of its value; the email-only rule could still be built standalone if
+  you want that one signal ahead of the rest, but it's not much of a module by itself.
+
+---
+
 ## M2 AgentReady built — SSRF-safe fetcher independently red-teamed, one critical bug found and fixed
 
 Follow-up to the entry below (previously "pausing before M2's scanner") — finished it

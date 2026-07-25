@@ -1,0 +1,252 @@
+[
+  {
+    "promptId": "p1",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": true,
+    "brandMentionRank": 1,
+    "sentiment": "positive",
+    "citedDomains": ["cascadetrailwear.com", "gearjunkie.com"],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p2",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": true,
+    "brandMentionRank": 1,
+    "sentiment": "positive",
+    "citedDomains": ["cascadetrailwear.com"],
+    "competitorMentions": { "TrailForge": 2 }
+  },
+  {
+    "promptId": "p3",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": true,
+    "brandMentionRank": 2,
+    "sentiment": "positive",
+    "citedDomains": ["gearjunkie.com"],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p4",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": true,
+    "brandMentionRank": 3,
+    "sentiment": "neutral",
+    "citedDomains": ["outdoorgearlab.com"],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p5",
+    "model": "gemini-3-pro",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": true,
+    "brandMentionRank": 2,
+    "sentiment": "negative",
+    "citedDomains": ["cascadetrailwear.com"],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p6",
+    "model": "gemini-3-pro",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p7",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p8",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p9",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p10",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p11",
+    "model": "perplexity-sonar",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": { "TrailForge": 1 }
+  },
+  {
+    "promptId": "p12",
+    "model": "perplexity-sonar",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p13",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p14",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p15",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p16",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p17",
+    "model": "gemini-3-pro",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p18",
+    "model": "gemini-3-pro",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p19",
+    "model": "perplexity-sonar",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p20",
+    "model": "perplexity-sonar",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p21",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p22",
+    "model": "claude-opus-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p23",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p24",
+    "model": "gpt-5",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  },
+  {
+    "promptId": "p25",
+    "model": "gemini-3-pro",
+    "sampledAt": "2026-07-20T00:00:00Z",
+    "mentionsBrand": false,
+    "brandMentionRank": null,
+    "sentiment": null,
+    "citedDomains": [],
+    "competitorMentions": {}
+  }
+]

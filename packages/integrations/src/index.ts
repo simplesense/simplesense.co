@@ -43,6 +43,11 @@ export {
   type KlaviyoClientConfig,
 } from './klaviyo/client'
 export { buildAgentReadySnapshot } from './agent-ready/build-snapshot'
+export {
+  MockAnswerShelfBattery,
+  type AnswerShelfBatteryClient,
+  type AnswerShelfBatteryResult,
+} from './answer-shelf/battery-client'
 
 /** Topics we subscribe to on connect (MVP: keep orders fresh + handle disconnect). */
 export const DEFAULT_WEBHOOK_TOPICS = ['orders/create', 'orders/updated', 'app/uninstalled']

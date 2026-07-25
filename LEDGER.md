@@ -23,6 +23,42 @@ the audit.
 
 ## Build log (newest first)
 
+### 2026-07-24 — M1 AnswerShelf v0: full chassis (mock battery, real battery deferred)
+
+**Scope:** fourth module this pass. Detoured through M3 first and found it doesn't have
+enough standalone-buildable surface for a real chassis this session (see
+PARKING_LOT.md) — researched the actual FTC rule before concluding that, not before
+building on top of a guess. M1 turned out to be the better next module: its data
+source (LLM battery responses) is exactly as mockable as M8's Klaviyo data was, so the
+full 6-rule chassis is provably exercisable end-to-end today, with the *real*
+multi-provider battery cleanly deferred (needs OpenAI/Gemini/Perplexity keys, already
+parked from earlier this session).
+
+**What's real and tested (66 new tests):**
+- `@ss/rulebooks/answer-shelf`: `analyzeAnswerShelf()` pre-aggregation (share of voice,
+  first-mention rate, sentiment breakdown, cited-domain ranking, per-competitor share,
+  baseline trend delta — 9 tests) + all 6 rules the plan names, each enforcing its own
+  sampling floor per the plan's own "statistical honesty" requirement (small samples
+  render `insufficient`, never a shaky percentage) — 17 tests.
+- `@ss/integrations/answer-shelf`: `MockAnswerShelfBattery`, deterministic, matching
+  `MockKlaviyoClient`'s precedent — 4 tests. No `RealAnswerShelfBattery` yet (see
+  parking lot: needs provider keys not configured, and a real LLM call has a real
+  dollar cost this session shouldn't spend without a go-ahead).
+- End-to-end fixture (`fixtures/answer-shelf/case-01`, "Cascade Trailwear vs.
+  TrailForge," 25 current + 25 baseline responses) with a deliberately planted
+  *declining* trend (32% → 20%) and a *concerning* sentiment share (20% negative), not
+  just the clean-path numbers — every figure hand-derived before running the test, all
+  10 assertions matched on the first run.
+- `/audits/answer-shelf` landing page, mirroring the established S5 pattern; verified
+  in-browser (correct render, no console/server errors).
+
+**Not done — real founder decisions, not silently dropped:** the real multi-provider
+battery (OpenAI/Gemini/Perplexity keys); no real prompt-set/niche selection has been
+made yet (plan says "pick 3 niches + 15 target brands" is a founder Track F action);
+sentiment classification in the mock is hand-labeled, not computed — a real battery
+will need either an LLM-based classifier call or a cheaper heuristic, an open design
+question for whoever builds `RealAnswerShelfBattery`.
+
 ### 2026-07-24 — `@ss/safe-fetch` + M2 AgentReady v0: full chassis + free scanner
 
 **Scope:** third module built this pass, per "finish the rest" — M2's free public

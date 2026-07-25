@@ -12,6 +12,7 @@ export { runRulebook } from './engine'
 export * as retentionXRay from './retention-x-ray'
 export * as returnLens from './return-lens'
 export * as agentReady from './agent-ready'
+export * as answerShelf from './answer-shelf'
 // Also re-exported at the top level for convenience — adapters typically only need one module's types.
 export { retentionXRayRulebook } from './retention-x-ray/rulebook'
 export type {
@@ -43,3 +44,12 @@ export type {
   ProductPageSummary,
   AgentReadySnapshot,
 } from './agent-ready/types'
+export { answerShelfRulebook } from './answer-shelf/rulebook'
+export { analyzeAnswerShelf } from './answer-shelf/derive'
+export type {
+  Sentiment,
+  PromptResponse,
+  CompetitorShare,
+  CitedDomainCount,
+  AnswerShelfSnapshot,
+} from './answer-shelf/types'
