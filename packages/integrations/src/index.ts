@@ -42,6 +42,7 @@ export {
   type KlaviyoClient,
   type KlaviyoClientConfig,
 } from './klaviyo/client'
+export { buildAgentReadySnapshot } from './agent-ready/build-snapshot'
 
 /** Topics we subscribe to on connect (MVP: keep orders fresh + handle disconnect). */
 export const DEFAULT_WEBHOOK_TOPICS = ['orders/create', 'orders/updated', 'app/uninstalled']

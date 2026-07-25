@@ -41,6 +41,15 @@ export interface DetectionResult {
   dollarFrame?: DollarFrame
   /** The specific next step, interpolated with this run's real numbers. Required when triggered. */
   action?: string
+  /**
+   * Optional pass/fail discriminator for a `triggered` finding — was this check clean,
+   * or did it surface a real gap? Most modules (M8, M5) only ever render findings as
+   * narrative text and don't need this. M2 AgentReady's free scanner needs a numeric
+   * score, so its rules set this explicitly rather than the score computation
+   * fragile-string-matching the `action` text for a "no gap" prefix. Undefined for any
+   * rule that doesn't set it — never inferred.
+   */
+  passed?: boolean
 }
 
 /** A finding is a rule's static metadata merged with one run's DetectionResult. */

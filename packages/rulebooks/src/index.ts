@@ -11,6 +11,7 @@ export type {
 export { runRulebook } from './engine'
 export * as retentionXRay from './retention-x-ray'
 export * as returnLens from './return-lens'
+export * as agentReady from './agent-ready'
 // Also re-exported at the top level for convenience — adapters typically only need one module's types.
 export { retentionXRayRulebook } from './retention-x-ray/rulebook'
 export type {
@@ -31,3 +32,14 @@ export type {
   WardrobingStats,
   ReturnsSnapshot,
 } from './return-lens/types'
+export { agentReadyRulebook } from './agent-ready/rulebook'
+export { computeAgentReadyScore } from './agent-ready/score'
+export type { AgentReadyScore } from './agent-ready/score'
+export type {
+  ProductOfferSummary,
+  ProductSchemaSummary,
+  PolicyPageSummary,
+  RobotsTxtSummary,
+  ProductPageSummary,
+  AgentReadySnapshot,
+} from './agent-ready/types'

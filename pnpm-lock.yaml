@@ -47,6 +47,9 @@ importers:
       '@ss/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
+      '@ss/rulebooks':
+        specifier: workspace:*
+        version: link:../../packages/rulebooks
       '@ss/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -147,6 +150,9 @@ importers:
       '@ss/rulebooks':
         specifier: workspace:*
         version: link:../rulebooks
+      '@ss/safe-fetch':
+        specifier: workspace:*
+        version: link:../safe-fetch
     devDependencies:
       typescript:
         specifier: ^5.7.3
@@ -204,6 +210,15 @@ importers:
       '@ss/csv-ingest':
         specifier: workspace:*
         version: link:../csv-ingest
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
+  packages/safe-fetch:
     devDependencies:
       typescript:
         specifier: ^5.7.3

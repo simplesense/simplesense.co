@@ -1,5 +1,5 @@
 {
-  "name": "@ss/integrations",
+  "name": "@ss/safe-fetch",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,12 +11,6 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
-  },
-  "dependencies": {
-    "@ss/config": "workspace:*",
-    "@ss/core": "workspace:*",
-    "@ss/rulebooks": "workspace:*",
-    "@ss/safe-fetch": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

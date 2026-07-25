@@ -9,26 +9,46 @@ Newest first.
 
 ---
 
-## Pausing before M2 AgentReady's scanner — wants a deliberate security pass, not a rushed one
+## M2 AgentReady built — SSRF-safe fetcher independently red-teamed, one critical bug found and fixed
 
-M8 and M5 were both safe to build end-to-end quickly because their "chassis" only
-ever computes over data the founder/customer explicitly hands over (a Klaviyo API
-key, CSV exports) — nothing SimpleSense's server reaches out to on its own. M2's free
-public scanner (`/audits/agent-ready`, plan §4) is different in kind: it's a service
-that takes an arbitrary URL from a stranger on the internet and has *our server* fetch
-it. That needs real SSRF-safe design before any code — block private/link-local/cloud-
-metadata IP ranges (including after DNS resolution, not just by hostname, to close
-DNS-rebinding), cap redirects and refuse ones that land on a blocked range, timeouts
-and response-size limits, and rate-limiting so the scanner can't be turned into a
-free HTTP proxy or DDoS amplifier for someone else's target. That's a genuinely
-different risk profile than anything built so far this session, and rushing it inside
-the same "keep building" pass felt like the wrong tradeoff — a security design deserves
-a clear head, not a 15th-thing-tonight pass. I stopped here rather than build it
-carelessly. Worth noting: a meaningful slice of M2's rubric (schema.org validity,
-policy-text presence, robots.txt checks) doesn't actually need Playwright/a full
-headless browser — a plain rate-limited `fetch()` covers most of it; only the
-"JS-only price rendering" check needs real browser rendering. So M2 doesn't have to
-wait on the Playwright decision below, just on getting the fetcher's safety net right.
+Follow-up to the entry below (previously "pausing before M2's scanner") — finished it
+after you said to keep going. Built `@ss/safe-fetch` first, in isolation, then ran a
+dedicated adversarial-review workflow against it (2 independent reviewers, each
+verified by a second independent agent that reproduced the findings against the real
+code) *before* building the rubric/scanner UI on top of it. Worth knowing this actually
+caught something real, not just a box-ticking exercise: a **critical, reproduced**
+bypass where `http://[::ffff:169.254.169.254]/` (the cloud-metadata IP, disguised as an
+IPv4-mapped IPv6 literal in its hex-group form) sailed straight past the IP blocklist —
+the mapped-address check only recognized the dotted-decimal textual form, but
+`url.hostname` always produces the hex-group form, so the check never actually fired
+for real traffic. Fixed, plus two smaller confirmed bugs (unbounded DNS lookup timeout,
+an unhandled body-stream-error rejection). All three have regression tests. Full
+writeup in `LEDGER.md`'s 2026-07-24 entry.
+
+**Still an accepted, documented v0 limitation, not silently ignored**: `safeFetch`
+validates DNS resolution then lets `fetch()` re-resolve the same hostname to actually
+connect — a narrow DNS-rebinding TOCTOU window between the two lookups. Closing it
+fully means pinning the TCP connection to the pre-validated IP via a low-level
+connect-time `lookup` override, which needs `undici`'s dispatcher API — I judged that
+not worth adding as a new dependency for a v0 scanner. Worth revisiting if this scanner
+ever handles higher-stakes traffic than a free lead-magnet tool.
+
+**Also not individually re-verified this session**: the AI-agent crawler user-agent
+list the robots.txt rule checks (`ClaudeBot`, `Google-Extended`, `PerplexityBot`,
+`CCBot`) — these are well-established, widely-documented tokens I'm confident in from
+general knowledge, but only OpenAI's set (`GPTBot`/`ChatGPT-User`/`OAI-SearchBot`/
+`OAI-AdsBot`) was freshly confirmed via WebFetch this session (Anthropic's own crawler
+docs page 404'd when I tried). Low-stakes if one of these tokens is ever renamed —
+worst case the rule under- or over-reports a block that isn't checked elsewhere — but
+flagging since D3 (no invented symbols) technically wants everything source-verified.
+
+It turned out most of M2's rubric doesn't need Playwright at all — schema.org
+validity, policy-text presence, robots.txt, login-wall, and CAPTCHA detection all work
+from a plain static fetch. Only the "JS-only price rendering" check is weaker without
+real browser rendering (the rule is explicit about this in its own finding text —
+"consistent with client-side rendering... cannot execute JavaScript to confirm it").
+So M2 shipped without waiting on the Playwright decision below; M3 still needs it more
+(review-widget scraping has no static-fetch equivalent).
 
 ## Hand-wrote the CSV parser instead of adding a library (S2)
 
@@ -102,14 +122,17 @@ page silently doesn't render (by design — never show a broken/empty payment li
 a real Stripe Payment Link created and the env var set in `apps/web/.env.local` (dev) and
 Fly secrets (prod) before that CTA does anything.
 
-## Playwright decision needed for S1 (crawler) — blocks M2 AgentReady / M3 ReviewProof data collection
+## Playwright decision needed for S1 (crawler) — blocks M3 ReviewProof's review-widget scraping
 
-The plan's S1 shared crawler needs a headless-browser dependency (Playwright is the
-obvious choice) to actually fetch and parse a store's live site for AgentReady/ReviewProof
-signals. That's a new dependency (D5) I'm not adding without your sign-off. I've been
-building the parts of M2/M3 that don't need it yet (rulebook chassis, report rendering)
-and will keep the crawler-dependent pieces parked here until you decide: Playwright, a
-lighter fetch+cheerio approach, or a hosted scraping API.
+Update: M2 AgentReady turned out not to need this after all (see the entry above) — its
+static-fetch rubric shipped complete. What's still blocked is M3 ReviewProof's
+review-widget/PDP scraping (plan §4: "crawl PDPs, review widgets... capture with
+hashes"), which genuinely needs rendered DOM (review widgets are typically JS-injected)
+in a way a plain fetch can't get around. That's a new dependency (D5) I'm not adding
+without your sign-off: Playwright, a lighter fetch+cheerio approach, or a hosted
+scraping API. M3's email-based rule (incentivized-review language in forwarded
+review-request emails) doesn't need this and could still be built standalone if you'd
+rather see that slice first.
 
 ## LLM provider keys needed for S3/M1 AnswerShelf's "battery" runner
 

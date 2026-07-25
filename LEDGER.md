@@ -23,6 +23,78 @@ the audit.
 
 ## Build log (newest first)
 
+### 2026-07-24 — `@ss/safe-fetch` + M2 AgentReady v0: full chassis + free scanner
+
+**Scope:** third module built this pass, per "finish the rest" — M2's free public
+scanner (plan §4: "URL -> score + top 5 gaps... as lead magnet") plus the paid
+fix-sprint intake. Unlike M8/M5, M2's data source is arbitrary internet URLs a stranger
+submits, not data the founder/customer hands over — a materially different risk
+profile, handled as its own piece of work before any rule code:
+
+**`@ss/safe-fetch` (new package) — SSRF-safe fetcher, built and independently
+red-teamed before anything was built on top of it.** IP blocklist covering IANA
+special-purpose ranges (loopback/private/link-local/CGNAT/multicast/reserved, IPv6
+loopback/link-local/unique-local/multicast, cloud-metadata 169.254.169.254 explicitly)
++ scheme/port allowlisting + per-hop redirect re-validation + response size/time caps.
+Ran a dedicated adversarial-review workflow (2 independent reviewers × independent
+verification passes, each reproducing findings against the real code, not just
+inspecting it) before trusting this — it found and this session fixed **3 confirmed
+bugs**, one critical:
+1. **Critical, confirmed live via local reproduction:** the IPv4-mapped-IPv6 blocklist
+   check only matched the dotted-decimal textual form (`::ffff:169.254.169.254`), but
+   `url.hostname` always serializes IPv6 as hex groups (`::ffff:a9fe:a9fe`) — so the one
+   check meant to catch this never fired for real traffic, and the cloud-metadata
+   endpoint plus the entire IPv4 blocklist was reachable via `http://[::ffff:<hex>]/`.
+   Fixed by unifying the mapped/compatible/NAT64 address detection onto the expanded
+   hex-group representation regardless of input form.
+2. DNS resolution had no timeout, so a slow/adversarial DNS response could blow the
+   configured request budget by 8x in the reviewer's reproduction. Fixed by racing the
+   lookup against the remaining time budget.
+3. A response body-stream error (mid-read connection reset) wasn't caught, so it
+   propagated as an unhandled promise rejection instead of `{ok:false}`. Fixed with a
+   try/catch around the read loop.
+All three now have regression tests reproducing the exact confirmed bypass/failure
+mode, not just the fix's happy path. 38 tests total.
+
+**M2 rulebook — all 6 rules the plan names**, operating on static-fetch-only data
+(schema.org validity, policy-text presence, robots.txt agent access, login walls,
+CAPTCHA detection, and a render-transparency proxy for the plan's "JS-only price
+rendering" check that's honest about what a non-JS-executing scanner can and can't
+verify). Verified against real sources this session: Google Search Central's actual
+Product/Offer/AggregateRating structured-data requirements and
+schema.org's real `ItemAvailability` enum (WebFetch), plus OpenAI's published crawler
+user-agent tokens (GPTBot/ChatGPT-User/OAI-SearchBot/OAI-AdsBot verified;
+ClaudeBot/Google-Extended/PerplexityBot/CCBot are well-established industry tokens not
+individually re-verified this session — see PARKING_LOT.md). Added an optional
+`passed?: boolean` field to the shared `DetectionResult`/`Finding` type (additive,
+M8/M5 unaffected) so the free scanner's score computation reads an explicit signal
+instead of fragile-string-matching rule action text.
+
+**Free scanner UI** (`/audits/agent-ready`) — different shape from M8/M5's "submit
+info, we follow up" intake: runs the scan live and renders score + findings inline,
+no DB write for the scan itself; a separate fix-sprint intake form (same AuditIntake
+pattern, `module: 'agent-ready'`) captures leads who want the paid fix. Per-IP rate
+limited (5/hour) since every submission triggers real outbound HTTP, unlike a DB-write
+form. **A real bug caught by actual browser testing, not just typecheck**: the first
+version exported a plain constant from the `'use server'` actions file (Next.js's
+"use server" files may only export async functions) — build passed, typecheck passed,
+but the live page 500'd. Fixed by moving the constant to the client component that
+already needed it locally. Verified end-to-end against a real live URL
+(`example.com`) after the fix: correct 50/100 score, accurate per-check findings.
+
+**Golden fixture** (`fixtures/agent-ready/case-01`, "Trail Runner Jacket," one planted
+CAPTCHA gap among 6 otherwise-clean checks) proves the full chassis deterministically —
+5/6 passed = 83/100, asserted per-rule, not just snapshot-matched. 90 new tests across
+the whole M2 slice (safe-fetch 38 + integrations agent-ready 33 + rulebooks agent-ready
+27 — some overlap in shared coverage, see individual test runs).
+
+**Not done — real founder decisions, not silently dropped:** the DNS-rebinding TOCTOU
+gap in `@ss/safe-fetch` (documented, accepted for v0 — closing it needs a
+connect-time-pinning dispatcher API judged not worth the complexity yet); M2's rubric
+still can't execute JavaScript (needs S1/Playwright, and per this session's parking-lot
+note, doesn't actually need to for most checks — only the JS-rendering signal is
+weakened); no real fix-sprint delivered yet to prove the paid side.
+
 ### 2026-07-24 — `/audits/return-lens` landing page
 
 Closes the M5 "not done" item flagged in the entry below: a real page to pitch

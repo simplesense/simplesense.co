@@ -16,6 +16,7 @@
     "@ss/engine": "workspace:*",
     "@ss/integrations": "workspace:*",
     "@ss/jobs": "workspace:*",
+    "@ss/rulebooks": "workspace:*",
     "@ss/ui": "workspace:*",
     "next": "^15.1.4",
     "react": "^19.0.0",
