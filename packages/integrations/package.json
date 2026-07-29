@@ -15,6 +15,7 @@
   "dependencies": {
     "@ss/config": "workspace:*",
     "@ss/core": "workspace:*",
+    "@ss/crawler": "workspace:*",
     "@ss/rulebooks": "workspace:*",
     "@ss/safe-fetch": "workspace:*"
   },

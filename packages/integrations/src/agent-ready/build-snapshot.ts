@@ -1,4 +1,4 @@
-import { safeFetch, type SafeFetchOptions } from '@ss/safe-fetch'
+import { safeFetch, looksLikeLoginPath, type SafeFetchOptions } from '@ss/safe-fetch'
 import type { AgentReadySnapshot, ProductOfferSummary, ProductSchemaSummary } from '@ss/rulebooks'
 import {
   extractJsonLd,
@@ -31,7 +31,6 @@ const VALID_AVAILABILITY = new Set(
 
 const POLICY_PATH_PATTERN = /\/(policies|pages)\/(shipping|returns?|refund)[-_]?(policy)?/i
 const POLICY_TEXT_PATTERN = /shipping|returns?|refund policy/i
-const LOGIN_PATH_PATTERN = /\b(login|sign[-_]?in|account\/login)\b/i
 
 function buildProductSchema(html: string): ProductSchemaSummary {
   const nodes = flattenJsonLdTypes(extractJsonLd(html))
@@ -110,7 +109,7 @@ export async function buildAgentReadySnapshot(
   const looksLoginWalled =
     productResult.status === 401 ||
     productResult.status === 403 ||
-    LOGIN_PATH_PATTERN.test(new URL(productResult.finalUrl).pathname)
+    looksLikeLoginPath(new URL(productResult.finalUrl).pathname)
 
   const links = extractLinks(html)
   const policyLink = links.find(

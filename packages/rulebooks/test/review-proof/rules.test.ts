@@ -7,8 +7,9 @@ function email(over: Partial<ReviewRequestEmail> = {}): ReviewRequestEmail {
   return { id: 'e1', subject: 'How was your order?', body: 'We would love your feedback!', ...over }
 }
 
-function findFinding(snapshot: ReviewProofSnapshot) {
-  const findings = runRulebook(reviewProofRulebook, snapshot)
+function findFinding(snapshot: Partial<ReviewProofSnapshot>) {
+  const full: ReviewProofSnapshot = { emails: [], reviewWidgetHistory: [], ...snapshot }
+  const findings = runRulebook(reviewProofRulebook, full)
   const f = findings.find((x) => x.ruleId === 'review_proof.incentivized_review_disclosure')
   if (!f) throw new Error('finding not found')
   return f

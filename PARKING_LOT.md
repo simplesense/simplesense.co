@@ -9,6 +9,56 @@ Newest first.
 
 ---
 
+## Wave-0 backlog (S1/S4/S6/S7): decisions made without stopping to ask
+
+Built per "finish the Wave-0 backlog" (your clarification of "build it completely").
+Everything below shipped; these are calls I made on my own worth a look.
+
+1. **S7 (`@ss/entities`) is not wired into any module's run pipeline yet.** The plan
+   says it "keys every module's outputs so cross-module intelligence compounds" — I
+   built the registry itself (brand/domain/marketplace/competitor, symmetric
+   competitor linking) fully tested and complete, but did NOT touch M1/M2/M3/M5/M8's
+   actual run code to start keying their findings against it. That's a real,
+   non-trivial integration decision (does a `Brand` become a Prisma model eventually?
+   does it key off the existing `Store`/org identity, or something new?) that felt
+   like it deserved your input rather than a default.
+2. **S6 (`@ss/capture-archive`) has no persistent (DB-backed) implementation** — only
+   in-memory and JSON-file backends. A real production crawl run needs the JSON-file
+   backend pointed at a real path (or a future Postgres-backed one) — not decided or
+   attempted here, since it touches the same "where does this actually persist"
+   question as #1.
+3. **M3 ReviewProof is now 3-of-5 signals real** (added review-count-regression and
+   review-timing-burst on top of the existing email-based signal). Whether that's
+   enough to finally build the `/audits/review-proof` landing page + set a price is
+   still the same founder pricing/positioning call flagged in the entry below — I
+   didn't revisit it just because more signals exist now.
+4. **The 2 new ReviewProof rules' exact thresholds (10 dated reviews minimum, 3x
+   density multiplier, 7-day window) are my own documented methodology, not derived
+   from any external source** — same honesty pattern as everywhere else in this
+   module (cited when there's a real citation, "SimpleSense benchmark v0" when there
+   isn't). Worth recalibrating once real client data exists to compare against.
+5. **S3 (real multi-provider LLM battery) is still blocked** — same reason as before
+   (no OpenAI/Gemini/Perplexity keys in this environment), not something this session
+   could unblock. See the existing entry below.
+6. **BLOCKING-worth-your-eyes, not blocking further work: `@ss/crawler`'s SSRF defense
+   has one deliberately-accepted gap, not a silently-dropped one.** After an adversarial
+   review found and I fixed 16 real bugs (see LEDGER.md — 3 were critical, including an
+   SSRF bypass via redirects), one finding remains only partially addressed: Chromium
+   resolves DNS for its actual network connection completely independently of the
+   pre-flight IP-blocklist check (a DNS-rebinding attack — a malicious/compromised
+   nameserver could answer differently on the two separate resolutions). Every real
+   request now IS validated (that part's fixed — redirects and subresources included),
+   but the validation and the actual connection are still two separate DNS lookups in
+   two separate processes. Fully closing it needs pinning Chromium's connection to a
+   specific pre-validated IP (`--host-resolver-rules` or an equivalent), which is a
+   bigger change than felt right to make unreviewed. This is the SAME class of gap
+   `@ss/safe-fetch` itself already documents and accepts for plain `fetch()` — I
+   extended the identical posture rather than inventing a new, undiscussed one, but
+   flagging it explicitly here since this module fetches customer/prospect-submitted
+   URLs, which is exactly the scenario where this matters most.
+
+---
+
 ## Niche pages (/for/*): decisions made overnight without stopping to ask
 
 Built the entire `SIMPLESENSE_NICHE_PAGES_CE_ADDENDUM_2026-07-25.md` per your "complete

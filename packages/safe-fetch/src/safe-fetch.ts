@@ -8,7 +8,9 @@ const DEFAULT_MAX_REDIRECTS = 3
 const DEFAULT_MAX_BYTES = 2_000_000
 const ALLOWED_PORTS = new Set(['', '80', '443'])
 
-async function defaultLookup(hostname: string): Promise<string[]> {
+/** Real DNS resolution — the default `lookup` for both `safeFetch` and any other
+ *  caller of `validateUrlSafety` (the S1 crawler) that doesn't inject its own. */
+export async function defaultDnsLookup(hostname: string): Promise<string[]> {
   const results = await dns.lookup(hostname, { all: true })
   return results.map((r) => r.address)
 }
@@ -45,16 +47,19 @@ function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string)
  * Validates a URL is safe to fetch: http(s) only, a standard port, and — the actual
  * SSRF defense — every address the hostname resolves to is checked against the IP
  * blocklist (`ip-blocklist.ts`) BEFORE any request is made. Returns a reason string on
- * rejection, or null when clear to fetch.
+ * rejection, or null when clear to fetch. Exported (not just used internally by
+ * `safeFetch`) so other callers that need the SAME network-layer validation without
+ * `fetch()`'s own request/response cycle — the S1 crawler's Playwright navigation,
+ * specifically — get it from one place rather than a second copy.
  *
  * Known v0 limitation, documented rather than silently accepted: this validates DNS
- * resolution, then lets Node's `fetch()` resolve the SAME hostname again to actually
- * connect — a narrow DNS-rebinding TOCTOU window between the two resolutions. Closing
- * it fully means pinning the TCP connection to the pre-validated IP (a custom
- * connect-time `lookup`), which needs a dispatcher API beyond what's worth adding for a
- * v0 scanner. See PARKING_LOT.md.
+ * resolution, then lets the caller's own connection (Node's `fetch()`, or Playwright's
+ * navigation) resolve the SAME hostname again to actually connect — a narrow
+ * DNS-rebinding TOCTOU window between the two resolutions. Closing it fully means
+ * pinning the connection to the pre-validated IP, which needs a dispatcher/proxy API
+ * beyond what's worth adding for a v0 scanner. See PARKING_LOT.md.
  */
-async function validateUrl(
+export async function validateUrlSafety(
   url: URL,
   lookup: (hostname: string) => Promise<string[]>,
   timeoutMs: number,
@@ -95,7 +100,7 @@ export async function safeFetch(
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
   const maxRedirects = options.maxRedirects ?? DEFAULT_MAX_REDIRECTS
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES
-  const lookup = options.lookup ?? defaultLookup
+  const lookup = options.lookup ?? defaultDnsLookup
 
   let currentUrl: URL
   try {
@@ -110,7 +115,7 @@ export async function safeFetch(
     const beforeValidate = deadline - Date.now()
     if (beforeValidate <= 0) return { ok: false, reason: 'timed out' }
 
-    const invalidReason = await validateUrl(currentUrl, lookup, beforeValidate)
+    const invalidReason = await validateUrlSafety(currentUrl, lookup, beforeValidate)
     if (invalidReason) return { ok: false, reason: invalidReason }
 
     const remaining = deadline - Date.now()

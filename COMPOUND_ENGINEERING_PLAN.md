@@ -99,13 +99,13 @@ Per-run LLM cost logging and daily caps (A-Z review item P0-C7) apply to every m
 
 ## 3. Wave 0 — shared builds (do these once, days 1–3)
 
-- [ ] **S1 Crawler service** — Playwright; robots-aware, per-domain rate limits and politeness delays, full-page screenshot + DOM + extracted-field triple per capture, retry/backoff, snapshot store. No login walls, no CAPTCHA evasion, public pages only. Serves M2 and M3.
+- [x] **S1 Crawler service** — `@ss/crawler`, 2026-07-29. Playwright, robots-aware (reuses `@ss/safe-fetch`'s robots.txt parser), per-domain rate limiter, retry/backoff, SSRF-safe (reuses `@ss/safe-fetch`'s IP-blocklist against Playwright's own navigation), refuses login-walled/CAPTCHA-gated pages. Serves M3 today (M2 shipped complete on static fetch alone, per PARKING_LOT.md).
 - [x] **S2 CSV ingest kit** — schema sniffing for Shopify order/return exports, versioned parsers, quarantine-on-drift. Serves M5.
-- [ ] **S3 LLM battery runner** — prompt-set files per niche, n-samples per model per prompt, nightly cron, response store with run-ids, per-run cost log, daily budget cap. Serves M1 (and doubles as SimpleSense's own AI-visibility dogfood — see §6).
-- [ ] **S4 Report engine** — branded HTML→PDF audit template: cover, methodology, findings (shared schema with Moves: finding → evidence → dollar frame → exact action), citations, disclaimer footer. One template, per-module skins.
-- [ ] **S5 Audit intake** — one landing section per module on simplesense.co (`/audits/<module>`), Stripe **payment link** + a short intake form (store URL, exports upload, or API-key handoff instructions). Founder-fulfilled. No entitlement code (Decision 2). `[VERIFY]` marketing-site structure for where these pages mount.
-- [ ] **S6 Capture archive** — append-only snapshot store with SHA-256 hashes per artifact and a retention policy config, so M3's scan findings are tamper-evident and age well (a finding a client disputes six weeks later can be shown exactly as captured).
-- [ ] **S7 Entity registry** — brands, domains, marketplaces, competitor sets; keys every module's outputs so cross-module intelligence compounds (§6).
+- [ ] **S3 LLM battery runner** — still blocked: no OpenAI/Gemini/Perplexity API keys exist in this environment, and the actual point of the module (cross-provider comparison) needs them. See PARKING_LOT.md.
+- [x] **S4 Report engine** — `packages/reports/src/render-pdf.ts`, 2026-07-29. `renderReportPdf()` via headless Chromium printing `renderReportHtml`'s own output, completing the "print dialog" stopgap.
+- [x] **S5 Audit intake** — landing pages + Stripe payment links live for M8/M1/M2/M5 (`/audits/<module>`); M3 ReviewProof's page is a deliberate founder pricing/positioning call, not a gap (see PARKING_LOT.md — still true even with 3 of 5 signals now real).
+- [x] **S6 Capture archive** — `@ss/capture-archive`, 2026-07-29. SHA-256 re-hashed independently at archive time (never trusts a caller-supplied hash), append-only, retention-policy expiry, in-memory + JSON-file backends.
+- [x] **S7 Entity registry** — `@ss/entities`, 2026-07-29. Brand/domain/marketplace/competitor registry, symmetric competitor linking, in-memory backend. Not yet wired into any module's actual run pipeline — that integration is a follow-up, see PARKING_LOT.md.
 
 ---
 

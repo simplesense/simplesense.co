@@ -1,2 +1,2 @@
 export { reviewProofRulebook } from './rulebook'
-export type { ReviewRequestEmail, ReviewProofSnapshot } from './types'
+export type { ReviewRequestEmail, ReviewProofSnapshot, ReviewWidgetSnapshot } from './types'

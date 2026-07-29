@@ -4,9 +4,9 @@ import type { Report } from './types'
 /**
  * Pure HTML renderer for the shared audit-report schema (S4, COMPOUND_ENGINEERING_PLAN.md
  * §3). Self-contained (inline CSS, no external assets, no build step) so a report opens
- * correctly as a standalone .html file or an email attachment, and can be converted to
- * PDF via a browser's print dialog until a dedicated PDF renderer is added (deferred —
- * see TASK.md; reusing Playwright once S1's crawler lands is the planned follow-up).
+ * correctly as a standalone .html file or an email attachment. PDF output is handled by
+ * `renderReportPdf` in ./render-pdf.ts, which prints this same HTML through a headless
+ * Chromium rather than duplicating the layout.
  * Colors mirror the SimpleSense design system (packages/ui/src/tokens/colors.css) but are
  * inlined here rather than imported, since this is a standalone distributable artifact,
  * not an app-shell component consuming the live token stylesheet.

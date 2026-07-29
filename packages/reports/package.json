@@ -13,7 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ss/rulebooks": "workspace:*"
+    "@ss/rulebooks": "workspace:*",
+    "playwright": "1.61.1"
   },
   "devDependencies": {
     "@ss/csv-ingest": "workspace:*",

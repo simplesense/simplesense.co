@@ -23,6 +23,161 @@ the audit.
 
 ## Build log (newest first)
 
+### 2026-07-29 — Wave-0 backlog: S1 crawler, S4 PDF, S6 capture archive, S7 entity registry
+
+**Scope:** you asked to "build it completely"; clarified via a quick question into
+"finish the Wave-0 backlog" (S1/S4/S6/S7 — S3 stays blocked, no LLM provider keys
+exist in this environment and that's not something I can unblock myself). All four
+shipped, plus the 2 new M3 ReviewProof signals S1+S6 unlock.
+
+**S1 — `@ss/crawler` (new package):** Playwright, pinned to the exact version
+(`1.61.1`) matching a chromium binary already cached on this machine, so no browser
+download was needed. Every invariant from the plan is enforced inside `capture()`
+itself, in order — SSRF check → robots.txt check → rate-limit wait → navigate (with
+retry/backoff) → login-wall/CAPTCHA bail-out → screenshot + hash — so none can be
+skipped by a caller forgetting a step. Reused rather than duplicated:
+`@ss/safe-fetch`'s IP-blocklist (exported a new `validateUrlSafety` for Playwright's
+navigation to reuse the exact same SSRF check `safeFetch` uses for plain fetches) and
+its robots.txt parser (moved `parseRobotsDisallows`/`disallowsEverything` from
+`@ss/integrations` into `@ss/safe-fetch`, re-exported so no existing call site
+changed). 28 tests, all mocking the `Page`/browser (dependency-injected, structural
+`CrawlerPage` interface) so `pnpm test` never launches a real browser — plus one
+deliberate real-Chromium integration test proving the actual Playwright wiring works,
+not just the mocks.
+
+**S4 — `renderReportPdf()` in `packages/reports`:** completes the "print dialog"
+stopgap `render.ts`'s own doc comment flagged as deferred until S1 landed. Reuses
+`renderReportHtml`'s output verbatim (prints the same HTML a headless Chromium sees,
+so the PDF and the HTML/email artifact can never drift). Built by a background agent
+in parallel with S7 (independent files, same session) — independently re-verified
+(typecheck + full test run, including the 2 existing e2e snapshot tests) before
+trusting it.
+
+**S6 — `@ss/capture-archive` (new package):** append-only, SHA-256-hashed store for
+crawler Captures. Deliberately re-hashes independently at archive time rather than
+trusting a caller-supplied hash — a mutated-in-transit Capture still can't pass as
+tamper-evident. In-memory + JSON-file backends; retention-policy expiry with
+`purgeExpired()` as the one operation allowed to remove data, and only records already
+past their own declared expiry.
+
+**S7 — `@ss/entities` (new package):** brand/domain/marketplace/competitor registry —
+symmetric competitor linking, case-insensitive domain uniqueness. Pure/in-memory only;
+not wired into any module's actual run pipeline yet (that integration decision is
+parked, see PARKING_LOT.md). Built by the same background agent pair as S4.
+
+**M3 ReviewProof — 2 new real signals, now 3 of 5 named signals real (not faked):**
+S1+S6 unlock comparing a store's OWN review-widget data across time.
+`reviewCountRegressionRule` flags a review count that dropped between two crawls
+(reviews don't disappear on their own — insufficient with <2 dated snapshots).
+`reviewTimingBurstRule` flags a statistically dense cluster of reviews relative to the
+store's own baseline posting rate (methodology is SimpleSense's own — no regulator
+publishes a bright line here — insufficient with <10 dated reviews in the widget's own
+JSON-LD). Both new rules read schema.org `AggregateRating`/`Review` JSON-LD, extracted
+via the SAME JSON-LD parser M2 AgentReady already uses (moved to a shared
+`packages/integrations/src/json-ld.ts` rather than duplicated). "Insider reviews" and
+"review hijacking" stay permanently out of scope — not real crawlable signals /
+dropped from the FTC's final rule — rather than being faked with an ungrounded
+heuristic, matching this module's own founding decision to scope down rather than pad.
+New fixture (`fixtures/review-proof/case-01/`): two review-widget captures with two
+planted gaps (a count regression 120→95, a 6-review 5-star burst inside a 6-day
+window), asserted by hand end-to-end, not just snapshot-matched.
+
+**A real, pre-existing bug found and fixed along the way:** `flattenJsonLdTypes`
+double-counted every JSON-LD node reached via `@graph` — it walked `@graph` explicitly
+AND the same array again via its own generic "walk every object-valued property" loop.
+Caught by a stricter test than the original (`toEqual` on the full array, not `.some()`
+on presence) written while moving this function to the new shared `json-ld.ts` — the
+double-count would have silently doubled every review-timing metric downstream had it
+shipped unfixed. Fixed by deleting the now-redundant explicit `@graph` walk (the
+generic loop already reaches it).
+
+**Adversarial review found this was NOT safe to ship as first written — 16 real,
+independently-verified bugs, 3 of them critical.** Ran a 4-lens parallel find (SSRF/
+network safety, robots.txt compliance, resource leaks, retry/rate-limit correctness)
+→ 3-vote adversarial verify pass specifically on the new crawler/SSRF/robots/
+rate-limiter code — bigger and sharper than the 3-bug safe-fetch red-team earlier this
+session, and every one of the 16 held up under an independent skeptic explicitly
+instructed to try to refute it (16 of 17 candidates survived; the 1 refuted concerned
+`URL.pathname` semantics that turned out to already be handled correctly). All 16
+fixed, tested, and re-verified before this shipped:
+
+- **Critical — a redirect during Playwright navigation bypassed the SSRF check
+  entirely.** The one pre-flight `validateUrlSafety` call only ever inspected the
+  original URL; Chromium follows redirects (and loads every subresource — images,
+  scripts, XHR) on its own, with none of it re-checked. A malicious/compromised public
+  domain could 302 the crawler straight to `169.254.169.254` (cloud metadata) and the
+  response would come back as a normal, "successful" capture. **Fixed** by routing
+  *every* request — main navigation, every redirect hop, every subresource — through
+  `context.route()` in `browser.ts`, validated the same way as the top-level URL. The
+  one related gap NOT fully closed: Chromium's own DNS resolution is still independent
+  of the pre-check's resolution (a DNS-rebinding TOCTOU) — documented as the same
+  accepted v0 limitation `@ss/safe-fetch` itself already carries for plain `fetch()`,
+  not a new, silently-introduced one.
+- **Critical — robots.txt per-crawler blocks could never actually match.** `RobotsCache`
+  compared the *entire* descriptive user-agent string
+  (`SimpleSense-Crawler/0.1 (+https://...)`) against robots.txt group names, which are
+  always bare product tokens (`SimpleSense-Crawler`) — a site correctly, explicitly
+  blocking this crawler by name would never match, silently falling through to `*` or
+  nothing. The 2 original tests happened to pass a short literal string for both sides,
+  masking this. **Fixed** via `robotsProductToken()` (strip the descriptive suffix
+  before matching); regression test now uses the real default user-agent string.
+- **Critical — an unguarded `pageFactory()` call could crash the whole process.** It sat
+  outside `capture()`'s try/finally, so a browser-launch failure propagated as an
+  unhandled rejection instead of `capture()`'s promised typed result — for a caller
+  looping over many URLs without its own try/catch (reasonable, given the whole point
+  of a typed-result contract), this could crash the entire crawl run over one bad page.
+  **Fixed** by wrapping it.
+- **High — `pathIsDisallowed` never matched any real wildcard rule.** Literal
+  `path.startsWith(rule)` silently never fires for any Disallow containing `*`/`$`
+  (Shopify's own generated robots.txt uses both) — real paths essentially never contain
+  those characters, so the rule was dead on arrival, not "more conservative" as the old
+  comment claimed. **Fixed** with a real robots.txt-semantics regex matcher
+  (`isPathBlocked`).
+- **High — `Allow:` directives were silently dropped, over-blocking.** A site writing
+  the extremely common `Disallow: /` + `Allow: /products/` (block crawling in general,
+  but permit the storefront) got treated as a full-site block — the opposite-direction
+  failure from the wildcard bug, and the one that most directly undermines this
+  crawler's purpose. **Fixed** by parsing Allow rules too and applying real
+  longest-match precedence.
+- **High — a genuine robots.txt fetch failure was silently treated as "no
+  restrictions."** Any `safeFetch` failure (timeout, DNS error, exceeding its 2MB byte
+  cap) collapsed to the same `null` as "no robots.txt exists," fail-opening exactly
+  where this codebase's own stated philosophy is "insufficient beats a guess." **Fixed**
+  by distinguishing a real fetch failure from "fetched successfully, declares nothing"
+  — a genuine failure now fails closed (`robots_unavailable`, refuses the capture)
+  rather than silently proceeding.
+- **High — `BrowserPool`'s lazy browser launch had an unsynchronized race** that could
+  launch two Chromium processes under concurrent first calls and leak one forever, plus
+  **a context leak** if `context.newPage()` threw after `newContext()` succeeded, plus
+  **`close()` no-op'd instead of waiting** for an in-flight launch, also leaking it.
+  **Fixed**: cache the launch *promise* (not just the eventual browser) so concurrent
+  calls share one launch; wrap context creation in try/catch that closes on failure;
+  `close()` now awaits an in-flight launch before closing it.
+- **High — `RateLimiter.waitTurn()` had a classic check-then-act race** — two concurrent
+  captures to the same origin could both read the same stale timestamp and both proceed
+  together, silently defeating the "per-domain rate limit" invariant for exactly the
+  `Promise.all`-over-multiple-pages pattern this package exists to support politely.
+  **Fixed** with a per-origin promise chain (reproduced the race in a test first,
+  confirmed the fix serializes correctly).
+- **Medium (×3) — unguarded `page.content()`/`page.screenshot()`, an unguarded
+  `finally`-block `close()`, and `RobotsCache`'s first-access fetch not being shared**
+  — the first two broke the "capture() never throws" contract for less catastrophic
+  failure points than the pageFactory bug above; the finally-block one could let a
+  cleanup error silently replace a real, already-computed success; the last one just
+  wasted extra requests against the target site under concurrent bursts. **All fixed**:
+  the whole post-navigation block now shares one try/catch converting any exception to
+  a typed result; the finally-block close() swallows its own errors; `RobotsCache`
+  shares one in-flight fetch promise per origin.
+
+Every fix has a regression test that reproduces the original failure mode, not just a
+happy-path check — several by directly instrumenting the exact race (concurrent
+`Promise.all` calls) the reviewer described. Full findings/verdicts:
+`packages/crawler/`'s git history this session; the workflow's own journal has every
+independent verifier's reasoning.
+
+**Full gate (after all 16 fixes):** `pnpm typecheck` (16 packages), `pnpm test` (714
+tests, 88 files), `pnpm lint`, `pnpm --filter @ss/web build` — all green.
+
 ### 2026-07-25 — Niche pages (/for/*): 3 vertical landing pages, spearheading M8/M1/M5
 
 **Scope:** built the full `SIMPLESENSE_NICHE_PAGES_CE_ADDENDUM_2026-07-25.md` — three

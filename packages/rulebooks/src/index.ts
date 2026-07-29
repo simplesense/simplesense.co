@@ -55,4 +55,8 @@ export type {
   AnswerShelfSnapshot,
 } from './answer-shelf/types'
 export { reviewProofRulebook } from './review-proof/rulebook'
-export type { ReviewRequestEmail, ReviewProofSnapshot } from './review-proof/types'
+export type {
+  ReviewRequestEmail,
+  ReviewProofSnapshot,
+  ReviewWidgetSnapshot,
+} from './review-proof/types'

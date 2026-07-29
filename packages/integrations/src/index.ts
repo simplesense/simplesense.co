@@ -43,6 +43,7 @@ export {
   type KlaviyoClientConfig,
 } from './klaviyo/client'
 export { buildAgentReadySnapshot } from './agent-ready/build-snapshot'
+export { buildReviewWidgetSnapshot } from './review-proof/build-review-widget-snapshot'
 export {
   MockAnswerShelfBattery,
   type AnswerShelfBatteryClient,
