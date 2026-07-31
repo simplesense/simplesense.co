@@ -87,7 +87,14 @@ export class RealStripeClient implements StripeClient {
       },
       body,
     })
-    if (!res.ok) throw new Error(`Stripe checkout failed: ${res.status}`)
+    if (!res.ok) {
+      const errorBody = (await res.json().catch(() => null)) as {
+        error?: { message?: string }
+      } | null
+      throw new Error(
+        `Stripe checkout failed: ${res.status}${errorBody?.error?.message ? ` — ${errorBody.error.message}` : ''}`,
+      )
+    }
     const data = (await res.json()) as { url?: string }
     if (!data.url) throw new Error('Stripe returned no checkout url')
     return data.url
@@ -104,6 +111,7 @@ export class RealStripeClient implements StripeClient {
         object?: {
           metadata?: { orgId?: string; tier?: string }
           status?: string
+          payment_status?: string
           customer?: unknown
           current_period_end?: unknown
           items?: { data?: Array<{ current_period_end?: unknown }> }
@@ -140,16 +148,33 @@ export class RealStripeClient implements StripeClient {
       incomplete_expired: 'CANCELED',
     }
     const isSubscriptionLifecycle = evt.type.startsWith('customer.subscription.')
+    const isCheckoutSession = evt.type.startsWith('checkout.session.')
     const tier = obj?.metadata?.tier
+    // A Checkout Session's `status` is the SESSION's own lifecycle
+    // (open | complete | expired) — NOT a subscription status — and must never be run
+    // through `statusMap`. Two real bugs came from conflating them (found 2026-07-31):
+    //   * `checkout.session.expired` resolved to status null while still carrying our
+    //     `metadata.tier`, and the route's `?? 'ACTIVE'` create-default then granted
+    //     permanent paid entitlement for an ABANDONED, unpaid checkout.
+    //   * `checkout.session.completed` never reached its intended 'ACTIVE' branch,
+    //     because a session's `status` is always truthy, so a returning customer who
+    //     paid stayed CANCELED (i.e. on free) unless a separate subscription event
+    //     happened to arrive.
+    // Entitlement is granted only on a completed session that Stripe says is actually
+    // paid (or legitimately needs no payment, e.g. a 100%-off coupon or trial).
+    const status: StripeEvent['status'] = isCheckoutSession
+      ? evt.type === 'checkout.session.completed' &&
+        (obj?.payment_status === 'paid' || obj?.payment_status === 'no_payment_required')
+        ? 'ACTIVE'
+        : null
+      : obj?.status
+        ? (statusMap[obj.status] ?? (isSubscriptionLifecycle ? 'CANCELED' : null))
+        : null
     return {
       type: evt.type,
       orgId: obj?.metadata?.orgId ?? null,
       tier: tier === 'PRO' || tier === 'BASIC' ? tier : null,
-      status: obj?.status
-        ? (statusMap[obj.status] ?? (isSubscriptionLifecycle ? 'CANCELED' : null))
-        : evt.type === 'checkout.session.completed'
-          ? 'ACTIVE'
-          : null,
+      status,
       customerId,
       currentPeriodEnd,
     }

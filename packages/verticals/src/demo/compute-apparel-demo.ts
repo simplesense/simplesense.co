@@ -4,11 +4,14 @@ import { generateStore } from '../generator/generate-store'
 import { generateReturnsData } from '../generator/generate-returns'
 import { renderMoves } from '../render-moves'
 import { apparelBrandsConfig } from '../configs/apparel-brands'
+import { requiredPct } from './metric-access'
 import type { VerticalDemoResult } from './compute-pet-demo'
 
 const { analyzeReturns } = returnLens
 
-const pct = (v: number | null | undefined) => (v == null ? 0 : Math.round(v * 1000) / 10)
+/** Rounds an already-computed local ratio. Takes `number`, never a possibly-insufficient
+ *  metric — read those with `requiredPct` so a missing one fails the build, not the reader. */
+const pct = (v: number) => Math.round(v * 1000) / 10
 const usd = (v: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -90,10 +93,10 @@ export function computeApparelBrandsDemo(now: Date): VerticalDemoResult {
   return {
     storeName: params.storeName,
     stats: [
-      { label: 'Return rate', value: `${pct(byKey.get('returns.rate_overall')?.valueNumeric)}%` },
+      { label: 'Return rate', value: `${requiredPct(byKey, 'returns.rate_overall')}%` },
       {
         label: 'Repeat-purchase rate',
-        value: `${pct(byKey.get('cohort.repeat_purchase_rate')?.valueNumeric)}%`,
+        value: `${requiredPct(byKey, 'cohort.repeat_purchase_rate')}%`,
       },
       { label: 'Abuse-cohort share of return $', value: `${abuseReturnSharePct}%` },
       { label: 'Bracketing pattern rate', value: `${bracketingOrdersPct}%` },

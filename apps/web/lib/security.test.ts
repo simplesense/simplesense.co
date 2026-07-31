@@ -11,6 +11,23 @@ describe('redaction', () => {
     expect(out).toContain('[redacted-email]')
   })
 
+  it('masks Stripe secret, restricted and webhook-signing keys (regression: Stripe was the one configured provider this redactor missed, found 2026-07-31)', () => {
+    const out = redactSecrets(
+      'live sk_live_51AbCdEf00xyz test sk_test_51AbCdEf00xyz restricted rk_live_51AbCdEf00xyz hook whsec_AbCdEf123',
+    )
+    expect(out).not.toMatch(/sk_live_51AbCdEf00xyz/)
+    expect(out).not.toMatch(/sk_test_51AbCdEf00xyz/)
+    expect(out).not.toMatch(/rk_live_51AbCdEf00xyz/)
+    expect(out).not.toMatch(/whsec_AbCdEf123/)
+    expect(out).toContain('[redacted-key]')
+    expect(out).toContain('[redacted-secret]')
+  })
+
+  it('leaves non-secret Stripe identifiers (price_/acct_/cs_) readable — they are needed for debugging and are not credentials', () => {
+    const s = 'price_1Tz9fDPSg73eCHB6 acct_1Tz8wzPSg73eCHB6 cs_test_a1gNITK2JSv9'
+    expect(redactSecrets(s)).toBe(s)
+  })
+
   it('deep-redacts sensitive keys and scrubs nested strings', () => {
     const obj = { accessTokenEnc: 'iv.tag.ct', nested: { email: 'a@b.co' }, ok: 'fine' }
     const out = redactDeep(obj) as { accessTokenEnc: string; nested: { email: string }; ok: string }

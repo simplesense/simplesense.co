@@ -23,6 +23,10 @@ pnpm monorepo: `@ss/core` (pure analyzers/grounding/ranking), `@ss/config`, `@ss
 
 - Full gate (run before any commit):
   `pnpm format && pnpm typecheck && pnpm test && pnpm lint && pnpm --filter @ss/web build`
+- Config sanity (run FIRST when anything env/integration-related misbehaves — it
+  checks env-file location, Clerk all-or-nothing, encryption-key shape, and validates
+  Stripe prices against the live API): `pnpm preflight` (add `--offline` to skip
+  network checks). Never debug a config symptom by hand before running this.
 - Deploy (only when asked; a deploy leaves the machine — D5):
   `fly deploy --app simplesense-co --ha=false --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<pk_...>`
 - Prisma against the live DB: source env from `apps/web/.env.local` (packages/db/.env is empty);

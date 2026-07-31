@@ -12,6 +12,90 @@ each section.
 - The working directory is nested inside the home-folder git repo; initialized a
   **dedicated** git repo at `/Users/satya/simplesense.co` so the project history is clean.
 
+### Config gotchas that cost a full debugging session (2026-07-31)
+
+All three of these are now caught in one command by `pnpm preflight`
+(`scripts/doctor.mjs`) — added specifically so none of them can burn an hour twice.
+
+- **A repo-root `.env` is invisible to Next.js.** Only env files inside `apps/web/`
+  are auto-loaded. Vars set only at the root silently don't exist at runtime, and the
+  failure looks like "the code ignores my config." `preflight` reports stranded
+  root-only vars explicitly. (Four are stranded today: `NODE_ENV`, `APP_URL`,
+  `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` — harmless only because nothing in
+  `apps/web` reads them.)
+- **One email can own several Stripe accounts, and keys/products don't warn you when
+  they're from different ones.** Copying API keys from account A while creating
+  products in account B produces `No such price: price_...` on checkout — an error
+  that reads like a code bug and isn't. The account id is embedded in the secret key
+  (right after `sk_test_5`/`sk_live_5`) and appears in Dashboard product URLs;
+  compare them before debugging anything else. `preflight` now calls
+  `GET /v1/account` + `GET /v1/prices/{id}` and reports the mismatch by name.
+- **`pnpm doctor` is a pnpm builtin** and silently shadows a same-named `scripts`
+  entry — it runs pnpm's own doctor and your script never executes, with no error.
+  Hence the name `preflight`. Check for a builtin collision before naming any script.
+
+Two more Stripe checkout preconditions worth knowing, both also covered by
+`preflight`: the price must be **recurring** (checkout runs in `subscription` mode, so
+a one-time price 400s) and **active** (an archived price 400s the same way).
+
+### Self-audit findings (2026-07-31) — 16 candidates, 5 confirmed, all fixed
+
+Ran a 4-lens adversarial audit (authz, product invariants, stubs/doc-drift, billing)
+with 2 independent skeptics per finding; only unanimously-unrefuted findings below.
+11 candidates were correctly refuted, which is the point of the verify pass.
+
+- **A fabricated `0` shipped to a LIVE public page — the grounding invariant inverted.**
+  `/for/pet-brands` rendered "launch a replenishment flow timed to your **0-day**
+  reorder cycle", on a page whose own copy two elements above promises "every figure
+  below is computed by SimpleSense's real analysis pipeline." Cause: `?? 0` on a
+  legitimately-insufficient metric. Two root causes, both fixed: (a) the synthetic
+  generator keyed each order's SKU off a GLOBAL counter, so a repeat customer never
+  rebought the same product and `replenishment.median_reorder_interval_days` was
+  correctly insufficient — repeat orders now reuse the customer's own first SKU, which
+  is what a replenishment interval actually means, and the page now shows a real
+  77-day cycle; (b) all three demo files defaulted missing metrics to 0. Added
+  `demo/metric-access.ts` — `requiredMetric`/`requiredPct` THROW instead of
+  defaulting. These pages are statically generated, so a throw fails the build rather
+  than shipping a lie. **Lesson: `?? 0` on anything derived from a metric is a
+  grounding violation waiting to happen; the guard belongs in a shared reader, not in
+  each caller's discipline.**
+- **An abandoned checkout granted permanent free Pro.** `checkout.session.expired`
+  still carries the `metadata.tier` we stamp at checkout. Its `status` is the SESSION's
+  (`expired`), which isn't in the subscription `statusMap`, so status resolved to null
+  — and the webhook's `status: evt.status ?? 'ACTIVE'` create-default did the rest.
+  Fixed with an event-type allowlist plus a hard refusal to CREATE an entitlement row
+  without an explicitly resolved status. **Lesson: a Checkout Session's `status` is not
+  a subscription status; never run one through the other's map.**
+- **The `checkout.session.completed → ACTIVE` branch was unreachable.** Same root
+  confusion: a session's `status` is always truthy, so the ternary never fell through
+  to the intended branch. A returning customer could pay and stay on free. Now keyed
+  explicitly off `payment_status` (`paid` / `no_payment_required`).
+- **Upgrading an existing subscriber double-billed them.** Clicking "Upgrade to Pro"
+  as a Basic customer opened a SECOND subscription under a SECOND Stripe customer id;
+  the webhook then overwrote `stripeCustomerId`, making the original $99 charge
+  invisible and uncancellable from inside the product. Existing ACTIVE/PAST_DUE
+  subscribers are now routed to the billing portal (proration-aware plan swap) instead.
+- **`updateStoreSettings` was the one mutating server action without a demo guard** —
+  it could rewrite the shared showcase store and trigger an unbounded LLM re-analysis.
+  **Lesson: a server action is a directly-invokable endpoint; being rendered on an
+  authenticated page is not protection.**
+
+Also fixed while reviewing my own diff: `redactSecrets` covered Anthropic and Shopify
+credentials but **not Stripe** (`sk_`/`rk_`/`whsec_`) — the one configured provider it
+missed, and precisely the one whose errors get logged verbatim during billing
+debugging.
+
+### Debugging-approach lesson (2026-07-31)
+
+The Stripe misconfiguration above took ~15 conversational round-trips of single
+`grep`s and one-at-a-time hypotheses. What actually resolved it was surfacing the
+provider's own error message (`packages/integrations/src/stripe.ts` now includes
+`error.message`, not just the HTTP status — it reaches server logs only, never an HTTP
+response body) and then querying the provider for ground truth. **When a third-party
+call fails, get the provider's real error text and query the provider's own state
+first — before forming hypotheses about local config.** A status code alone is not a
+diagnosis.
+
 ## Bugs → regression tests
 
 ### Analyzer adversarial audit (2026-06-27) — 14 findings, all fixed

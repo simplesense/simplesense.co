@@ -8,6 +8,12 @@ const PATTERNS: { re: RegExp; with: string }[] = [
   { re: /[\w.+-]+@[\w-]+\.[\w.-]+/g, with: '[redacted-email]' },
   { re: /sk-ant-[A-Za-z0-9_-]+/g, with: '[redacted-key]' },
   { re: /shp(at|ss|ca|pa|ss)_[A-Za-z0-9]+/g, with: '[redacted-token]' },
+  // Stripe secret (sk_), restricted (rk_), and webhook-signing (whsec_) keys. Added
+  // 2026-07-31 — Stripe was the one configured provider whose credentials this
+  // redactor did NOT cover, and billing errors are exactly the kind of thing that
+  // gets logged verbatim while debugging.
+  { re: /(sk|rk)_(live|test)_[A-Za-z0-9]+/g, with: '[redacted-key]' },
+  { re: /whsec_[A-Za-z0-9]+/g, with: '[redacted-secret]' },
   { re: /Bearer\s+[A-Za-z0-9._-]+/gi, with: 'Bearer [redacted]' },
 ]
 

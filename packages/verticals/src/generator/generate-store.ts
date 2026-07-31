@@ -70,13 +70,21 @@ export function generateStore(params: DemoStoreParams, now: Date): NormalizedSto
     const isRepeat = c < repeatCount
     const orderCount = isRepeat ? repeatCycle[c % repeatCycle.length]! : 1
     const { addr } = locationAddrFor(c)
+    // A repeat customer rebuys the SAME product — that is what a replenishment
+    // interval measures. Anchoring every order after the first to the customer's own
+    // first SKU is what makes `replenishment.median_reorder_interval_days` computable
+    // at all; keying it off the global `orderSeq` (as this did until 2026-07-31) gave
+    // every order a different SKU, so no (customer, product) pair ever repeated and
+    // the analyzer correctly reported insufficient data for it.
+    let firstSkuIdx = -1
     for (let k = 0; k < orderCount; k++) {
       orderSeq++
       // Spread across the trailing window, newest orders for lower k (most-recent first per customer).
       const daysAgo = Math.round(((orderSeq * 37) % (WINDOW_YEARS * 365)) + k * 40)
       const created = new Date(now.getTime() - daysAgo * DAY_MS)
-      const sku = params.skuTree[orderSeq % params.skuTree.length]!
-      const skuIdx = orderSeq % params.skuTree.length
+      const skuIdx = k === 0 ? orderSeq % params.skuTree.length : firstSkuIdx
+      if (k === 0) firstSkuIdx = skuIdx
+      const sku = params.skuTree[skuIdx]!
       const price = Math.round(sku.unitPrice * (0.85 + (orderSeq % 5) * 0.075) * 100) / 100
       const isDiscounted = (orderSeq % 100) / 100 < params.discountedRevenueShare
       const discount = isDiscounted ? Math.round(price * params.avgDiscountRate * 100) / 100 : 0

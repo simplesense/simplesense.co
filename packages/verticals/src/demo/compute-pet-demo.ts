@@ -3,6 +3,7 @@ import { generateStore } from '../generator/generate-store'
 import { computeSubscriptionChurn } from '../compute/subscription-churn'
 import { renderMoves, type RenderedMove } from '../render-moves'
 import { petBrandsConfig } from '../configs/pet-brands'
+import { requiredMetric, requiredPct } from './metric-access'
 
 export interface VerticalDemoStat {
   label: string
@@ -15,7 +16,6 @@ export interface VerticalDemoResult {
   moves: RenderedMove[]
 }
 
-const pct = (v: number | null | undefined) => (v == null ? 0 : Math.round(v * 1000) / 10)
 const usd = (v: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -31,13 +31,13 @@ export function computePetBrandsDemo(now: Date): VerticalDemoResult {
   const byKey = new Map(metrics.map((m) => [m.key, m]))
   const churn = computeSubscriptionChurn(params)
 
-  const top20SharePct = pct(byKey.get('pareto.top20_revenue_share')?.valueNumeric)
-  const top20CustomerCount = byKey.get('pareto.top20_customer_count')?.valueNumeric ?? 0
+  const top20SharePct = requiredPct(byKey, 'pareto.top20_revenue_share')
+  const top20CustomerCount = requiredMetric(byKey, 'pareto.top20_customer_count')
   const vipNoFlowCount = Math.round(top20CustomerCount * (1 - params.vipFlowCoveragePct))
   const medianReorderDays = Math.round(
-    byKey.get('replenishment.median_reorder_interval_days')?.valueNumeric ?? 0,
+    requiredMetric(byKey, 'replenishment.median_reorder_interval_days'),
   )
-  const localRevenuePct = pct(byKey.get('geo.within_5mi_revenue_share')?.valueNumeric)
+  const localRevenuePct = requiredPct(byKey, 'geo.within_5mi_revenue_share')
 
   const computed = {
     top20SharePct,
@@ -58,7 +58,7 @@ export function computePetBrandsDemo(now: Date): VerticalDemoResult {
       { label: 'Median reorder cycle', value: `${medianReorderDays} days` },
       {
         label: 'Repeat-purchase rate',
-        value: `${pct(byKey.get('cohort.repeat_purchase_rate')?.valueNumeric)}%`,
+        value: `${requiredPct(byKey, 'cohort.repeat_purchase_rate')}%`,
       },
     ],
     moves: renderMoves(petBrandsConfig.exampleMoves, computed),

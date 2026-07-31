@@ -26,10 +26,55 @@ const FEATURES: Record<TierId, string[]> = {
 }
 const ORDER: TierId[] = ['free', 'basic', 'pro']
 
+/** One-line banner above the plan grid. Four of these render conditionally; they were
+ *  copy-pasted style objects until 2026-07-31. */
+function Notice({
+  tone,
+  icon,
+  children,
+}: {
+  tone: 'info' | 'warning'
+  icon: string
+  children: React.ReactNode
+}) {
+  const toneStyle =
+    tone === 'info'
+      ? {
+          background: 'var(--surface-card)',
+          border: '1px solid var(--border-hairline)',
+          color: 'var(--text-body)',
+        }
+      : { background: 'var(--ss-warning-bg)', color: 'var(--ss-warning)' }
+  return (
+    <div
+      style={{
+        ...toneStyle,
+        borderRadius: 'var(--radius-sm)',
+        padding: '10px 14px',
+        fontSize: 13,
+        margin: '12px 0',
+        maxWidth: 760,
+      }}
+    >
+      <i
+        className={`bi bi-${icon}`}
+        style={{ marginRight: 8, ...(tone === 'info' ? { color: 'var(--ss-success)' } : {}) }}
+      />
+      {children}
+    </div>
+  )
+}
+
 export default async function PlansPage({
   searchParams,
 }: {
-  searchParams: Promise<{ upgraded?: string; canceled?: string }>
+  searchParams: Promise<{
+    upgraded?: string
+    canceled?: string
+    failed?: string
+    demo?: string
+    manage?: string
+  }>
 }) {
   const sp = await searchParams
   const { orgId } = await getSession()
@@ -60,58 +105,41 @@ export default async function PlansPage({
         The free Audit is the front door. Geo + Pareto — the omnichannel wedge — live in Basic.
       </p>
       {sp.upgraded === '1' ? (
-        <div
-          style={{
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-hairline)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px 14px',
-            fontSize: 13,
-            margin: '12px 0',
-            maxWidth: 760,
-            color: 'var(--text-body)',
-          }}
-        >
-          <i
-            className="bi bi-check2-circle"
-            style={{ color: 'var(--ss-success)', marginRight: 8 }}
-          />
+        <Notice tone="info" icon="check2-circle">
           Payment received — thank you. Your plan activates as soon as Stripe confirms it (usually
           seconds). Refresh if your Current badge hasn’t moved yet.
-        </div>
+        </Notice>
       ) : null}
       {sp.canceled === '1' ? (
-        <div
-          style={{
-            background: 'var(--ss-warning-bg)',
-            color: 'var(--ss-warning)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px 14px',
-            fontSize: 13,
-            margin: '12px 0',
-            maxWidth: 760,
-          }}
-        >
-          <i className="bi bi-info-circle" style={{ marginRight: 8 }} />
+        <Notice tone="warning" icon="info-circle">
           Checkout canceled — no charge was made. Pick a plan whenever you’re ready.
-        </div>
+        </Notice>
+      ) : null}
+      {sp.failed === '1' ? (
+        <Notice tone="warning" icon="exclamation-triangle">
+          We couldn’t start checkout just now — no charge was made. Please try again in a moment; if
+          it keeps happening, reply to your welcome email and we’ll sort it out.
+        </Notice>
+      ) : null}
+      {sp.demo === '1' ? (
+        <Notice tone="warning" icon="info-circle">
+          You’re viewing the shared demo store, so there’s nothing to bill. Connect your own store
+          to pick a plan — the numbers above become yours.
+        </Notice>
+      ) : null}
+      {sp.manage === '1' ? (
+        <Notice tone="warning" icon="info-circle">
+          You already have an active plan, so we didn’t start a second one. We couldn’t open your
+          billing portal automatically — reply to your welcome email and we’ll switch your plan over
+          manually.
+        </Notice>
       ) : null}
       {!cfg.hasCredentials ? (
-        <div
-          style={{
-            background: 'var(--ss-warning-bg)',
-            color: 'var(--ss-warning)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '10px 14px',
-            fontSize: 13,
-            margin: '12px 0',
-            maxWidth: 760,
-          }}
-        >
-          <i className="bi bi-info-circle" style={{ marginRight: 8 }} />
+        <Notice tone="warning" icon="info-circle">
           Checkout is wired — add <code>STRIPE_SECRET_KEY</code> +{' '}
-          <code>STRIPE_PRICE_BASIC/PRO</code> to enable live billing.
-        </div>
+          <code>STRIPE_PRICE_BASIC/PRO</code> to enable live billing. Run{' '}
+          <code>pnpm preflight</code> to verify.
+        </Notice>
       ) : null}
 
       <div

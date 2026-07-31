@@ -142,12 +142,24 @@ describe('RealStripeClient.parseWebhook', () => {
     expect(evt?.currentPeriodEnd?.getTime()).toBe(1700003600 * 1000)
   })
 
-  it('captures customer id on checkout.session.completed with no current_period_end (existing ACTIVE default preserved)', () => {
+  // Fixture corrected 2026-07-31: it previously omitted `payment_status`, which real
+  // Stripe ALWAYS sends on a Checkout Session (paid | unpaid | no_payment_required).
+  // The assertion below is unchanged — a genuinely paid session still resolves ACTIVE;
+  // only the input was made realistic. Sessions WITHOUT a paid payment_status now
+  // correctly resolve to null, covered by the Checkout-Session describe block below.
+  it('captures customer id on a paid checkout.session.completed with no current_period_end', () => {
     const client = new RealStripeClient({ secretKey: 'sk', webhookSecret: SECRET })
     const now = Date.now()
     const body = JSON.stringify({
       type: 'checkout.session.completed',
-      data: { object: { metadata: { orgId: 'org1', tier: 'PRO' }, customer: 'cus_123' } },
+      data: {
+        object: {
+          metadata: { orgId: 'org1', tier: 'PRO' },
+          customer: 'cus_123',
+          status: 'complete',
+          payment_status: 'paid',
+        },
+      },
     })
     const t = String(Math.floor(now / 1000))
     const evt = client.parseWebhook(body, `t=${t},v1=${sign(t, body)}`)
@@ -267,5 +279,63 @@ describe('resolvePeriodEndUpdate', () => {
   it('returns null (leave the stored value alone) when the incoming value is null', () => {
     expect(resolvePeriodEndUpdate(new Date(NOW), null)).toBeNull()
     expect(resolvePeriodEndUpdate(null, null)).toBeNull()
+  })
+})
+
+describe('RealStripeClient.parseWebhook — Checkout Session status is NOT a subscription status', () => {
+  const client = new RealStripeClient({ secretKey: 'sk', webhookSecret: SECRET })
+  const parse = (type: string, object: Record<string, unknown>) => {
+    const body = JSON.stringify({ type, data: { object } })
+    const t = String(Math.floor(Date.now() / 1000))
+    return client.parseWebhook(body, `t=${t},v1=${sign(t, body)}`)
+  }
+
+  it('grants NOTHING for an abandoned checkout.session.expired, even though it still carries our metadata.tier (regression: this granted permanent free Pro, 2026-07-31)', () => {
+    const evt = parse('checkout.session.expired', {
+      metadata: { orgId: 'org1', tier: 'PRO' },
+      status: 'expired',
+      payment_status: 'unpaid',
+    })
+    expect(evt?.status).toBeNull()
+    // The tier still parses (it is on the session), which is exactly why the ROUTE must
+    // allowlist event types and refuse to create a row without a resolved status.
+    expect(evt?.tier).toBe('PRO')
+  })
+
+  it('grants ACTIVE for a completed+paid checkout session — the branch a truthy session status used to make unreachable', () => {
+    const evt = parse('checkout.session.completed', {
+      metadata: { orgId: 'org1', tier: 'PRO' },
+      status: 'complete',
+      payment_status: 'paid',
+    })
+    expect(evt?.status).toBe('ACTIVE')
+  })
+
+  it('grants ACTIVE when no payment was required (100%-off coupon / trial)', () => {
+    const evt = parse('checkout.session.completed', {
+      metadata: { orgId: 'org1', tier: 'BASIC' },
+      status: 'complete',
+      payment_status: 'no_payment_required',
+    })
+    expect(evt?.status).toBe('ACTIVE')
+  })
+
+  it('grants NOTHING for a completed session that is still unpaid', () => {
+    const evt = parse('checkout.session.completed', {
+      metadata: { orgId: 'org1', tier: 'PRO' },
+      status: 'complete',
+      payment_status: 'unpaid',
+    })
+    expect(evt?.status).toBeNull()
+  })
+
+  it('never maps a session status through the subscription statusMap', () => {
+    // 'open' is not a subscription status; it must not resolve to anything.
+    expect(
+      parse('checkout.session.async_payment_failed', {
+        metadata: { orgId: 'org1', tier: 'PRO' },
+        status: 'open',
+      })?.status,
+    ).toBeNull()
   })
 })

@@ -3,9 +3,8 @@ import { generateStore } from '../generator/generate-store'
 import { computeQ4GiftBuyerStats } from '../compute/q4-gift-buyers'
 import { renderMoves } from '../render-moves'
 import { candleBrandsConfig } from '../configs/candle-brands'
+import { requiredPct } from './metric-access'
 import type { VerticalDemoResult } from './compute-pet-demo'
-
-const pct = (v: number | null | undefined) => (v == null ? 0 : Math.round(v * 1000) / 10)
 
 /** Real-pipeline: synthetic store -> @ss/core's real analyzers + a real Q4-cohort computation -> pre-written move templates. */
 export function computeCandleBrandsDemo(now: Date): VerticalDemoResult {
@@ -15,9 +14,9 @@ export function computeCandleBrandsDemo(now: Date): VerticalDemoResult {
   const byKey = new Map(metrics.map((m) => [m.key, m]))
   const gift = computeQ4GiftBuyerStats(store, now)
 
-  const discountedRevenuePct = pct(byKey.get('discount.revenue_share_discounted')?.valueNumeric)
-  const avgDiscountPct = pct(byKey.get('discount.avg_discount_rate')?.valueNumeric)
-  const localRevenuePct = pct(byKey.get('geo.within_5mi_revenue_share')?.valueNumeric)
+  const discountedRevenuePct = requiredPct(byKey, 'discount.revenue_share_discounted')
+  const avgDiscountPct = requiredPct(byKey, 'discount.avg_discount_rate')
+  const localRevenuePct = requiredPct(byKey, 'geo.within_5mi_revenue_share')
 
   const computed = {
     giftBuyerOneTimePct: gift.giftBuyerOneTimePct,
@@ -35,7 +34,7 @@ export function computeCandleBrandsDemo(now: Date): VerticalDemoResult {
       { label: 'Revenue within 5 miles', value: `${localRevenuePct}%` },
       {
         label: 'Repeat-purchase rate',
-        value: `${pct(byKey.get('cohort.repeat_purchase_rate')?.valueNumeric)}%`,
+        value: `${requiredPct(byKey, 'cohort.repeat_purchase_rate')}%`,
       },
       { label: 'Q4 one-time buyers', value: `${gift.giftBuyerOneTimePct}%` },
     ],
