@@ -8,6 +8,7 @@ const isPublic = createRouteMatcher([
   '/',
   '/how-it-works',
   '/pricing',
+  '/story',
   '/privacy',
   '/terms',
   '/audit(.*)',

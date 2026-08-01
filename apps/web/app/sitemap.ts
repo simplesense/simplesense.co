@@ -15,6 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/audits/return-lens',
     '/audits/agent-ready',
     '/audits/answer-shelf',
+    '/audits/review-proof',
+    '/story',
   ]
   const verticalPaths = SHIPPED_VERTICAL_CONFIGS.map((c) => c.urlPath)
 
