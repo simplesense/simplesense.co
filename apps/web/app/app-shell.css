@@ -56,6 +56,18 @@
   gap: 2px;
 }
 
+/* Grouped nav sections (design system, 2026-08-01). */
+.ss-nav-group {
+  margin-bottom: 16px;
+}
+.ss-nav-group-label {
+  padding: 0 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 .ss-nav-item {
   position: relative;
   display: flex;
@@ -175,6 +187,12 @@
   }
   .ss-nav-label {
     display: none;
+  }
+  .ss-nav-group-label {
+    display: none;
+  }
+  .ss-nav-group {
+    margin-bottom: 10px;
   }
   .ss-nav-badge {
     position: absolute;

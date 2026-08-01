@@ -13,6 +13,69 @@ interface Step {
   cta?: { label: string; href: string }
 }
 
+/**
+ * At-a-glance progress rail (design system, 2026-08-01). Driven entirely by the same
+ * real `done`/`active` flags the cards below use — derived from whether a store is
+ * actually connected, an analysis run actually exists, and a recommendation has actually
+ * been acted on. The design's own version animated a fake "Reading 18,402 orders…"
+ * counter; that is exactly the kind of invented progress this product doesn't ship.
+ */
+function Stepper({ steps }: { steps: Step[] }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
+      {steps.map((s, i) => (
+        <div key={s.n} style={{ display: 'contents' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, flex: 'none' }}>
+            <span
+              style={{
+                display: 'grid',
+                placeItems: 'center',
+                width: 26,
+                height: 26,
+                flex: 'none',
+                borderRadius: '50%',
+                fontSize: 12.5,
+                fontWeight: 700,
+                background: s.done
+                  ? 'var(--ss-success)'
+                  : s.active
+                    ? 'var(--action-primary)'
+                    : 'var(--surface-soft)',
+                color: s.done || s.active ? '#fff' : 'var(--text-muted)',
+                boxShadow: s.active ? 'var(--shadow-inset-glint)' : 'none',
+              }}
+            >
+              {s.done ? <i className="bi bi-check2" aria-hidden="true" /> : s.n}
+            </span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: s.active ? 600 : 500,
+                whiteSpace: 'nowrap',
+                color: s.done || s.active ? 'var(--text-strong)' : 'var(--text-muted)',
+              }}
+            >
+              {s.title}
+            </span>
+          </div>
+          {i < steps.length - 1 ? (
+            <div
+              aria-hidden="true"
+              style={{
+                flex: 1,
+                height: 1.5,
+                minWidth: 16,
+                margin: '0 12px',
+                background: s.done ? 'var(--ss-success)' : 'var(--border-strong)',
+              }}
+            />
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default async function OnboardingPage() {
   const { orgId } = await getSession()
   const connected = await prisma.store.findFirst({
@@ -82,6 +145,8 @@ export default async function OnboardingPage() {
         <p style={{ margin: '0 0 28px', color: 'var(--text-body)' }}>
           Three steps to a ranked, grounded list — every number earned from your own data.
         </p>
+
+        <Stepper steps={steps} />
 
         <div style={{ display: 'grid', gap: 14 }}>
           {steps.map((s) => (
