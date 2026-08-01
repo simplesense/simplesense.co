@@ -41,10 +41,23 @@ describe('visual baseline: component classes, focus ring, fonts, contrast', () =
     expect(layout).toContain('bootstrap-icons.min.css') // icon font must survive
   })
 
+  // Brand fonts changed 2026-08-01 (Instrument Serif/Inter/Manrope → Newsreader/Public
+  // Sans) as a deliberate rebrand. The ASSERTION INTENT is unchanged: the token layer
+  // must reference next/font's injected CSS variables and carry a literal fallback, so
+  // type never collapses to a system default if font loading fails.
   it('typography tokens consume the next/font variables with fallbacks', () => {
     const css = read('packages/ui/src/tokens/typography.css')
-    expect(css).toContain("var(--font-instrument-serif, 'Instrument Serif')")
-    expect(css).toContain("var(--font-inter, 'Inter')")
-    expect(css).toContain("var(--font-manrope, 'Manrope')")
+    expect(css).toContain("var(--font-newsreader, 'Newsreader')")
+    expect(css).toContain("var(--font-public-sans, 'Public Sans')")
+  })
+
+  it('the root layout actually declares every font variable the tokens consume', () => {
+    const layout = read('apps/web/app/layout.tsx')
+    const tokens = read('packages/ui/src/tokens/typography.css')
+    for (const v of new Set(tokens.match(/--font-[a-z-]+(?=,)/g) ?? [])) {
+      expect(layout, `${v} is used by tokens but never declared in layout.tsx`).toContain(
+        `variable: '${v}'`,
+      )
+    }
   })
 })

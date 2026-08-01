@@ -1,20 +1,26 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Instrument_Serif, Manrope, Inter } from 'next/font/google'
+import { Newsreader, Public_Sans } from 'next/font/google'
 import '@ss/ui/styles.css'
 import './globals.css'
 import './app-shell.css'
 
-const instrumentSerif = Instrument_Serif({
-  weight: '400', // Instrument Serif is NOT a variable font — weight is required
+// Design system (2026-08-01 rebrand): Newsreader for editorial display, Public Sans for
+// everything functional. Both are variable fonts, so no explicit weight list is needed.
+// The token NAMES in packages/ui/src/tokens/typography.css are unchanged, so every
+// component already consuming var(--font-display)/var(--font-sans) picks these up.
+const newsreader = Newsreader({
   style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-instrument-serif',
+  variable: '--font-newsreader',
   display: 'swap',
 })
-const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' })
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  variable: '--font-public-sans',
+  display: 'swap',
+})
 
 const DESCRIPTION =
   'Simple Sense reads your whole Shopify store and tells you the few moves to make this week — what to do, why, and the dollar impact. Every number earned from your own data.'
@@ -43,7 +49,7 @@ const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const shell = (
-    <html lang="en" className={`${instrumentSerif.variable} ${manrope.variable} ${inter.variable}`}>
+    <html lang="en" className={`${newsreader.variable} ${publicSans.variable}`}>
       <head>
         {/* Bootstrap Icons webfont (vendored locally under /public). */}
         <link rel="stylesheet" href="/vendor/bootstrap-icons/font/bootstrap-icons.min.css" />

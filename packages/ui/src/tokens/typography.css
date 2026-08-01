@@ -1,16 +1,17 @@
 /* ============================================================
    SimpleSense — Typography tokens
-   Instrument Serif for editorial display (hero, big numbers,
-   pull quotes). Inter for everything functional.
+   Newsreader for editorial display (hero, big numbers, pull quotes).
+   Public Sans for everything functional. Rebranded 2026-08-01; the token
+   NAMES below are deliberately unchanged so every consumer follows along.
    ============================================================ */
 
 :root {
   /* Families */
-  --font-display:
-    var(--font-instrument-serif, 'Instrument Serif'), Georgia, 'Times New Roman', serif;
+  --font-display: var(--font-newsreader, 'Newsreader'), Georgia, 'Times New Roman', serif;
   --font-ui-display:
-    var(--font-manrope, 'Manrope'), var(--font-inter, 'Inter'), system-ui, sans-serif; /* in-product display & labels (CRM / app UI) — never marketing display */
-  --font-sans: var(--font-inter, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
+    var(--font-public-sans, 'Public Sans'), system-ui, sans-serif; /* in-product display & labels (CRM / app UI) — never marketing display */
+  --font-sans:
+    var(--font-public-sans, 'Public Sans'), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Type scale (rem) */
