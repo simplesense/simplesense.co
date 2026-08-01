@@ -1,7 +1,7 @@
 ---
 status: building
 focus: Core product live on Fly; all 5 intelligence-audit modules + Wave-0 shared infra shipped in code. Stripe billing verified working in TEST mode (2026-07-31) — live billing is the next revenue-unblocking step, and it is human-gated.
-updated: 2026-07-31
+updated: 2026-08-01
 ---
 
 - [ ] **Go live on billing (highest-value unblock).** Test mode is verified end-to-end.
@@ -50,6 +50,10 @@ updated: 2026-07-31
       demo numbers only, banned-claims lint enforced
 - [x] Wave-0 shared infra: S1 Playwright crawler, S4 report PDF, S6 capture archive,
       S7 entity registry (16 real bugs found by adversarial review, all fixed)
+- [x] Design-system rebrand landed: Newsreader/Public Sans, ~100KB component layer,
+      nav dropdowns exposing /for/* and /audits/* for the first time, plus two new
+      pages — /story and /audits/review-proof (3 of 5 signals live, other 2 marked
+      "not offered" with the reason rather than padded in)
 - [x] `pnpm preflight` config doctor — validates env location, Clerk all-or-nothing,
       encryption-key shape, and Stripe prices against the live API
 - [x] Self-audit 2026-07-31 (4 lenses, adversarially verified): 5 real defects found
